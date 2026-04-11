@@ -1,5 +1,5 @@
 import { apiRequest } from "@/lib/api/client";
-import { ApiSuccessResponse } from "@/types/api";
+import { ApiSuccessResponse, PaginatedResponse } from "@/types/api";
 import { Amenity, ListingDetail, ListingSummary } from "@/types/domain";
 
 export type ListingSearchParams = {
@@ -12,6 +12,9 @@ export type ListingSearchParams = {
   houseType?: string;
   furnished?: boolean;
   amenities?: string[];
+  page?: number;
+  size?: number;
+  sort?: "PUBLISHED_AT_DESC" | "RENT_AMOUNT_ASC" | "RENT_AMOUNT_DESC" | "CREATED_AT_DESC";
 };
 
 export type ListingUpsertPayload = {
@@ -105,9 +108,12 @@ export async function searchListings(params: ListingSearchParams = {}) {
   if (params.houseType) search.set("houseType", params.houseType);
   if (params.furnished !== undefined) search.set("furnished", String(params.furnished));
   params.amenities?.forEach((amenity) => search.append("amenities", amenity));
+  if (params.page !== undefined) search.set("page", String(params.page));
+  if (params.size !== undefined) search.set("size", String(params.size));
+  if (params.sort) search.set("sort", params.sort);
 
   const query = search.toString();
-  const response = await apiRequest<ApiSuccessResponse<ListingSummary[]>>(`/listings${query ? `?${query}` : ""}`, {
+  const response = await apiRequest<ApiSuccessResponse<PaginatedResponse<ListingSummary>>>(`/listings${query ? `?${query}` : ""}`, {
     method: "GET",
     cache: "no-store",
   });

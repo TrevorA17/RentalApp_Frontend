@@ -1,20 +1,23 @@
 "use client";
 
+import { FormEvent, useEffect, useMemo, useState } from "react";
 import Alert from "@mui/material/Alert";
+import Box from "@mui/material/Box";
 import Button from "@mui/material/Button";
 import Chip from "@mui/material/Chip";
 import Grid from "@mui/material/Grid";
+import Pagination from "@mui/material/Pagination";
 import Paper from "@mui/material/Paper";
 import Stack from "@mui/material/Stack";
 import TextField from "@mui/material/TextField";
 import Typography from "@mui/material/Typography";
-import Box from "@mui/material/Box";
 import Link from "next/link";
-import { FormEvent, useEffect, useState } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
 import { useAuth } from "@/features/auth/AuthProvider";
 import { getAmenities, searchListings } from "@/lib/api/listings";
 import { getSavedListingIds } from "@/lib/api/savedListings";
 import { Amenity, HouseType, ListingSummary } from "@/types/domain";
+import { PaginatedResponse } from "@/types/api";
 import { SaveListingButton } from "./SaveListingButton";
 
 const houseTypes: HouseType[] = [
@@ -27,40 +30,89 @@ const houseTypes: HouseType[] = [
   "TOWNHOUSE",
 ];
 
+const sortOptions = [
+  { value: "PUBLISHED_AT_DESC", label: "Newest published" },
+  { value: "RENT_AMOUNT_ASC", label: "Price: low to high" },
+  { value: "RENT_AMOUNT_DESC", label: "Price: high to low" },
+  { value: "CREATED_AT_DESC", label: "Newest added" },
+] as const;
+
+type ListingSort = (typeof sortOptions)[number]["value"];
+
+const emptyResults: PaginatedResponse<ListingSummary> = {
+  items: [],
+  page: 0,
+  size: 12,
+  totalElements: 0,
+  totalPages: 0,
+  hasNext: false,
+  hasPrevious: false,
+  sort: "PUBLISHED_AT_DESC",
+};
+
 export function ListingsBrowseView() {
+  const router = useRouter();
+  const searchParams = useSearchParams();
   const { session } = useAuth();
-  const [listings, setListings] = useState<ListingSummary[]>([]);
+  const [results, setResults] = useState<PaginatedResponse<ListingSummary>>(emptyResults);
   const [amenities, setAmenities] = useState<Amenity[]>([]);
   const [savedListingIds, setSavedListingIds] = useState<string[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [isSearching, setIsSearching] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
-  const [city, setCity] = useState("");
-  const [area, setArea] = useState("");
-  const [maxPrice, setMaxPrice] = useState("");
-  const [bedrooms, setBedrooms] = useState("");
-  const [houseType, setHouseType] = useState("");
-  const [selectedAmenity, setSelectedAmenity] = useState("");
+
+  const [city, setCity] = useState(searchParams.get("city") ?? "");
+  const [area, setArea] = useState(searchParams.get("area") ?? "");
+  const [maxPrice, setMaxPrice] = useState(searchParams.get("maxPrice") ?? "");
+  const [bedrooms, setBedrooms] = useState(searchParams.get("bedrooms") ?? "");
+  const [houseType, setHouseType] = useState(searchParams.get("houseType") ?? "");
+  const [selectedAmenity, setSelectedAmenity] = useState(searchParams.get("amenities") ?? "");
+  const [sort, setSort] = useState<ListingSort>((searchParams.get("sort") as ListingSort) || "PUBLISHED_AT_DESC");
 
   useEffect(() => {
-    async function loadInitial() {
+    setCity(searchParams.get("city") ?? "");
+    setArea(searchParams.get("area") ?? "");
+    setMaxPrice(searchParams.get("maxPrice") ?? "");
+    setBedrooms(searchParams.get("bedrooms") ?? "");
+    setHouseType(searchParams.get("houseType") ?? "");
+    setSelectedAmenity(searchParams.get("amenities") ?? "");
+    setSort(((searchParams.get("sort") as ListingSort) || "PUBLISHED_AT_DESC"));
+  }, [searchParams]);
+
+  useEffect(() => {
+    async function loadBrowseData() {
       try {
+        setErrorMessage(null);
+        const pageParam = Number(searchParams.get("page") ?? "0");
+        const sizeParam = Number(searchParams.get("size") ?? "12");
         const [listingResults, amenityOptions] = await Promise.all([
-          searchListings(),
+          searchListings({
+            city: searchParams.get("city") || undefined,
+            area: searchParams.get("area") || undefined,
+            maxPrice: searchParams.get("maxPrice") ? Number(searchParams.get("maxPrice")) : undefined,
+            bedrooms: searchParams.get("bedrooms") ? Number(searchParams.get("bedrooms")) : undefined,
+            houseType: searchParams.get("houseType") || undefined,
+            amenities: searchParams.get("amenities") ? [searchParams.get("amenities") as string] : undefined,
+            page: Number.isNaN(pageParam) ? 0 : pageParam,
+            size: Number.isNaN(sizeParam) ? 12 : sizeParam,
+            sort: ((searchParams.get("sort") as ListingSort) || "PUBLISHED_AT_DESC"),
+          }),
           getAmenities(),
         ]);
-        setListings(listingResults);
+        setResults(listingResults);
         setAmenities(amenityOptions);
       } catch (error) {
         const message = error instanceof Error ? error.message : "Failed to load listings.";
         setErrorMessage(message);
       } finally {
         setIsLoading(false);
+        setIsSearching(false);
       }
     }
 
-    void loadInitial();
-  }, []);
+    setIsSearching(true);
+    void loadBrowseData();
+  }, [searchParams]);
 
   useEffect(() => {
     async function loadSavedIds() {
@@ -90,46 +142,68 @@ export function ListingsBrowseView() {
     });
   }
 
+  function updateQuery(next: Record<string, string | undefined>) {
+    const params = new URLSearchParams(searchParams.toString());
+
+    Object.entries(next).forEach(([key, value]) => {
+      if (!value) {
+        params.delete(key);
+      } else {
+        params.set(key, value);
+      }
+    });
+
+    const query = params.toString();
+    router.replace(`/listings${query ? `?${query}` : ""}`);
+  }
+
   async function handleSearch(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     setErrorMessage(null);
     setIsSearching(true);
-
-    try {
-      const results = await searchListings({
-        city: city || undefined,
-        area: area || undefined,
-        maxPrice: maxPrice ? Number(maxPrice) : undefined,
-        bedrooms: bedrooms ? Number(bedrooms) : undefined,
-        houseType: houseType || undefined,
-        amenities: selectedAmenity ? [selectedAmenity] : undefined,
-      });
-      setListings(results);
-    } catch (error) {
-      const message = error instanceof Error ? error.message : "Failed to search listings.";
-      setErrorMessage(message);
-    } finally {
-      setIsSearching(false);
-    }
+    updateQuery({
+      city: city || undefined,
+      area: area || undefined,
+      maxPrice: maxPrice || undefined,
+      bedrooms: bedrooms || undefined,
+      houseType: houseType || undefined,
+      amenities: selectedAmenity || undefined,
+      sort,
+      page: "0",
+      size: String(results.size || 12),
+    });
   }
 
   function handleReset() {
-    setCity("");
-    setArea("");
-    setMaxPrice("");
-    setBedrooms("");
-    setHouseType("");
-    setSelectedAmenity("");
     setErrorMessage(null);
     setIsSearching(true);
+    updateQuery({
+      city: undefined,
+      area: undefined,
+      maxPrice: undefined,
+      bedrooms: undefined,
+      houseType: undefined,
+      amenities: undefined,
+      sort: "PUBLISHED_AT_DESC",
+      page: "0",
+      size: "12",
+    });
+  }
 
-    void searchListings()
-      .then((results) => setListings(results))
-      .catch((error) => {
-        const message = error instanceof Error ? error.message : "Failed to reload listings.";
-        setErrorMessage(message);
-      })
-      .finally(() => setIsSearching(false));
+  function handleSortChange(nextSort: ListingSort) {
+    setSort(nextSort);
+    setIsSearching(true);
+    updateQuery({
+      sort: nextSort,
+      page: "0",
+    });
+  }
+
+  function handlePageChange(nextPage: number) {
+    setIsSearching(true);
+    updateQuery({
+      page: String(nextPage - 1),
+    });
   }
 
   function formatEnumLabel(value: string) {
@@ -140,14 +214,18 @@ export function ListingsBrowseView() {
       .join(" ");
   }
 
-  const activeFilterLabels = [
-    city ? `City: ${city}` : null,
-    area ? `Area: ${area}` : null,
-    maxPrice ? `Max KES ${maxPrice}` : null,
-    bedrooms ? `${bedrooms} bedroom${bedrooms === "1" ? "" : "s"}` : null,
-    houseType ? formatEnumLabel(houseType) : null,
-    selectedAmenity ? amenities.find((item) => item.id === selectedAmenity)?.name ?? null : null,
-  ].filter(Boolean) as string[];
+  const activeFilterLabels = useMemo(
+    () =>
+      [
+        city ? `City: ${city}` : null,
+        area ? `Area: ${area}` : null,
+        maxPrice ? `Max KES ${maxPrice}` : null,
+        bedrooms ? `${bedrooms} bedroom${bedrooms === "1" ? "" : "s"}` : null,
+        houseType ? formatEnumLabel(houseType) : null,
+        selectedAmenity ? amenities.find((item) => item.id === selectedAmenity)?.name ?? null : null,
+      ].filter(Boolean) as string[],
+    [amenities, area, bedrooms, city, houseType, maxPrice, selectedAmenity],
+  );
 
   return (
     <Stack spacing={3}>
@@ -157,7 +235,7 @@ export function ListingsBrowseView() {
         </Typography>
         <Typography variant="h2">Browse listings</Typography>
         <Typography color="text.secondary">
-          Public discovery is now backed by real published listing data and core filters.
+          Explore live rental listings with practical filters, sorting, and paginated results built for a real marketplace flow.
         </Typography>
       </Stack>
 
@@ -195,7 +273,21 @@ export function ListingsBrowseView() {
                 ))}
               </TextField>
             </Grid>
-            <Grid size={{ xs: 12, md: 8 }}>
+            <Grid size={{ xs: 12, md: 4 }}>
+              <TextField
+                select
+                SelectProps={{ native: true }}
+                label="Sort"
+                value={sort}
+                onChange={(e) => handleSortChange(e.target.value as ListingSort)}
+                fullWidth
+              >
+                {sortOptions.map((option) => (
+                  <option key={option.value} value={option.value}>{option.label}</option>
+                ))}
+              </TextField>
+            </Grid>
+            <Grid size={{ xs: 12, md: 4 }}>
               <Stack direction="row" spacing={1} flexWrap="wrap" useFlexGap>
                 {activeFilterLabels.length > 0 ? (
                   activeFilterLabels.map((label) => <Chip key={label} label={label} color="secondary" />)
@@ -219,19 +311,38 @@ export function ListingsBrowseView() {
 
       {errorMessage ? <Alert severity="error">{errorMessage}</Alert> : null}
       {isLoading || isSearching ? <Alert severity="info">Loading listings...</Alert> : null}
-      {!isLoading && !isSearching && listings.length === 0 ? (
+
+      {!isLoading && !isSearching ? (
+        <Paper sx={{ p: 2.5 }}>
+          <Stack
+            direction={{ xs: "column", md: "row" }}
+            spacing={1.5}
+            justifyContent="space-between"
+            alignItems={{ xs: "flex-start", md: "center" }}
+          >
+            <Typography color="text.secondary">
+              {results.totalElements} listing{results.totalElements === 1 ? "" : "s"} found
+            </Typography>
+            <Typography color="text.secondary">
+              Page {results.totalPages === 0 ? 0 : results.page + 1} of {results.totalPages}
+            </Typography>
+          </Stack>
+        </Paper>
+      ) : null}
+
+      {!isLoading && !isSearching && results.items.length === 0 ? (
         <Paper sx={{ p: 4 }}>
           <Stack spacing={1}>
             <Typography variant="h5">No listings match these filters</Typography>
             <Typography color="text.secondary">
-              Try broadening the price, location, or amenity filters and search again.
+              Try broadening the location, price, or property details and search again.
             </Typography>
           </Stack>
         </Paper>
       ) : null}
 
       <Grid container spacing={3}>
-        {listings.map((listing) => (
+        {results.items.map((listing) => (
           <Grid key={listing.id} size={{ xs: 12, md: 6 }}>
             <Paper
               sx={{
@@ -283,6 +394,18 @@ export function ListingsBrowseView() {
           </Grid>
         ))}
       </Grid>
+
+      {!isLoading && !isSearching && results.totalPages > 1 ? (
+        <Stack alignItems="center">
+          <Pagination
+            count={results.totalPages}
+            page={results.page + 1}
+            onChange={(_, page) => handlePageChange(page)}
+            color="secondary"
+            shape="rounded"
+          />
+        </Stack>
+      ) : null}
     </Stack>
   );
 }
