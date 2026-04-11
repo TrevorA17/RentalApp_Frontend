@@ -56,6 +56,19 @@ export type Profile = {
   verificationStatus?: VerificationStatus;
 };
 
+export type AgentRecommendation = {
+  id: string;
+  rating: number;
+  comment: string;
+  approvalStatus: ApprovalStatus;
+  createdAt: string;
+  author: {
+    userId: string;
+    fullName: string;
+    role: Role;
+  };
+};
+
 export type ListingStatus = "DRAFT" | "PUBLISHED" | "UNPUBLISHED" | "ARCHIVED" | "DISABLED";
 
 export type ApprovalStatus = "PENDING" | "APPROVED" | "REJECTED";
@@ -109,6 +122,12 @@ export type ListingSummary = {
   amenities: Amenity[];
   thumbnailUrl?: string;
   media: ListingMedia[];
+};
+
+export type ListingSuggestion = {
+  listing: ListingSummary;
+  reason: string;
+  score: number;
 };
 
 export type ListingDetail = ListingSummary & {

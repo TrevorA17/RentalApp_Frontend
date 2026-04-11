@@ -9,30 +9,32 @@ import Typography from "@mui/material/Typography";
 import Link from "next/link";
 import { useEffect, useState } from "react";
 import { useAuth } from "@/features/auth/AuthProvider";
-import { getRecommendations, Recommendation } from "@/lib/api/recommendations";
+import { getSuggestedListings } from "@/lib/api/suggestions";
+import { ListingSuggestion } from "@/types/domain";
 
-export function RecommendationsPanel() {
+export function SuggestedListingsPanel() {
   const { session } = useAuth();
-  const [items, setItems] = useState<Recommendation[]>([]);
+  const [items, setItems] = useState<ListingSuggestion[]>([]);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
   useEffect(() => {
-    async function loadRecommendations() {
+    async function loadSuggestions() {
       if (!session?.accessToken) {
         setItems([]);
         return;
       }
 
       try {
-        const response = await getRecommendations(session.accessToken, 3);
+        const response = await getSuggestedListings(session.accessToken, 3);
         setItems(response);
+        setErrorMessage(null);
       } catch (error) {
-        const message = error instanceof Error ? error.message : "Failed to load recommendations.";
+        const message = error instanceof Error ? error.message : "Failed to load listing suggestions.";
         setErrorMessage(message);
       }
     }
 
-    void loadRecommendations();
+    void loadSuggestions();
   }, [session?.accessToken]);
 
   if (!session) {
@@ -43,10 +45,10 @@ export function RecommendationsPanel() {
     <Paper sx={{ p: { xs: 3, md: 4 } }}>
       <Stack spacing={2}>
         <Stack spacing={1}>
-          <Chip label="Recommended" color="secondary" sx={{ width: "fit-content" }} />
-          <Typography variant="h4">Listings tailored for you</Typography>
+          <Chip label="Suggested" color="secondary" sx={{ width: "fit-content" }} />
+          <Typography variant="h4">Listings worth a closer look</Typography>
           <Typography color="text.secondary">
-            These picks are scored from your profile, saved items, and inquiry history.
+            These suggestions use your profile, saved items, and inquiry activity to surface relevant rental options.
           </Typography>
         </Stack>
 
@@ -54,7 +56,7 @@ export function RecommendationsPanel() {
 
         {items.length === 0 ? (
           <Typography color="text.secondary">
-            Recommendations will appear once you have profile and activity signals.
+            Suggestions will appear once you have a bit more browsing or profile activity.
           </Typography>
         ) : null}
 

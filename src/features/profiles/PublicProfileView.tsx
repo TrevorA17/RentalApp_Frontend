@@ -2,13 +2,15 @@ import Chip from "@mui/material/Chip";
 import Paper from "@mui/material/Paper";
 import Stack from "@mui/material/Stack";
 import Typography from "@mui/material/Typography";
-import { Profile } from "@/types/domain";
+import { AgentRecommendationsSection } from "@/features/recommendations/AgentRecommendationsSection";
+import { AgentRecommendation, Profile } from "@/types/domain";
 
 type PublicProfileViewProps = {
   profile: Profile;
+  recommendations: AgentRecommendation[];
 };
 
-export function PublicProfileView({ profile }: PublicProfileViewProps) {
+export function PublicProfileView({ profile, recommendations }: PublicProfileViewProps) {
   return (
     <Stack spacing={3}>
       <Paper sx={{ p: { xs: 3, md: 4 } }}>
@@ -37,6 +39,10 @@ export function PublicProfileView({ profile }: PublicProfileViewProps) {
           <Typography color="text.secondary">Contact: {profile.phoneNumber || "Not provided"}</Typography>
         </Stack>
       </Paper>
+
+      {profile.role === "AGENT" ? (
+        <AgentRecommendationsSection agentUserId={profile.userId} initialRecommendations={recommendations} />
+      ) : null}
     </Stack>
   );
 }

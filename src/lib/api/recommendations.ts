@@ -1,18 +1,30 @@
 import { apiRequest } from "@/lib/api/client";
 import { ApiSuccessResponse } from "@/types/api";
-import { ListingSummary } from "@/types/domain";
+import { AgentRecommendation } from "@/types/domain";
 
-export type Recommendation = {
-  listing: ListingSummary;
-  reason: string;
-  score: number;
+export type CreateAgentRecommendationRequest = {
+  rating: number;
+  comment: string;
 };
 
-export async function getRecommendations(token: string, limit = 3) {
-  const response = await apiRequest<ApiSuccessResponse<Recommendation[]>>(`/recommendations?limit=${limit}`, {
+export async function getAgentRecommendations(agentUserId: string) {
+  const response = await apiRequest<ApiSuccessResponse<AgentRecommendation[]>>(`/agents/${agentUserId}/recommendations`, {
     method: "GET",
-    token,
     cache: "no-store",
+  });
+
+  return response.data;
+}
+
+export async function createAgentRecommendation(
+  token: string,
+  agentUserId: string,
+  payload: CreateAgentRecommendationRequest,
+) {
+  const response = await apiRequest<ApiSuccessResponse<AgentRecommendation>>(`/agents/${agentUserId}/recommendations`, {
+    method: "POST",
+    token,
+    body: JSON.stringify(payload),
   });
 
   return response.data;
