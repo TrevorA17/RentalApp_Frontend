@@ -8,11 +8,12 @@ import {
   useState,
 } from "react";
 import {
+  clearStoredSession,
+  getCurrentUser,
   getStoredSession,
-  loginMockUser,
-  logoutMockUser,
-  registerMockUser,
-} from "@/lib/auth/mockAuthService";
+  loginUser,
+  registerUser,
+} from "@/lib/auth/authService";
 import { AuthSession, LoginRequest, RegisterRequest } from "@/types/auth";
 
 type AuthContextValue = {
@@ -32,19 +33,37 @@ export function AuthProvider({ children }: PropsWithChildren) {
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   useEffect(() => {
-    try {
-      setSession(getStoredSession());
-    } finally {
-      setIsLoading(false);
+    async function restoreSession() {
+      try {
+        const storedSession = getStoredSession();
+
+        if (!storedSession) {
+          setSession(null);
+          return;
+        }
+
+        const user = await getCurrentUser(storedSession.accessToken);
+        setSession({
+          ...storedSession,
+          user,
+        });
+      } catch {
+        clearStoredSession();
+        setSession(null);
+      } finally {
+        setIsLoading(false);
+      }
     }
+
+    void restoreSession();
   }, []);
 
   async function login(request: LoginRequest) {
     setIsSubmitting(true);
 
     try {
-      const result = await loginMockUser(request);
-      setSession(result.session);
+      const session = await loginUser(request);
+      setSession(session);
     } finally {
       setIsSubmitting(false);
     }
@@ -54,22 +73,16 @@ export function AuthProvider({ children }: PropsWithChildren) {
     setIsSubmitting(true);
 
     try {
-      const result = await registerMockUser(request);
-      setSession(result.session);
+      const session = await registerUser(request);
+      setSession(session);
     } finally {
       setIsSubmitting(false);
     }
   }
 
   async function logout() {
-    setIsSubmitting(true);
-
-    try {
-      await logoutMockUser();
-      setSession(null);
-    } finally {
-      setIsSubmitting(false);
-    }
+    clearStoredSession();
+    setSession(null);
   }
 
   return (

@@ -186,7 +186,7 @@ export function RegisterForm() {
         </Button>
         <Divider />
         <Typography variant="body2" color="text.secondary">
-          This remains mock-backed for now. Backend auth will replace the storage layer later without changing the form structure.
+          Account creation now calls the backend register endpoint and signs you in immediately after success.
         </Typography>
         <Typography color="text.secondary">
           Already registered? <Link href="/login">Sign in here</Link>.

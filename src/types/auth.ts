@@ -13,6 +13,8 @@ export type AuthSession = {
   user: AuthUser;
 };
 
+export type AuthResponse = AuthSession;
+
 export type LoginRequest = {
   email: string;
   password: string;

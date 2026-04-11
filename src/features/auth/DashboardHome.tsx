@@ -76,7 +76,7 @@ export function DashboardHome() {
             {copy.summary}
           </Typography>
           <Typography variant="body2" color="text.secondary">
-            Frontend auth is currently mock-backed. The next backend auth scaffold will replace only the service layer.
+            This dashboard is now using the real backend auth session instead of the earlier mock storage flow.
           </Typography>
         </Stack>
       </Paper>

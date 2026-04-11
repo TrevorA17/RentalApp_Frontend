@@ -75,7 +75,7 @@ export function LoginForm() {
     <AuthCard
       eyebrow="Module 1"
       title="Sign in"
-      description="Use the mock auth flow now. This form will later connect to the real backend auth endpoints."
+      description="Sign in against the backend auth API. The same page structure is now using the real register, login, and me endpoints."
     >
       <Stack component="form" spacing={2} onSubmit={handleSubmit}>
         {formError ? <Alert severity="error">{formError}</Alert> : null}
@@ -105,10 +105,7 @@ export function LoginForm() {
         <Divider />
         <Stack spacing={0.75}>
           <Typography variant="body2" color="text.secondary">
-            Mock flow notes
-          </Typography>
-          <Typography variant="body2" color="text.secondary">
-            Register any account first, then sign in with the same credentials.
+            Use an account created through the registration page, then sign in with the same credentials.
           </Typography>
         </Stack>
         <Typography color="text.secondary">
