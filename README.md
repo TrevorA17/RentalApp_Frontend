@@ -1,6 +1,23 @@
 # RentalApp Frontend
 
-Frontend scaffold for the Rental House Hunting Platform MVP.
+Next.js frontend for the Rental House Hunting Platform MVP.
+
+## Current status
+
+This repo is no longer scaffold-only. The frontend currently includes:
+
+- auth screens and session handling
+- public listing browse and detail pages
+- profile management
+- listing creation and editing
+- URL-based media entry in listing forms
+- saved listings
+- inquiries
+- public agent profile page
+- agent recommendations/testimonials UI
+- personalized listing suggestions on the dashboard
+- admin moderation screens for listings, reports, and users
+- AI description assist in listing forms
 
 ## Stack
 
@@ -8,18 +25,82 @@ Frontend scaffold for the Rental House Hunting Platform MVP.
 - TypeScript
 - MUI
 
-## Current status
+## Product terminology
 
-This repo has Phase 0 frontend scaffolding only:
+- `recommendations` = public agent testimonials/reviews
+- `suggestions` = personalized listing picks for signed-in users
 
-- app router structure
-- shared theme
-- placeholder routes from the route map
-- API client skeleton
-- shared domain types
+## Current route surface
 
-## Next step
+- `/`
+- `/login`
+- `/register`
+- `/listings`
+- `/listings/[listingId]`
+- `/agents/[agentUserId]`
+- `/dashboard`
+- `/profile`
+- `/saved-listings`
+- `/inquiries/sent`
+- `/inquiries/received`
+- `/my-listings`
+- `/my-listings/new`
+- `/my-listings/[listingId]/edit`
+- `/admin`
+- `/admin/listings`
+- `/admin/reports`
+- `/admin/users`
 
-Implement Module 1: Auth using the plan in the backend repo:
+## Environment
 
+Create `.env.local` from [.env.local.example](./.env.local.example).
+
+Current important variable:
+
+```env
+NEXT_PUBLIC_API_BASE_URL=http://localhost:8080/api/v1
+```
+
+## Local development
+
+Install dependencies:
+
+```powershell
+npm install
+```
+
+Run the app:
+
+```powershell
+npm run dev
+```
+
+Quality checks:
+
+```powershell
+npm run lint
+npm run build
+```
+
+## Current implementation truth
+
+- the public agent profile page shows recommendations and allows authenticated submission
+- listing media is currently URL-based, not file-upload based
+- suggestions are a signed-in personalization feature, not a public trust feature
+- AI support is currently lightweight listing-description assistance only
+
+## Not yet implemented
+
+- dedicated admin UI for moderating agent recommendations
+- pagination and sorting UI for listing search
+- file-upload media workflow
+- advanced AI workflows beyond listing description assist
+
+## Source-of-truth docs
+
+Backend repo planning docs:
+
+- `../RentalApp_backend/docs/API_Contract_V1.md`
+- `../RentalApp_backend/docs/MVP_Data_Model.md`
+- `../RentalApp_backend/docs/Frontend_Route_Map.md`
 - `../RentalApp_backend/plan.md`
