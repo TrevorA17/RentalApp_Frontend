@@ -30,6 +30,16 @@ export type Profile = {
   verificationStatus?: VerificationStatus;
 };
 
+export type ListingStatus = "DRAFT" | "PUBLISHED" | "UNPUBLISHED" | "ARCHIVED" | "DISABLED";
+
+export type ApprovalStatus = "PENDING" | "APPROVED" | "REJECTED";
+
+export type Amenity = {
+  id: string;
+  name: string;
+  slug: string;
+};
+
 export type ListingCard = {
   id: string;
   title: string;
@@ -42,4 +52,33 @@ export type ListingCard = {
   furnished: boolean;
   availabilityStatus: AvailabilityStatus;
   thumbnailUrl?: string;
+};
+
+export type ListingSummary = {
+  id: string;
+  title: string;
+  rentAmount: number;
+  depositAmount?: number;
+  agentFeeAmount?: number;
+  city: string;
+  area: string;
+  bedrooms: number;
+  bathrooms: number;
+  houseType: HouseType;
+  furnished: boolean;
+  availabilityStatus: AvailabilityStatus;
+  listingStatus: ListingStatus;
+  approvalStatus: ApprovalStatus;
+  ownerType: Role;
+  amenities: Amenity[];
+};
+
+export type ListingDetail = ListingSummary & {
+  description: string;
+  poster: {
+    userId: string;
+    fullName: string;
+    email: string;
+    role: Role;
+  };
 };

@@ -1,5 +1,6 @@
+import { getListingById } from "@/lib/api/listings";
 import { PageSection } from "@/components/shell/PageSection";
-import { PlaceholderPage } from "@/components/shell/PlaceholderPage";
+import { PublicListingView } from "@/features/listings/PublicListingView";
 
 type ListingDetailPageProps = {
   params: Promise<{ listingId: string }>;
@@ -7,16 +8,11 @@ type ListingDetailPageProps = {
 
 export default async function ListingDetailPage({ params }: ListingDetailPageProps) {
   const { listingId } = await params;
+  const listing = await getListingById(listingId);
 
   return (
     <PageSection>
-      <PlaceholderPage
-        eyebrow="Listing Detail"
-        title={`Listing ${listingId}`}
-        description="This page will show pricing, media, amenities, poster summary, save action, and inquiry flow."
-        primaryHref="/listings"
-        primaryLabel="Back To Listings"
-      />
+      <PublicListingView listing={listing} />
     </PageSection>
   );
 }
