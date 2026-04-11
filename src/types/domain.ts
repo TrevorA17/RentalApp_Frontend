@@ -18,8 +18,11 @@ export type InquiryStatus = "NEW" | "CONTACTED" | "CLOSED";
 export type Profile = {
   userId: string;
   fullName: string;
+  email?: string;
+  role?: Role;
   phoneNumber?: string;
   bio?: string;
+  profilePhotoUrl?: string;
   city?: string;
   serviceAreas?: string[];
   companyName?: string;
