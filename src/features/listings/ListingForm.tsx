@@ -20,7 +20,7 @@ import {
   updateListing,
 } from "@/lib/api/listings";
 import { useAuth } from "@/features/auth/AuthProvider";
-import { Amenity, AvailabilityStatus, HouseType } from "@/types/domain";
+import { Amenity, AvailabilityStatus, HouseType, MediaType } from "@/types/domain";
 
 type ListingFormProps = {
   mode: "create" | "edit";
@@ -43,6 +43,8 @@ const availabilityStatuses: AvailabilityStatus[] = [
   "OCCUPIED",
 ];
 
+const mediaTypes: MediaType[] = ["IMAGE", "VIDEO"];
+
 export function ListingForm({ mode, listingId }: ListingFormProps) {
   const router = useRouter();
   const { session } = useAuth();
@@ -64,6 +66,9 @@ export function ListingForm({ mode, listingId }: ListingFormProps) {
   const [availabilityStatus, setAvailabilityStatus] = useState<AvailabilityStatus>("AVAILABLE_NOW");
   const [furnished, setFurnished] = useState(false);
   const [selectedAmenityIds, setSelectedAmenityIds] = useState<string[]>([]);
+  const [mediaItems, setMediaItems] = useState<Array<{ mediaType: MediaType; mediaUrl: string; caption: string }>>([
+    { mediaType: "IMAGE", mediaUrl: "", caption: "" },
+  ]);
 
   useEffect(() => {
     async function loadData() {
@@ -94,6 +99,15 @@ export function ListingForm({ mode, listingId }: ListingFormProps) {
           setAvailabilityStatus(existingListing.availabilityStatus);
           setFurnished(existingListing.furnished);
           setSelectedAmenityIds(existingListing.amenities.map((amenity) => amenity.id));
+          setMediaItems(
+            existingListing.media.length > 0
+              ? existingListing.media.map((item) => ({
+                  mediaType: item.mediaType,
+                  mediaUrl: item.mediaUrl,
+                  caption: item.caption ?? "",
+                }))
+              : [{ mediaType: "IMAGE", mediaUrl: "", caption: "" }],
+          );
         }
       } catch (error) {
         const message = error instanceof Error ? error.message : "Failed to load listing form.";
@@ -125,6 +139,27 @@ export function ListingForm({ mode, listingId }: ListingFormProps) {
     );
   }
 
+  function updateMediaItem(index: number, field: "mediaType" | "mediaUrl" | "caption", value: string) {
+    setMediaItems((current) =>
+      current.map((item, itemIndex) =>
+        itemIndex === index
+          ? {
+              ...item,
+              [field]: value,
+            }
+          : item
+      )
+    );
+  }
+
+  function addMediaItem() {
+    setMediaItems((current) => [...current, { mediaType: "IMAGE", mediaUrl: "", caption: "" }]);
+  }
+
+  function removeMediaItem(index: number) {
+    setMediaItems((current) => (current.length === 1 ? current : current.filter((_, itemIndex) => itemIndex !== index)));
+  }
+
   async function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     setErrorMessage(null);
@@ -146,6 +181,13 @@ export function ListingForm({ mode, listingId }: ListingFormProps) {
         furnished,
         availabilityStatus,
         amenityIds: selectedAmenityIds,
+        media: mediaItems
+          .filter((item) => item.mediaUrl.trim().length > 0)
+          .map((item) => ({
+            mediaType: item.mediaType,
+            mediaUrl: item.mediaUrl.trim(),
+            caption: item.caption.trim() || undefined,
+          })),
       };
 
       const listing =
@@ -270,6 +312,69 @@ export function ListingForm({ mode, listingId }: ListingFormProps) {
                 </Grid>
               ))}
             </Grid>
+          </Stack>
+
+          <Stack spacing={1.5}>
+            <Stack direction="row" justifyContent="space-between" alignItems="center">
+              <Typography fontWeight={700}>Listing media</Typography>
+              <Button type="button" variant="outlined" onClick={addMediaItem} disabled={isLoading || isSaving}>
+                Add media
+              </Button>
+            </Stack>
+            <Typography color="text.secondary">
+              Add image or video URLs in the order you want them displayed.
+            </Typography>
+            {mediaItems.map((item, index) => (
+              <Paper key={`${index}-${item.mediaUrl}`} variant="outlined" sx={{ p: 2 }}>
+                <Stack spacing={2}>
+                  <Grid container spacing={2}>
+                    <Grid size={{ xs: 12, md: 3 }}>
+                      <TextField
+                        select
+                        SelectProps={{ native: true }}
+                        label="Type"
+                        value={item.mediaType}
+                        onChange={(event) => updateMediaItem(index, "mediaType", event.target.value)}
+                        fullWidth
+                        disabled={isLoading || isSaving}
+                      >
+                        {mediaTypes.map((option) => (
+                          <option key={option} value={option}>{option}</option>
+                        ))}
+                      </TextField>
+                    </Grid>
+                    <Grid size={{ xs: 12, md: 7 }}>
+                      <TextField
+                        label="Media URL"
+                        value={item.mediaUrl}
+                        onChange={(event) => updateMediaItem(index, "mediaUrl", event.target.value)}
+                        fullWidth
+                        disabled={isLoading || isSaving}
+                      />
+                    </Grid>
+                    <Grid size={{ xs: 12, md: 2 }}>
+                      <Button
+                        type="button"
+                        variant="text"
+                        color="error"
+                        onClick={() => removeMediaItem(index)}
+                        disabled={isLoading || isSaving || mediaItems.length === 1}
+                        sx={{ mt: { md: 1 } }}
+                      >
+                        Remove
+                      </Button>
+                    </Grid>
+                  </Grid>
+                  <TextField
+                    label="Caption"
+                    value={item.caption}
+                    onChange={(event) => updateMediaItem(index, "caption", event.target.value)}
+                    fullWidth
+                    disabled={isLoading || isSaving}
+                  />
+                </Stack>
+              </Paper>
+            ))}
           </Stack>
 
           <Stack direction="row" spacing={2}>

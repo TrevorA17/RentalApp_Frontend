@@ -6,6 +6,7 @@ import Chip from "@mui/material/Chip";
 import Paper from "@mui/material/Paper";
 import Stack from "@mui/material/Stack";
 import Typography from "@mui/material/Typography";
+import Box from "@mui/material/Box";
 import Link from "next/link";
 import { useEffect, useState } from "react";
 import { getMyListings } from "@/lib/api/listings";
@@ -65,12 +66,23 @@ export function MyListingsView() {
       {listings.map((listing) => (
         <Paper key={listing.id} sx={{ p: 3 }}>
           <Stack spacing={1.5}>
+            {listing.thumbnailUrl ? (
+              <Box
+                component="img"
+                src={listing.thumbnailUrl}
+                alt={listing.title}
+                sx={{ width: "100%", maxHeight: 220, objectFit: "cover", borderRadius: 3 }}
+              />
+            ) : null}
             <Typography variant="h5">{listing.title}</Typography>
             <Typography color="text.secondary">
               {listing.city}, {listing.area} - KES {listing.rentAmount}
             </Typography>
             <Typography color="text.secondary">
               {listing.listingStatus} / {listing.approvalStatus}
+            </Typography>
+            <Typography color="text.secondary">
+              Media items: {listing.media.length}
             </Typography>
             <Stack direction="row" spacing={1}>
               <Button component={Link} href={`/my-listings/${listing.id}/edit`} variant="outlined">

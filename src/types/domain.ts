@@ -15,6 +15,28 @@ export type AvailabilityStatus = "AVAILABLE_NOW" | "AVAILABLE_SOON" | "OCCUPIED"
 
 export type InquiryStatus = "NEW" | "CONTACTED" | "CLOSED";
 
+export type Inquiry = {
+  id: string;
+  listingId: string;
+  listingTitle: string;
+  listingRentAmount: number;
+  message: string;
+  status: InquiryStatus;
+  createdAt: string;
+  sender: {
+    userId: string;
+    fullName: string;
+    email: string;
+    role: Role;
+  };
+  recipient: {
+    userId: string;
+    fullName: string;
+    email: string;
+    role: Role;
+  };
+};
+
 export type Profile = {
   userId: string;
   fullName: string;
@@ -38,6 +60,16 @@ export type Amenity = {
   id: string;
   name: string;
   slug: string;
+};
+
+export type MediaType = "IMAGE" | "VIDEO";
+
+export type ListingMedia = {
+  id: string;
+  mediaType: MediaType;
+  mediaUrl: string;
+  caption?: string;
+  displayOrder: number;
 };
 
 export type ListingCard = {
@@ -71,10 +103,13 @@ export type ListingSummary = {
   approvalStatus: ApprovalStatus;
   ownerType: Role;
   amenities: Amenity[];
+  thumbnailUrl?: string;
+  media: ListingMedia[];
 };
 
 export type ListingDetail = ListingSummary & {
   description: string;
+  thumbnailUrl?: string;
   poster: {
     userId: string;
     fullName: string;
