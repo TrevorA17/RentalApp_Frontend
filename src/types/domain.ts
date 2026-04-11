@@ -15,6 +15,10 @@ export type AvailabilityStatus = "AVAILABLE_NOW" | "AVAILABLE_SOON" | "OCCUPIED"
 
 export type InquiryStatus = "NEW" | "CONTACTED" | "CLOSED";
 
+export type ReportStatus = "OPEN" | "RESOLVED" | "DISMISSED";
+
+export type UserStatus = "ACTIVE" | "SUSPENDED";
+
 export type Inquiry = {
   id: string;
   listingId: string;
@@ -115,5 +119,57 @@ export type ListingDetail = ListingSummary & {
     fullName: string;
     email: string;
     role: Role;
+  };
+};
+
+export type Report = {
+  id: string;
+  reason: string;
+  details?: string;
+  status: ReportStatus;
+  createdAt: string;
+  reporter: {
+    userId: string;
+    fullName: string;
+    email: string;
+    role: Role;
+  };
+  reportedUser?: {
+    userId: string;
+    fullName: string;
+    email: string;
+    role: Role;
+  };
+  listing?: {
+    listingId: string;
+    title: string;
+    city: string;
+    area: string;
+    ownerUserId: string;
+    ownerFullName: string;
+  };
+};
+
+export type AdminUser = {
+  id: string;
+  fullName: string;
+  email: string;
+  role: Role;
+  status: UserStatus;
+  emailVerified: boolean;
+};
+
+export type AdminListing = {
+  id: string;
+  title: string;
+  city: string;
+  area: string;
+  listingStatus: ListingStatus;
+  approvalStatus: ApprovalStatus;
+  updatedAt: string;
+  owner: {
+    userId: string;
+    fullName: string;
+    email: string;
   };
 };

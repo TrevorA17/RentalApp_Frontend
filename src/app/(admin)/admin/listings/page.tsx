@@ -1,11 +1,10 @@
-import { PlaceholderPage } from "@/components/shell/PlaceholderPage";
+import { PageSection } from "@/components/shell/PageSection";
+import { AdminListingsView } from "@/features/admin/AdminListingsView";
 
 export default function AdminListingsPage() {
   return (
-    <PlaceholderPage
-      eyebrow="Module 9"
-      title="Moderate Listings"
-      description="Admin listing review and approval flow will be built here."
-    />
+    <PageSection>
+      <AdminListingsView />
+    </PageSection>
   );
 }

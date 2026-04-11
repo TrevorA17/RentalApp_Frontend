@@ -7,6 +7,7 @@ import Paper from "@mui/material/Paper";
 import Stack from "@mui/material/Stack";
 import Typography from "@mui/material/Typography";
 import { useAuth } from "@/features/auth/AuthProvider";
+import { RecommendationsPanel } from "@/features/recommendations/RecommendationsPanel";
 import { Role } from "@/types/domain";
 
 const roleCopy: Record<
@@ -100,6 +101,8 @@ export function DashboardHome() {
           </Grid>
         ))}
       </Grid>
+
+      <RecommendationsPanel />
     </Stack>
   );
 }

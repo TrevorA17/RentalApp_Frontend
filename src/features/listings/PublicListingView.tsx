@@ -7,6 +7,7 @@ import Typography from "@mui/material/Typography";
 import Box from "@mui/material/Box";
 import Link from "next/link";
 import { InquiryComposer } from "@/features/inquiries/InquiryComposer";
+import { ReportComposer } from "@/features/reports/ReportComposer";
 import { ListingDetail } from "@/types/domain";
 import { SaveListingButton } from "./SaveListingButton";
 
@@ -104,6 +105,7 @@ export function PublicListingView({ listing }: PublicListingViewProps) {
       </Paper>
 
       <InquiryComposer listing={listing} />
+      <ReportComposer listingId={listing.id} reportedUserId={listing.poster.userId} />
     </Stack>
   );
 }
