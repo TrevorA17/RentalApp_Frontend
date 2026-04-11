@@ -1,7 +1,18 @@
 import type { Metadata } from "next";
+import { DM_Sans, Fraunces } from "next/font/google";
 import { AuthProvider } from "@/features/auth/AuthProvider";
 import { ThemeRegistry } from "@/theme/ThemeRegistry";
 import "./globals.css";
+
+const sansFont = DM_Sans({
+  subsets: ["latin"],
+  variable: "--font-sans",
+});
+
+const displayFont = Fraunces({
+  subsets: ["latin"],
+  variable: "--font-display",
+});
 
 export const metadata: Metadata = {
   title: "RentalApp",
@@ -15,7 +26,7 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en">
-      <body>
+      <body className={`${sansFont.variable} ${displayFont.variable}`}>
         <ThemeRegistry>
           <AuthProvider>{children}</AuthProvider>
         </ThemeRegistry>

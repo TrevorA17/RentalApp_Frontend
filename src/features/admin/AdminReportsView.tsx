@@ -18,6 +18,7 @@ export function AdminReportsView() {
   const { session } = useAuth();
   const [reports, setReports] = useState<Report[]>([]);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
+  const [successMessage, setSuccessMessage] = useState<string | null>(null);
   const [drafts, setDrafts] = useState<Record<string, ReportStatus>>({});
 
   useEffect(() => {
@@ -47,9 +48,12 @@ export function AdminReportsView() {
     try {
       const updated = await updateAdminReportStatus(session.accessToken, reportId, drafts[reportId]);
       setReports((current) => current.map((item) => (item.id === reportId ? updated : item)));
+      setSuccessMessage("Report status updated.");
+      setErrorMessage(null);
     } catch (error) {
       const message = error instanceof Error ? error.message : "Failed to update report status.";
       setErrorMessage(message);
+      setSuccessMessage(null);
     }
   }
 
@@ -63,6 +67,12 @@ export function AdminReportsView() {
       </Stack>
 
       {errorMessage ? <Alert severity="error">{errorMessage}</Alert> : null}
+      {successMessage ? <Alert severity="success">{successMessage}</Alert> : null}
+      {reports.length === 0 ? (
+        <Paper sx={{ p: 3 }}>
+          <Typography color="text.secondary">No reports have been submitted yet.</Typography>
+        </Paper>
+      ) : null}
 
       <Stack spacing={2}>
         {reports.map((report) => (

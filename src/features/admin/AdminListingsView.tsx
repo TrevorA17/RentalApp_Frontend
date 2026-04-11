@@ -19,6 +19,7 @@ export function AdminListingsView() {
   const { session } = useAuth();
   const [listings, setListings] = useState<AdminListing[]>([]);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
+  const [successMessage, setSuccessMessage] = useState<string | null>(null);
   const [drafts, setDrafts] = useState<Record<string, ApprovalStatus>>({});
 
   useEffect(() => {
@@ -48,9 +49,12 @@ export function AdminListingsView() {
     try {
       const updated = await updateAdminListingApproval(session.accessToken, listingId, drafts[listingId]);
       setListings((current) => current.map((item) => (item.id === listingId ? updated : item)));
+      setSuccessMessage("Listing moderation status updated.");
+      setErrorMessage(null);
     } catch (error) {
       const message = error instanceof Error ? error.message : "Failed to update listing moderation status.";
       setErrorMessage(message);
+      setSuccessMessage(null);
     }
   }
 
@@ -64,6 +68,12 @@ export function AdminListingsView() {
       </Stack>
 
       {errorMessage ? <Alert severity="error">{errorMessage}</Alert> : null}
+      {successMessage ? <Alert severity="success">{successMessage}</Alert> : null}
+      {listings.length === 0 ? (
+        <Paper sx={{ p: 3 }}>
+          <Typography color="text.secondary">No listings are waiting in the moderation workspace yet.</Typography>
+        </Paper>
+      ) : null}
 
       <Stack spacing={2}>
         {listings.map((listing) => (

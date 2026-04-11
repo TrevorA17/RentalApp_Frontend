@@ -32,6 +32,8 @@ export function ListingsBrowseView() {
   const [listings, setListings] = useState<ListingSummary[]>([]);
   const [amenities, setAmenities] = useState<Amenity[]>([]);
   const [savedListingIds, setSavedListingIds] = useState<string[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [isSearching, setIsSearching] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [city, setCity] = useState("");
   const [area, setArea] = useState("");
@@ -52,6 +54,8 @@ export function ListingsBrowseView() {
       } catch (error) {
         const message = error instanceof Error ? error.message : "Failed to load listings.";
         setErrorMessage(message);
+      } finally {
+        setIsLoading(false);
       }
     }
 
@@ -89,6 +93,7 @@ export function ListingsBrowseView() {
   async function handleSearch(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     setErrorMessage(null);
+    setIsSearching(true);
 
     try {
       const results = await searchListings({
@@ -103,8 +108,46 @@ export function ListingsBrowseView() {
     } catch (error) {
       const message = error instanceof Error ? error.message : "Failed to search listings.";
       setErrorMessage(message);
+    } finally {
+      setIsSearching(false);
     }
   }
+
+  function handleReset() {
+    setCity("");
+    setArea("");
+    setMaxPrice("");
+    setBedrooms("");
+    setHouseType("");
+    setSelectedAmenity("");
+    setErrorMessage(null);
+    setIsSearching(true);
+
+    void searchListings()
+      .then((results) => setListings(results))
+      .catch((error) => {
+        const message = error instanceof Error ? error.message : "Failed to reload listings.";
+        setErrorMessage(message);
+      })
+      .finally(() => setIsSearching(false));
+  }
+
+  function formatEnumLabel(value: string) {
+    return value
+      .toLowerCase()
+      .split("_")
+      .map((part) => part.charAt(0).toUpperCase() + part.slice(1))
+      .join(" ");
+  }
+
+  const activeFilterLabels = [
+    city ? `City: ${city}` : null,
+    area ? `Area: ${area}` : null,
+    maxPrice ? `Max KES ${maxPrice}` : null,
+    bedrooms ? `${bedrooms} bedroom${bedrooms === "1" ? "" : "s"}` : null,
+    houseType ? formatEnumLabel(houseType) : null,
+    selectedAmenity ? amenities.find((item) => item.id === selectedAmenity)?.name ?? null : null,
+  ].filter(Boolean) as string[];
 
   return (
     <Stack spacing={3}>
@@ -154,30 +197,50 @@ export function ListingsBrowseView() {
             </Grid>
             <Grid size={{ xs: 12, md: 8 }}>
               <Stack direction="row" spacing={1} flexWrap="wrap" useFlexGap>
-                <Chip label="City" />
-                <Chip label="Area" />
-                <Chip label="Price" />
-                <Chip label="Bedrooms" />
-                <Chip label="House Type" />
-                <Chip label="Amenities" />
+                {activeFilterLabels.length > 0 ? (
+                  activeFilterLabels.map((label) => <Chip key={label} label={label} color="secondary" />)
+                ) : (
+                  <Chip label="No filters applied" variant="outlined" />
+                )}
               </Stack>
             </Grid>
           </Grid>
 
-          <Stack direction="row">
-            <Button type="submit" variant="contained">
+          <Stack direction={{ xs: "column", sm: "row" }} spacing={1.5}>
+            <Button type="submit" variant="contained" disabled={isSearching}>
               Search listings
+            </Button>
+            <Button type="button" variant="outlined" onClick={handleReset} disabled={isSearching}>
+              Reset filters
             </Button>
           </Stack>
         </Stack>
       </Paper>
 
       {errorMessage ? <Alert severity="error">{errorMessage}</Alert> : null}
+      {isLoading || isSearching ? <Alert severity="info">Loading listings...</Alert> : null}
+      {!isLoading && !isSearching && listings.length === 0 ? (
+        <Paper sx={{ p: 4 }}>
+          <Stack spacing={1}>
+            <Typography variant="h5">No listings match these filters</Typography>
+            <Typography color="text.secondary">
+              Try broadening the price, location, or amenity filters and search again.
+            </Typography>
+          </Stack>
+        </Paper>
+      ) : null}
 
       <Grid container spacing={3}>
         {listings.map((listing) => (
           <Grid key={listing.id} size={{ xs: 12, md: 6 }}>
-            <Paper sx={{ p: 3, backgroundColor: "background.paper", height: "100%" }}>
+            <Paper
+              sx={{
+                p: 3,
+                backgroundColor: "background.paper",
+                height: "100%",
+                overflow: "hidden",
+              }}
+            >
               <Stack spacing={2}>
                 {listing.thumbnailUrl ? (
                   <Box
@@ -203,16 +266,16 @@ export function ListingsBrowseView() {
                     KES {listing.rentAmount}
                   </Typography>
                   <Typography color="text.secondary">
-                    {listing.bedrooms} bed - {listing.bathrooms} bath - {listing.houseType}
+                    {listing.bedrooms} bed - {listing.bathrooms} bath - {formatEnumLabel(listing.houseType)}
                   </Typography>
                   <Typography color="text.secondary">
                     {listing.area}, {listing.city}
                   </Typography>
                   <Typography color="text.secondary">
-                    Amenities: {listing.amenities.map((amenity) => amenity.name).join(", ")}
+                    Amenities: {listing.amenities.length > 0 ? listing.amenities.map((amenity) => amenity.name).join(", ") : "None listed"}
                   </Typography>
                   <Typography color="text.secondary">
-                    Media items: {listing.media.length}
+                    {formatEnumLabel(listing.availabilityStatus)}{listing.furnished ? " - Furnished" : " - Unfurnished"}
                   </Typography>
                 </Stack>
               </Stack>

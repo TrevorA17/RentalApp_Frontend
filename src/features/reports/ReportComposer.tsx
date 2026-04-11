@@ -30,12 +30,18 @@ export function ReportComposer({ listingId, reportedUserId }: ReportComposerProp
   const [successMessage, setSuccessMessage] = useState<string | null>(null);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const canReport = !!session && session.user.role !== "ADMIN" && session.user.id !== reportedUserId;
 
   async function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
 
     if (!session?.accessToken) {
       setErrorMessage("Sign in to submit a report.");
+      return;
+    }
+
+    if (!canReport) {
+      setErrorMessage("You cannot report this listing from your current account.");
       return;
     }
 
@@ -91,10 +97,19 @@ export function ReportComposer({ listingId, reportedUserId }: ReportComposerProp
         />
 
         <Stack direction="row">
-          <Button type="submit" variant="outlined" color="error" disabled={isSubmitting}>
+          <Button type="submit" variant="outlined" color="error" disabled={isSubmitting || !canReport}>
             Submit report
           </Button>
         </Stack>
+        {!canReport ? (
+          <Alert severity="info">
+            {session
+              ? session.user.role === "ADMIN"
+                ? "Admin users should review reports from the moderation workspace instead of filing them."
+                : "You cannot report your own listing."
+              : "Sign in to submit a report."}
+          </Alert>
+        ) : null}
       </Stack>
     </Paper>
   );

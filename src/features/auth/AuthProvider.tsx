@@ -12,6 +12,8 @@ import {
   getCurrentUser,
   getStoredSession,
   loginUser,
+  logoutUser,
+  refreshSession,
   registerUser,
 } from "@/lib/auth/authService";
 import { AuthSession, LoginRequest, RegisterRequest } from "@/types/auth";
@@ -42,11 +44,20 @@ export function AuthProvider({ children }: PropsWithChildren) {
           return;
         }
 
-        const user = await getCurrentUser(storedSession.accessToken);
-        setSession({
-          ...storedSession,
-          user,
-        });
+        try {
+          const user = await getCurrentUser(storedSession.accessToken);
+          setSession({
+            ...storedSession,
+            user,
+          });
+        } catch {
+          const refreshedSession = await refreshSession(storedSession.refreshToken);
+          const user = await getCurrentUser(refreshedSession.accessToken);
+          setSession({
+            ...refreshedSession,
+            user,
+          });
+        }
       } catch {
         clearStoredSession();
         setSession(null);
@@ -81,8 +92,14 @@ export function AuthProvider({ children }: PropsWithChildren) {
   }
 
   async function logout() {
-    clearStoredSession();
-    setSession(null);
+    try {
+      if (session?.refreshToken) {
+        await logoutUser(session.refreshToken);
+      }
+    } finally {
+      clearStoredSession();
+      setSession(null);
+    }
   }
 
   return (

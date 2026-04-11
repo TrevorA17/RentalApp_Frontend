@@ -18,6 +18,7 @@ export function AdminUsersView() {
   const { session } = useAuth();
   const [users, setUsers] = useState<AdminUser[]>([]);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
+  const [successMessage, setSuccessMessage] = useState<string | null>(null);
   const [drafts, setDrafts] = useState<Record<string, UserStatus>>({});
 
   useEffect(() => {
@@ -47,9 +48,12 @@ export function AdminUsersView() {
     try {
       const updated = await updateAdminUserStatus(session.accessToken, userId, drafts[userId]);
       setUsers((current) => current.map((item) => (item.id === userId ? updated : item)));
+      setSuccessMessage("User status updated.");
+      setErrorMessage(null);
     } catch (error) {
       const message = error instanceof Error ? error.message : "Failed to update user status.";
       setErrorMessage(message);
+      setSuccessMessage(null);
     }
   }
 
@@ -63,6 +67,12 @@ export function AdminUsersView() {
       </Stack>
 
       {errorMessage ? <Alert severity="error">{errorMessage}</Alert> : null}
+      {successMessage ? <Alert severity="success">{successMessage}</Alert> : null}
+      {users.length === 0 ? (
+        <Paper sx={{ p: 3 }}>
+          <Typography color="text.secondary">No users found.</Typography>
+        </Paper>
+      ) : null}
 
       <Stack spacing={2}>
         {users.map((user) => (

@@ -19,6 +19,7 @@ import {
   publishListing,
   updateListing,
 } from "@/lib/api/listings";
+import { AiDescriptionAssist } from "@/features/ai/AiDescriptionAssist";
 import { useAuth } from "@/features/auth/AuthProvider";
 import { Amenity, AvailabilityStatus, HouseType, MediaType } from "@/types/domain";
 
@@ -244,6 +245,23 @@ export function ListingForm({ mode, listingId }: ListingFormProps) {
 
           <TextField label="Title" value={title} onChange={(e) => setTitle(e.target.value)} required disabled={isLoading || isSaving} />
           <TextField label="Description" value={description} onChange={(e) => setDescription(e.target.value)} required multiline minRows={4} disabled={isLoading || isSaving} />
+
+          <AiDescriptionAssist
+            token={accessToken}
+            title={title}
+            description={description}
+            city={city}
+            area={area}
+            houseType={houseType}
+            bedrooms={Number(bedrooms)}
+            bathrooms={Number(bathrooms)}
+            availabilityStatus={availabilityStatus}
+            furnished={furnished}
+            rentAmount={Number(rentAmount || 0)}
+            selectedAmenityIds={selectedAmenityIds}
+            amenities={amenities}
+            onApply={setDescription}
+          />
 
           <Grid container spacing={2}>
             <Grid size={{ xs: 12, md: 4 }}>

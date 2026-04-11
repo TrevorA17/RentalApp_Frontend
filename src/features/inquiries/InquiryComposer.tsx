@@ -23,6 +23,7 @@ export function InquiryComposer({ listing }: InquiryComposerProps) {
   const [successMessage, setSuccessMessage] = useState<string | null>(null);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [hasSubmitted, setHasSubmitted] = useState(false);
 
   const canInquire = !!session && session.user.id !== listing.poster.userId && session.user.role !== "ADMIN";
 
@@ -34,13 +35,19 @@ export function InquiryComposer({ listing }: InquiryComposerProps) {
       return;
     }
 
+    if (!message.trim()) {
+      setErrorMessage("Enter a short message before sending the inquiry.");
+      return;
+    }
+
     setIsSubmitting(true);
     setErrorMessage(null);
     setSuccessMessage(null);
 
     try {
-      await createInquiry(session.accessToken, listing.id, { message });
+      await createInquiry(session.accessToken, listing.id, { message: message.trim() });
       setSuccessMessage("Inquiry sent successfully.");
+      setHasSubmitted(true);
     } catch (error) {
       const nextMessage = error instanceof Error ? error.message : "Failed to send inquiry.";
       setErrorMessage(nextMessage);
@@ -62,7 +69,9 @@ export function InquiryComposer({ listing }: InquiryComposerProps) {
         {!canInquire ? (
           <Alert severity="info">
             {session
-              ? "You cannot send an inquiry for your own listing."
+              ? session.user.role === "ADMIN"
+                ? "Admin users cannot send listing inquiries."
+                : "You cannot send an inquiry for your own listing."
               : "Sign in to contact the listing owner."}
           </Alert>
         ) : null}
@@ -80,7 +89,7 @@ export function InquiryComposer({ listing }: InquiryComposerProps) {
         />
 
         <Stack direction="row" justifyContent="flex-start">
-          <Button type="submit" variant="contained" disabled={!canInquire || isSubmitting}>
+          <Button type="submit" variant="contained" disabled={!canInquire || isSubmitting || hasSubmitted}>
             Send inquiry
           </Button>
         </Stack>

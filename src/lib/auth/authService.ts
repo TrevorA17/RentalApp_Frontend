@@ -57,6 +57,16 @@ export async function loginUser(request: LoginRequest): Promise<AuthSession> {
   return response.data;
 }
 
+export async function refreshSession(refreshToken: string): Promise<AuthSession> {
+  const response = await apiRequest<ApiSuccessResponse<AuthResponse>>("/auth/refresh", {
+    method: "POST",
+    body: JSON.stringify({ refreshToken }),
+  });
+
+  storeSession(response.data);
+  return response.data;
+}
+
 export async function registerUser(request: RegisterRequest): Promise<AuthSession> {
   await apiRequest<ApiSuccessResponse<RegisterResponseData>>("/auth/register", {
     method: "POST",
@@ -82,4 +92,11 @@ export async function getCurrentUser(token: string): Promise<AuthUser> {
   });
 
   return response.data;
+}
+
+export async function logoutUser(refreshToken: string): Promise<void> {
+  await apiRequest<ApiSuccessResponse<null>>("/auth/logout", {
+    method: "POST",
+    body: JSON.stringify({ refreshToken }),
+  });
 }

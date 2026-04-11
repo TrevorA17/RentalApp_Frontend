@@ -20,34 +20,39 @@ const roleCopy: Record<
 > = {
   RENTER: {
     title: "Renter workspace",
-    summary: "Browse listings, save favorites, and keep track of the inquiries you send.",
+    summary: "Browse live listings, shortlist strong options, and follow every inquiry from one place.",
     actions: [
       { href: "/listings", label: "Browse listings" },
       { href: "/saved-listings", label: "View saved listings" },
+      { href: "/inquiries/sent", label: "Track sent inquiries" },
     ],
   },
   AGENT: {
     title: "Agent workspace",
-    summary: "Manage your professional profile, create listings, and review incoming leads.",
+    summary: "Keep your profile credible, publish stronger listings, and respond to renter leads quickly.",
     actions: [
       { href: "/my-listings", label: "Manage listings" },
       { href: "/inquiries/received", label: "Review inquiries" },
+      { href: "/my-listings/new", label: "Create with AI assist" },
     ],
   },
   LANDLORD: {
     title: "Landlord workspace",
-    summary: "Create rental listings directly and follow up on interested renters.",
+    summary: "Publish available units, improve descriptions, and stay on top of incoming interest.",
     actions: [
       { href: "/my-listings", label: "Manage listings" },
       { href: "/inquiries/received", label: "Review inquiries" },
+      { href: "/my-listings/new", label: "Create with AI assist" },
     ],
   },
   ADMIN: {
     title: "Admin workspace",
-    summary: "Moderate listings, review reports, and maintain platform trust.",
+    summary: "Moderate listings, resolve reports, and keep platform trust visible from the UI.",
     actions: [
       { href: "/admin", label: "Open admin area" },
       { href: "/admin/listings", label: "Moderate listings" },
+      { href: "/admin/reports", label: "Review reports" },
+      { href: "/admin/users", label: "Manage users" },
     ],
   },
 };
@@ -73,11 +78,15 @@ export function DashboardHome() {
         <Stack spacing={2.5}>
           <Chip label={session.user.role} color="secondary" sx={{ width: "fit-content" }} />
           <Typography variant="h3">Welcome back, {session.user.fullName}</Typography>
+          <Typography variant="overline" color="text.secondary" sx={{ letterSpacing: 1.8 }}>
+            {copy.title}
+          </Typography>
           <Typography color="text.secondary" maxWidth={720}>
             {copy.summary}
           </Typography>
-          <Typography variant="body2" color="text.secondary">
-            This dashboard is now using the real backend auth session instead of the earlier mock storage flow.
+          <Typography variant="body2" color="text.secondary" maxWidth={720}>
+            This workspace is wired to the live backend modules, so you can test browsing, saving, inquiries,
+            moderation, and AI-assisted listing creation directly from the frontend.
           </Typography>
         </Stack>
       </Paper>
@@ -85,11 +94,17 @@ export function DashboardHome() {
       <Grid container spacing={3}>
         {copy.actions.map((action) => (
           <Grid key={action.href} size={{ xs: 12, md: 6 }}>
-            <Paper sx={{ p: 3 }}>
+            <Paper
+              sx={{
+                p: 3,
+                background:
+                  "linear-gradient(180deg, rgba(255,255,255,0.78), rgba(255,250,244,0.96))",
+              }}
+            >
               <Stack spacing={2}>
                 <Typography variant="h5">{action.label}</Typography>
                 <Typography color="text.secondary">
-                  This route is scaffolded now so the next module can be wired without rebuilding navigation.
+                  Open this route to validate the current MVP flow from the UI.
                 </Typography>
                 <Stack direction="row">
                   <Button href={action.href} variant="contained">
