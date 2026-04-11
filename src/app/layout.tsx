@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { AuthProvider } from "@/features/auth/AuthProvider";
 import { ThemeRegistry } from "@/theme/ThemeRegistry";
 import "./globals.css";
 
@@ -15,7 +16,9 @@ export default function RootLayout({
   return (
     <html lang="en">
       <body>
-        <ThemeRegistry>{children}</ThemeRegistry>
+        <ThemeRegistry>
+          <AuthProvider>{children}</AuthProvider>
+        </ThemeRegistry>
       </body>
     </html>
   );
