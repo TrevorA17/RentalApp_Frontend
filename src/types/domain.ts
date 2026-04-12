@@ -137,6 +137,30 @@ export type ListingSuggestion = {
   score: number;
 };
 
+export type InterpretedAmenityMatch = {
+  id: string;
+  name: string;
+};
+
+export type InterpretedListingSearch = {
+  normalizedQuery: string;
+  interpreted: boolean;
+  provider: string;
+  matchedSignals: string[];
+  notes: string[];
+  filters: {
+    city?: string;
+    area?: string;
+    minPrice?: number;
+    maxPrice?: number;
+    bedrooms?: number;
+    bathrooms?: number;
+    houseType?: HouseType;
+    furnished?: boolean;
+    amenities: InterpretedAmenityMatch[];
+  };
+};
+
 export type ListingDetail = ListingSummary & {
   description: string;
   thumbnailUrl?: string;

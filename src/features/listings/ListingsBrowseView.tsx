@@ -14,9 +14,10 @@ import Typography from "@mui/material/Typography";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useAuth } from "@/features/auth/AuthProvider";
+import { interpretListingSearch } from "@/lib/api/ai";
 import { getAmenities, searchListings } from "@/lib/api/listings";
 import { getSavedListingIds } from "@/lib/api/savedListings";
-import { Amenity, HouseType, ListingSummary } from "@/types/domain";
+import { Amenity, HouseType, InterpretedListingSearch, ListingSummary } from "@/types/domain";
 import { PaginatedResponse } from "@/types/api";
 import { SaveListingButton } from "./SaveListingButton";
 
@@ -60,6 +61,9 @@ export function ListingsBrowseView() {
   const [isLoading, setIsLoading] = useState(true);
   const [isSearching, setIsSearching] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
+  const [aiSearchInput, setAiSearchInput] = useState("");
+  const [isInterpreting, setIsInterpreting] = useState(false);
+  const [aiInterpretation, setAiInterpretation] = useState<InterpretedListingSearch | null>(null);
 
   const [city, setCity] = useState(searchParams.get("city") ?? "");
   const [area, setArea] = useState(searchParams.get("area") ?? "");
@@ -174,6 +178,40 @@ export function ListingsBrowseView() {
     });
   }
 
+  async function handleInterpretSearch(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+
+    if (!aiSearchInput.trim()) {
+      return;
+    }
+
+    setErrorMessage(null);
+    setAiInterpretation(null);
+    setIsInterpreting(true);
+
+    try {
+      const interpreted = await interpretListingSearch(aiSearchInput.trim());
+      setAiInterpretation(interpreted);
+
+      updateQuery({
+        city: interpreted.filters.city || undefined,
+        area: interpreted.filters.area || undefined,
+        maxPrice: interpreted.filters.maxPrice ? String(interpreted.filters.maxPrice) : undefined,
+        bedrooms: interpreted.filters.bedrooms ? String(interpreted.filters.bedrooms) : undefined,
+        houseType: interpreted.filters.houseType || undefined,
+        amenities: interpreted.filters.amenities[0]?.id || undefined,
+        sort,
+        page: "0",
+        size: String(results.size || 12),
+      });
+    } catch (error) {
+      const message = error instanceof Error ? error.message : "Failed to interpret search request.";
+      setErrorMessage(message);
+    } finally {
+      setIsInterpreting(false);
+    }
+  }
+
   function handleReset() {
     setErrorMessage(null);
     setIsSearching(true);
@@ -240,6 +278,31 @@ export function ListingsBrowseView() {
       </Stack>
 
       <Paper sx={{ p: 3 }}>
+        <Stack component="form" spacing={1.5} onSubmit={handleInterpretSearch} sx={{ mb: 3 }}>
+          <Typography fontWeight={700}>Describe what you want</Typography>
+          <Typography color="text.secondary">
+            Try a natural-language request like “2 bedroom in Kilimani under 50k with parking”. We will translate it into the structured filters below.
+          </Typography>
+          <Stack direction={{ xs: "column", md: "row" }} spacing={1.5}>
+            <TextField
+              label="Natural-language housing request"
+              value={aiSearchInput}
+              onChange={(event) => setAiSearchInput(event.target.value)}
+              fullWidth
+            />
+            <Button type="submit" variant="outlined" disabled={isInterpreting}>
+              {isInterpreting ? "Interpreting..." : "Use AI to fill filters"}
+            </Button>
+          </Stack>
+          {aiInterpretation ? (
+            <Alert severity={aiInterpretation.interpreted ? "success" : "info"}>
+              {aiInterpretation.interpreted
+                ? `Matched ${aiInterpretation.matchedSignals.join(", ")} using ${aiInterpretation.provider}.`
+                : "No strong structured filters were extracted. Keep using the manual search controls."}
+              {aiInterpretation.notes.length > 0 ? ` ${aiInterpretation.notes.join(" ")}` : ""}
+            </Alert>
+          ) : null}
+        </Stack>
         <Stack component="form" spacing={2} onSubmit={handleSearch}>
           <Grid container spacing={2}>
             <Grid size={{ xs: 12, md: 3 }}>
