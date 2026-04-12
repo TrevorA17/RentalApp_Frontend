@@ -1,11 +1,10 @@
-import { PlaceholderPage } from "@/components/shell/PlaceholderPage";
+import { PageSection } from "@/components/shell/PageSection";
+import { AdminUsersView } from "@/features/admin/AdminUsersView";
 
 export default function AdminUsersPage() {
   return (
-    <PlaceholderPage
-      eyebrow="Module 9"
-      title="Manage Users"
-      description="Suspension and user moderation tools will be implemented here."
-    />
+    <PageSection>
+      <AdminUsersView />
+    </PageSection>
   );
 }

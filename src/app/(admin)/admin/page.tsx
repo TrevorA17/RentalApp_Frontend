@@ -1,11 +1,10 @@
-import { PlaceholderPage } from "@/components/shell/PlaceholderPage";
+import { PageSection } from "@/components/shell/PageSection";
+import { AdminModerationHistoryView } from "@/features/admin/AdminModerationHistoryView";
 
 export default function AdminHomePage() {
   return (
-    <PlaceholderPage
-      eyebrow="Module 9"
-      title="Admin Overview"
-      description="This page will summarize pending listing approvals, reports, and moderation actions."
-    />
+    <PageSection>
+      <AdminModerationHistoryView />
+    </PageSection>
   );
 }

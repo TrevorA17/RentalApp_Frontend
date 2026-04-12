@@ -1,5 +1,7 @@
+import { getPublicProfile } from "@/lib/api/profiles";
+import { getAgentRecommendations } from "@/lib/api/recommendations";
 import { PageSection } from "@/components/shell/PageSection";
-import { PlaceholderPage } from "@/components/shell/PlaceholderPage";
+import { PublicProfileView } from "@/features/profiles/PublicProfileView";
 
 type AgentProfilePageProps = {
   params: Promise<{ agentUserId: string }>;
@@ -7,16 +9,14 @@ type AgentProfilePageProps = {
 
 export default async function AgentProfilePage({ params }: AgentProfilePageProps) {
   const { agentUserId } = await params;
+  const [profile, recommendations] = await Promise.all([
+    getPublicProfile(agentUserId),
+    getAgentRecommendations(agentUserId),
+  ]);
 
   return (
     <PageSection>
-      <PlaceholderPage
-        eyebrow="Agent Profile"
-        title={`Agent ${agentUserId}`}
-        description="This public profile route will host the trust layer: profile details, fee transparency, and recommendations."
-        primaryHref="/listings"
-        primaryLabel="Browse Listings"
-      />
+      <PublicProfileView profile={profile} recommendations={recommendations} />
     </PageSection>
   );
 }

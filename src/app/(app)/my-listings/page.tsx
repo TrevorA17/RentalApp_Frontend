@@ -1,11 +1,5 @@
-import { PlaceholderPage } from "@/components/shell/PlaceholderPage";
+import { MyListingsView } from "@/features/listings/MyListingsView";
 
 export default function MyListingsPage() {
-  return (
-    <PlaceholderPage
-      eyebrow="Module 3"
-      title="My Listings"
-      description="Agents and landlords will manage their listing drafts and published records here."
-    />
-  );
+  return <MyListingsView />;
 }
