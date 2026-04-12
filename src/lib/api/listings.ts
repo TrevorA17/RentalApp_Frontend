@@ -1,6 +1,6 @@
 import { apiRequest } from "@/lib/api/client";
 import { ApiSuccessResponse, PaginatedResponse } from "@/types/api";
-import { Amenity, ListingDetail, ListingSummary } from "@/types/domain";
+import { Amenity, ListingDetail, ListingSummary, UploadedListingMedia } from "@/types/domain";
 
 export type ListingSearchParams = {
   city?: string;
@@ -52,6 +52,19 @@ export async function createListing(payload: ListingUpsertPayload) {
     method: "POST",
     auth: "required",
     body: JSON.stringify(payload),
+  });
+
+  return response.data;
+}
+
+export async function uploadListingImage(file: File) {
+  const formData = new FormData();
+  formData.append("file", file);
+
+  const response = await apiRequest<ApiSuccessResponse<UploadedListingMedia>>("/listings/media/upload", {
+    method: "POST",
+    auth: "required",
+    body: formData,
   });
 
   return response.data;

@@ -1,6 +1,7 @@
 "use client";
 
 import Alert from "@mui/material/Alert";
+import Box from "@mui/material/Box";
 import Button from "@mui/material/Button";
 import Checkbox from "@mui/material/Checkbox";
 import Chip from "@mui/material/Chip";
@@ -11,12 +12,13 @@ import Stack from "@mui/material/Stack";
 import TextField from "@mui/material/TextField";
 import Typography from "@mui/material/Typography";
 import { useRouter } from "next/navigation";
-import { FormEvent, useEffect, useState } from "react";
+import { ChangeEvent, FormEvent, useEffect, useRef, useState } from "react";
 import {
   createListing,
   getAmenities,
   getListingById,
   publishListing,
+  uploadListingImage,
   updateListing,
 } from "@/lib/api/listings";
 import { AiDescriptionAssist } from "@/features/ai/AiDescriptionAssist";
@@ -46,9 +48,21 @@ const availabilityStatuses: AvailabilityStatus[] = [
 
 const mediaTypes: MediaType[] = ["IMAGE", "VIDEO"];
 
+type ListingMediaDraft = {
+  clientId: string;
+  mediaType: MediaType;
+  mediaUrl: string;
+  caption: string;
+  source: "uploaded" | "manual" | "existing";
+  fileName?: string;
+  isUploading?: boolean;
+  uploadError?: string | null;
+};
+
 export function ListingForm({ mode, listingId }: ListingFormProps) {
   const router = useRouter();
   const { session } = useAuth();
+  const fileInputRef = useRef<HTMLInputElement | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [isSaving, setIsSaving] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
@@ -67,9 +81,8 @@ export function ListingForm({ mode, listingId }: ListingFormProps) {
   const [availabilityStatus, setAvailabilityStatus] = useState<AvailabilityStatus>("AVAILABLE_NOW");
   const [furnished, setFurnished] = useState(false);
   const [selectedAmenityIds, setSelectedAmenityIds] = useState<string[]>([]);
-  const [mediaItems, setMediaItems] = useState<Array<{ mediaType: MediaType; mediaUrl: string; caption: string }>>([
-    { mediaType: "IMAGE", mediaUrl: "", caption: "" },
-  ]);
+  const [mediaItems, setMediaItems] = useState<ListingMediaDraft[]>([]);
+  const isUploadingMedia = mediaItems.some((item) => item.isUploading);
 
   useEffect(() => {
     async function loadData() {
@@ -103,11 +116,13 @@ export function ListingForm({ mode, listingId }: ListingFormProps) {
           setMediaItems(
             existingListing.media.length > 0
               ? existingListing.media.map((item) => ({
+                  clientId: item.id,
                   mediaType: item.mediaType,
                   mediaUrl: item.mediaUrl,
                   caption: item.caption ?? "",
+                  source: "existing" as const,
                 }))
-              : [{ mediaType: "IMAGE", mediaUrl: "", caption: "" }],
+              : [],
           );
         }
       } catch (error) {
@@ -152,12 +167,80 @@ export function ListingForm({ mode, listingId }: ListingFormProps) {
     );
   }
 
-  function addMediaItem() {
-    setMediaItems((current) => [...current, { mediaType: "IMAGE", mediaUrl: "", caption: "" }]);
+  function addManualMediaItem() {
+    setMediaItems((current) => [
+      ...current,
+      {
+        clientId: crypto.randomUUID(),
+        mediaType: "IMAGE",
+        mediaUrl: "",
+        caption: "",
+        source: "manual",
+      },
+    ]);
   }
 
   function removeMediaItem(index: number) {
-    setMediaItems((current) => (current.length === 1 ? current : current.filter((_, itemIndex) => itemIndex !== index)));
+    setMediaItems((current) => current.filter((_, itemIndex) => itemIndex !== index));
+  }
+
+  async function handleMediaFilesSelected(event: ChangeEvent<HTMLInputElement>) {
+    const files = Array.from(event.target.files ?? []);
+    event.target.value = "";
+
+    if (files.length === 0) {
+      return;
+    }
+
+    setErrorMessage(null);
+
+    for (const file of files) {
+      const clientId = crypto.randomUUID();
+      setMediaItems((current) => [
+        ...current,
+        {
+          clientId,
+          mediaType: "IMAGE",
+          mediaUrl: "",
+          caption: file.name.replace(/\.[^.]+$/, ""),
+          source: "uploaded",
+          fileName: file.name,
+          isUploading: true,
+          uploadError: null,
+        },
+      ]);
+
+      try {
+        const uploaded = await uploadListingImage(file);
+        setMediaItems((current) =>
+          current.map((item) =>
+            item.clientId === clientId
+              ? {
+                  ...item,
+                  mediaUrl: uploaded.mediaUrl,
+                  mediaType: uploaded.mediaType,
+                  fileName: uploaded.fileName,
+                  isUploading: false,
+                  uploadError: null,
+                }
+              : item,
+          ),
+        );
+      } catch (error) {
+        const message = error instanceof Error ? error.message : "Failed to upload image.";
+        setMediaItems((current) =>
+          current.map((item) =>
+            item.clientId === clientId
+              ? {
+                  ...item,
+                  isUploading: false,
+                  uploadError: message,
+                }
+              : item,
+          ),
+        );
+      }
+    }
   }
 
   async function handleSubmit(event: FormEvent<HTMLFormElement>) {
@@ -165,6 +248,12 @@ export function ListingForm({ mode, listingId }: ListingFormProps) {
     setErrorMessage(null);
     setSuccessMessage(null);
     setIsSaving(true);
+
+    if (isUploadingMedia) {
+      setErrorMessage("Wait for media uploads to finish before saving the listing.");
+      setIsSaving(false);
+      return;
+    }
 
     try {
       const payload = {
@@ -214,6 +303,12 @@ export function ListingForm({ mode, listingId }: ListingFormProps) {
     setSuccessMessage(null);
     setIsSaving(true);
 
+    if (isUploadingMedia) {
+      setErrorMessage("Wait for media uploads to finish before publishing the listing.");
+      setIsSaving(false);
+      return;
+    }
+
     try {
       await publishListing(listingId);
       setSuccessMessage("Listing published successfully.");
@@ -227,6 +322,14 @@ export function ListingForm({ mode, listingId }: ListingFormProps) {
 
   return (
     <Stack spacing={3}>
+      <input
+        ref={fileInputRef}
+        type="file"
+        accept="image/png,image/jpeg,image/webp"
+        multiple
+        hidden
+        onChange={handleMediaFilesSelected}
+      />
       <Paper sx={{ p: { xs: 3, md: 4 } }}>
         <Stack spacing={2}>
           <Chip label="Module 3" color="secondary" sx={{ width: "fit-content" }} />
@@ -333,72 +436,142 @@ export function ListingForm({ mode, listingId }: ListingFormProps) {
           <Stack spacing={1.5}>
             <Stack direction="row" justifyContent="space-between" alignItems="center">
               <Typography fontWeight={700}>Listing media</Typography>
-              <Button type="button" variant="outlined" onClick={addMediaItem} disabled={isLoading || isSaving}>
-                Add media
-              </Button>
+              <Stack direction="row" spacing={1}>
+                <Button
+                  type="button"
+                  variant="contained"
+                  onClick={() => fileInputRef.current?.click()}
+                  disabled={isLoading || isSaving || isUploadingMedia}
+                >
+                  Upload images
+                </Button>
+                <Button type="button" variant="outlined" onClick={addManualMediaItem} disabled={isLoading || isSaving || isUploadingMedia}>
+                  Add external URL
+                </Button>
+              </Stack>
             </Stack>
             <Typography color="text.secondary">
-              Add image or video URLs in the order you want them displayed.
+              Upload JPG, PNG, or WebP images for the main gallery. External image or video URLs are still available as a secondary path.
             </Typography>
+            {mediaItems.length === 0 ? (
+              <Alert severity="info">No media attached yet. Upload at least one image to make the listing feel complete.</Alert>
+            ) : null}
             {mediaItems.map((item, index) => (
-              <Paper key={`${index}-${item.mediaUrl}`} variant="outlined" sx={{ p: 2 }}>
+              <Paper key={item.clientId} variant="outlined" sx={{ p: 2 }}>
                 <Stack spacing={2}>
-                  <Grid container spacing={2}>
-                    <Grid size={{ xs: 12, md: 3 }}>
-                      <TextField
-                        select
-                        SelectProps={{ native: true }}
-                        label="Type"
-                        value={item.mediaType}
-                        onChange={(event) => updateMediaItem(index, "mediaType", event.target.value)}
-                        fullWidth
-                        disabled={isLoading || isSaving}
-                      >
-                        {mediaTypes.map((option) => (
-                          <option key={option} value={option}>{option}</option>
-                        ))}
-                      </TextField>
-                    </Grid>
-                    <Grid size={{ xs: 12, md: 7 }}>
-                      <TextField
-                        label="Media URL"
-                        value={item.mediaUrl}
-                        onChange={(event) => updateMediaItem(index, "mediaUrl", event.target.value)}
-                        fullWidth
-                        disabled={isLoading || isSaving}
+                  <Stack direction={{ xs: "column", md: "row" }} spacing={1} justifyContent="space-between">
+                    <Stack direction="row" spacing={1} flexWrap="wrap" useFlexGap>
+                      <Chip
+                        label={
+                          item.source === "uploaded"
+                            ? "Uploaded image"
+                            : item.source === "manual"
+                              ? "External media URL"
+                              : "Existing media"
+                        }
+                        color={item.source === "manual" ? "default" : "secondary"}
+                        size="small"
                       />
-                    </Grid>
-                    <Grid size={{ xs: 12, md: 2 }}>
-                      <Button
-                        type="button"
-                        variant="text"
-                        color="error"
-                        onClick={() => removeMediaItem(index)}
-                        disabled={isLoading || isSaving || mediaItems.length === 1}
-                        sx={{ mt: { md: 1 } }}
+                      {item.isUploading ? <Chip label="Uploading..." color="warning" size="small" /> : null}
+                      {item.uploadError ? <Chip label="Upload failed" color="error" size="small" /> : null}
+                    </Stack>
+                    <Button
+                      type="button"
+                      variant="text"
+                      color="error"
+                      onClick={() => removeMediaItem(index)}
+                      disabled={isLoading || isSaving || item.isUploading}
+                    >
+                      Remove
+                    </Button>
+                  </Stack>
+                  {item.mediaUrl ? (
+                    item.mediaType === "IMAGE" ? (
+                      <Paper
+                        variant="outlined"
+                        sx={{ overflow: "hidden", borderRadius: 3, backgroundColor: "grey.100" }}
                       >
-                        Remove
-                      </Button>
-                    </Grid>
+                        <Box
+                          component="img"
+                          src={item.mediaUrl}
+                          alt={item.caption || title || "Listing media"}
+                          sx={{ width: "100%", maxHeight: 260, objectFit: "cover", display: "block" }}
+                        />
+                      </Paper>
+                    ) : (
+                      <Paper
+                        variant="outlined"
+                        sx={{ overflow: "hidden", borderRadius: 3, backgroundColor: "grey.100" }}
+                      >
+                        <Box
+                          component="video"
+                          src={item.mediaUrl}
+                          controls
+                          sx={{ width: "100%", maxHeight: 260, display: "block" }}
+                        />
+                      </Paper>
+                    )
+                  ) : null}
+                  <Grid container spacing={2}>
+                    {item.source === "manual" ? (
+                      <>
+                        <Grid size={{ xs: 12, md: 3 }}>
+                          <TextField
+                            select
+                            SelectProps={{ native: true }}
+                            label="Type"
+                            value={item.mediaType}
+                            onChange={(event) => updateMediaItem(index, "mediaType", event.target.value)}
+                            fullWidth
+                            disabled={isLoading || isSaving || item.isUploading}
+                          >
+                            {mediaTypes.map((option) => (
+                              <option key={option} value={option}>{option}</option>
+                            ))}
+                          </TextField>
+                        </Grid>
+                        <Grid size={{ xs: 12, md: 9 }}>
+                          <TextField
+                            label="External media URL"
+                            value={item.mediaUrl}
+                            onChange={(event) => updateMediaItem(index, "mediaUrl", event.target.value)}
+                            fullWidth
+                            disabled={isLoading || isSaving || item.isUploading}
+                            helperText="Use this only if you already host the media elsewhere."
+                          />
+                        </Grid>
+                      </>
+                    ) : (
+                      <Grid size={{ xs: 12 }}>
+                        <TextField
+                          label="Stored media URL"
+                          value={item.mediaUrl}
+                          fullWidth
+                          disabled
+                          helperText={item.fileName ? `Stored as ${item.fileName}` : "Uploaded media ready for this listing."}
+                        />
+                      </Grid>
+                    )}
                   </Grid>
                   <TextField
                     label="Caption"
                     value={item.caption}
                     onChange={(event) => updateMediaItem(index, "caption", event.target.value)}
                     fullWidth
-                    disabled={isLoading || isSaving}
+                    disabled={isLoading || isSaving || item.isUploading}
                   />
+                  {item.uploadError ? <Alert severity="error">{item.uploadError}</Alert> : null}
                 </Stack>
               </Paper>
             ))}
           </Stack>
 
           <Stack direction="row" spacing={2}>
-            <Button type="submit" variant="contained" disabled={isLoading || isSaving}>
+            <Button type="submit" variant="contained" disabled={isLoading || isSaving || isUploadingMedia}>
               {isSaving ? "Saving..." : mode === "create" ? "Create draft" : "Save changes"}
             </Button>
             {mode === "edit" ? (
-              <Button type="button" variant="outlined" onClick={handlePublish} disabled={isLoading || isSaving}>
+              <Button type="button" variant="outlined" onClick={handlePublish} disabled={isLoading || isSaving || isUploadingMedia}>
                 Publish
               </Button>
             ) : null}

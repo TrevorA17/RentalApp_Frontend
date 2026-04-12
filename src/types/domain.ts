@@ -89,6 +89,13 @@ export type ListingMedia = {
   displayOrder: number;
 };
 
+export type UploadedListingMedia = {
+  mediaUrl: string;
+  mediaType: MediaType;
+  fileName: string;
+  fileSize: number;
+};
+
 export type ListingCard = {
   id: string;
   title: string;

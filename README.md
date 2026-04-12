@@ -11,13 +11,14 @@ This repo is no longer scaffold-only. The frontend currently includes:
 - paginated and sorted listing browse UX with query-state persistence
 - profile management
 - listing creation and editing
-- URL-based media entry in listing forms
+- upload-first listing media attachments with optional external URL fallback
 - saved listings
 - inquiries
 - public agent profile page
 - agent recommendations/testimonials UI
 - personalized listing suggestions on the dashboard
 - admin moderation screens for listings, reports, and users
+- admin recommendation moderation and recent moderation history
 - AI description assist in listing forms
 
 ## Stack
@@ -51,6 +52,7 @@ This repo is no longer scaffold-only. The frontend currently includes:
 - `/admin/listings`
 - `/admin/reports`
 - `/admin/users`
+- `/admin/recommendations`
 
 ## Environment
 
@@ -109,15 +111,14 @@ npm run build
 
 - the public agent profile page shows recommendations and allows authenticated submission
 - the public listings page keeps filter, page, and sort state in the URL
-- listing media is currently URL-based, not file-upload based
+- listing media uploads go through the backend and are served from `/media/...`
 - suggestions are a signed-in personalization feature, not a public trust feature
 - AI support is currently lightweight listing-description assistance only
 
 ## Not yet implemented
 
-- dedicated admin UI for moderating agent recommendations
-- file-upload media workflow
 - advanced AI workflows beyond listing description assist
+- object-storage/CDN media pipeline
 
 ## Source-of-truth docs
 
