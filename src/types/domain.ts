@@ -192,3 +192,48 @@ export type AdminListing = {
     email: string;
   };
 };
+
+export type AdminAgentRecommendation = {
+  id: string;
+  rating: number;
+  comment: string;
+  approvalStatus: ApprovalStatus;
+  createdAt: string;
+  agent: {
+    userId: string;
+    fullName: string;
+    email: string;
+  };
+  author: {
+    userId: string;
+    fullName: string;
+    email: string;
+    role: Role;
+  };
+};
+
+export type ModerationActionType =
+  | "APPROVE"
+  | "REJECT"
+  | "FLAG"
+  | "DISABLE"
+  | "RESOLVE"
+  | "STATUS_CHANGE";
+
+export type ModerationTargetType = "LISTING" | "REPORT" | "AGENT_RECOMMENDATION";
+
+export type AdminModerationAction = {
+  id: string;
+  targetType: ModerationTargetType;
+  targetId: string;
+  actionType: ModerationActionType;
+  previousStatus?: string;
+  newStatus?: string;
+  reasonOrNote?: string;
+  createdAt: string;
+  actor: {
+    userId: string;
+    fullName: string;
+    email: string;
+  };
+};

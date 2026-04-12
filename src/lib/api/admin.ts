@@ -1,6 +1,15 @@
 import { apiRequest } from "@/lib/api/client";
 import { ApiSuccessResponse } from "@/types/api";
-import { AdminListing, AdminUser, ApprovalStatus, Report, ReportStatus, UserStatus } from "@/types/domain";
+import {
+  AdminAgentRecommendation,
+  AdminListing,
+  AdminModerationAction,
+  AdminUser,
+  ApprovalStatus,
+  Report,
+  ReportStatus,
+  UserStatus,
+} from "@/types/domain";
 
 export async function getAdminListings() {
   const response = await apiRequest<ApiSuccessResponse<AdminListing[]>>("/admin/listings", {
@@ -58,6 +67,42 @@ export async function updateAdminUserStatus(userId: string, status: UserStatus) 
     auth: "required",
     body: JSON.stringify({ status }),
   });
+
+  return response.data;
+}
+
+export async function getAdminRecommendations() {
+  const response = await apiRequest<ApiSuccessResponse<AdminAgentRecommendation[]>>("/admin/recommendations", {
+    method: "GET",
+    auth: "required",
+    cache: "no-store",
+  });
+
+  return response.data;
+}
+
+export async function updateAdminRecommendationApproval(recommendationId: string, approvalStatus: ApprovalStatus) {
+  const response = await apiRequest<ApiSuccessResponse<AdminAgentRecommendation>>(
+    `/admin/recommendations/${recommendationId}/approval`,
+    {
+      method: "PATCH",
+      auth: "required",
+      body: JSON.stringify({ approvalStatus }),
+    },
+  );
+
+  return response.data;
+}
+
+export async function getRecentModerationActions(limit = 12) {
+  const response = await apiRequest<ApiSuccessResponse<AdminModerationAction[]>>(
+    `/admin/moderation-actions?limit=${limit}`,
+    {
+      method: "GET",
+      auth: "required",
+      cache: "no-store",
+    },
+  );
 
   return response.data;
 }

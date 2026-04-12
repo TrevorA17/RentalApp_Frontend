@@ -35,6 +35,7 @@ const roleNavigation: Record<Role, Array<{ href: string; label: string; note: st
   ADMIN: [
     { href: "/admin", label: "Admin overview", note: "Protected moderation workspace." },
     { href: "/admin/listings", label: "Moderate listings", note: "Approve or reject listing changes." },
+    { href: "/admin/recommendations", label: "Moderate recommendations", note: "Review public agent testimonials." },
     { href: "/admin/reports", label: "Reports", note: "Review flags raised by renters." },
     { href: "/admin/users", label: "Manage users", note: "Suspend or restore accounts." },
   ],
