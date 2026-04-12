@@ -56,7 +56,10 @@ This repo is no longer scaffold-only. The frontend currently includes:
 
 ## Environment
 
-Create `.env.local` from [.env.local.example](./.env.local.example).
+Create a real env file from one of the tracked templates:
+
+- local: copy [.env.local.example](./.env.local.example) to the ignored `.env.local`
+- UAT: copy [.env.uat.example](./.env.uat.example) to an ignored runtime env file such as `.env.uat`, or inject the same value through your deployment platform
 
 Current important variable:
 
