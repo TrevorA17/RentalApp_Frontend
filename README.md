@@ -8,6 +8,7 @@ This repo is no longer scaffold-only. The frontend currently includes:
 
 - auth screens and session handling
 - public listing browse and detail pages
+- paginated and sorted listing browse UX with query-state persistence
 - profile management
 - listing creation and editing
 - URL-based media entry in listing forms
@@ -61,6 +62,13 @@ Current important variable:
 NEXT_PUBLIC_API_BASE_URL=http://localhost:8080/api/v1
 ```
 
+Current auth/session architecture:
+
+- centralized API client in `src/lib/api/client.ts`
+- browser session store in `src/lib/auth/sessionStore.ts`
+- refresh-aware retry flow for protected API requests
+- clean session clearing when refresh fails
+
 ## Local development
 
 Install dependencies:
@@ -75,6 +83,21 @@ Run the app:
 npm run dev
 ```
 
+Run the current containerized MVP stack from the backend repo:
+
+```powershell
+cd ..\RentalApp_backend
+docker compose up -d
+```
+
+That stack currently includes:
+
+- frontend on `http://localhost:3000`
+- backend on `http://localhost:8080`
+- postgres on `localhost:5433`
+
+It does not include Qdrant or Ollama because the current frontend does not depend on them.
+
 Quality checks:
 
 ```powershell
@@ -85,6 +108,7 @@ npm run build
 ## Current implementation truth
 
 - the public agent profile page shows recommendations and allows authenticated submission
+- the public listings page keeps filter, page, and sort state in the URL
 - listing media is currently URL-based, not file-upload based
 - suggestions are a signed-in personalization feature, not a public trust feature
 - AI support is currently lightweight listing-description assistance only
@@ -92,7 +116,6 @@ npm run build
 ## Not yet implemented
 
 - dedicated admin UI for moderating agent recommendations
-- pagination and sorting UI for listing search
 - file-upload media workflow
 - advanced AI workflows beyond listing description assist
 

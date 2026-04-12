@@ -23,7 +23,7 @@ export function SentInquiriesView() {
       }
 
       try {
-        const results = await getSentInquiries(session.accessToken);
+        const results = await getSentInquiries();
         setInquiries(results);
       } catch (error) {
         const message = error instanceof Error ? error.message : "Failed to load inquiries.";

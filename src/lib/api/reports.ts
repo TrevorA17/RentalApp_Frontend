@@ -9,10 +9,10 @@ export type CreateReportPayload = {
   details?: string;
 };
 
-export async function createReport(token: string, payload: CreateReportPayload) {
+export async function createReport(payload: CreateReportPayload) {
   const response = await apiRequest<ApiSuccessResponse<Report>>("/reports", {
     method: "POST",
-    token,
+    auth: "required",
     body: JSON.stringify(payload),
   });
 

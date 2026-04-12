@@ -29,7 +29,7 @@ export function AdminListingsView() {
       }
 
       try {
-        const result = await getAdminListings(session.accessToken);
+        const result = await getAdminListings();
         setListings(result);
         setDrafts(Object.fromEntries(result.map((item) => [item.id, item.approvalStatus])));
       } catch (error) {
@@ -47,7 +47,7 @@ export function AdminListingsView() {
     }
 
     try {
-      const updated = await updateAdminListingApproval(session.accessToken, listingId, drafts[listingId]);
+      const updated = await updateAdminListingApproval(listingId, drafts[listingId]);
       setListings((current) => current.map((item) => (item.id === listingId ? updated : item)));
       setSuccessMessage("Listing moderation status updated.");
       setErrorMessage(null);

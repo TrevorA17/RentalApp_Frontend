@@ -35,7 +35,7 @@ export function ReportComposer({ listingId, reportedUserId }: ReportComposerProp
   async function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
 
-    if (!session?.accessToken) {
+    if (!session) {
       setErrorMessage("Sign in to submit a report.");
       return;
     }
@@ -50,7 +50,7 @@ export function ReportComposer({ listingId, reportedUserId }: ReportComposerProp
     setErrorMessage(null);
 
     try {
-      await createReport(session.accessToken, {
+      await createReport({
         listingId,
         reportedUserId,
         reason,

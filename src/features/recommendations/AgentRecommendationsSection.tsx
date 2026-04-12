@@ -39,7 +39,7 @@ export function AgentRecommendationsSection({
 
   async function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
-    if (!session?.accessToken || !canSubmit) {
+    if (!session || !canSubmit) {
       return;
     }
 
@@ -48,7 +48,7 @@ export function AgentRecommendationsSection({
     setSuccessMessage(null);
 
     try {
-      const created = await createAgentRecommendation(session.accessToken, agentUserId, {
+      const created = await createAgentRecommendation(agentUserId, {
         rating,
         comment,
       });

@@ -2,60 +2,60 @@ import { apiRequest } from "@/lib/api/client";
 import { ApiSuccessResponse } from "@/types/api";
 import { AdminListing, AdminUser, ApprovalStatus, Report, ReportStatus, UserStatus } from "@/types/domain";
 
-export async function getAdminListings(token: string) {
+export async function getAdminListings() {
   const response = await apiRequest<ApiSuccessResponse<AdminListing[]>>("/admin/listings", {
     method: "GET",
-    token,
+    auth: "required",
     cache: "no-store",
   });
 
   return response.data;
 }
 
-export async function updateAdminListingApproval(token: string, listingId: string, approvalStatus: ApprovalStatus) {
+export async function updateAdminListingApproval(listingId: string, approvalStatus: ApprovalStatus) {
   const response = await apiRequest<ApiSuccessResponse<AdminListing>>(`/admin/listings/${listingId}/approval`, {
     method: "PATCH",
-    token,
+    auth: "required",
     body: JSON.stringify({ approvalStatus }),
   });
 
   return response.data;
 }
 
-export async function getAdminReports(token: string) {
+export async function getAdminReports() {
   const response = await apiRequest<ApiSuccessResponse<Report[]>>("/admin/reports", {
     method: "GET",
-    token,
+    auth: "required",
     cache: "no-store",
   });
 
   return response.data;
 }
 
-export async function updateAdminReportStatus(token: string, reportId: string, status: ReportStatus) {
+export async function updateAdminReportStatus(reportId: string, status: ReportStatus) {
   const response = await apiRequest<ApiSuccessResponse<Report>>(`/admin/reports/${reportId}/status`, {
     method: "PATCH",
-    token,
+    auth: "required",
     body: JSON.stringify({ status }),
   });
 
   return response.data;
 }
 
-export async function getAdminUsers(token: string) {
+export async function getAdminUsers() {
   const response = await apiRequest<ApiSuccessResponse<AdminUser[]>>("/admin/users", {
     method: "GET",
-    token,
+    auth: "required",
     cache: "no-store",
   });
 
   return response.data;
 }
 
-export async function updateAdminUserStatus(token: string, userId: string, status: UserStatus) {
+export async function updateAdminUserStatus(userId: string, status: UserStatus) {
   const response = await apiRequest<ApiSuccessResponse<AdminUser>>(`/admin/users/${userId}/status`, {
     method: "PATCH",
-    token,
+    auth: "required",
     body: JSON.stringify({ status }),
   });
 

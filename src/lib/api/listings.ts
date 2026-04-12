@@ -47,39 +47,39 @@ export async function getAmenities() {
   return response.data;
 }
 
-export async function createListing(token: string, payload: ListingUpsertPayload) {
+export async function createListing(payload: ListingUpsertPayload) {
   const response = await apiRequest<ApiSuccessResponse<ListingSummary>>("/listings", {
     method: "POST",
-    token,
+    auth: "required",
     body: JSON.stringify(payload),
   });
 
   return response.data;
 }
 
-export async function updateListing(token: string, listingId: string, payload: ListingUpsertPayload) {
+export async function updateListing(listingId: string, payload: ListingUpsertPayload) {
   const response = await apiRequest<ApiSuccessResponse<ListingSummary>>(`/listings/${listingId}`, {
     method: "PUT",
-    token,
+    auth: "required",
     body: JSON.stringify(payload),
   });
 
   return response.data;
 }
 
-export async function publishListing(token: string, listingId: string) {
+export async function publishListing(listingId: string) {
   const response = await apiRequest<ApiSuccessResponse<ListingSummary>>(`/listings/${listingId}/publish`, {
     method: "POST",
-    token,
+    auth: "required",
   });
 
   return response.data;
 }
 
-export async function getMyListings(token: string) {
+export async function getMyListings() {
   const response = await apiRequest<ApiSuccessResponse<ListingSummary[]>>("/my/listings", {
     method: "GET",
-    token,
+    auth: "required",
     cache: "no-store",
   });
 
@@ -89,6 +89,7 @@ export async function getMyListings(token: string) {
 export async function getListingById(listingId: string, token?: string | null) {
   const response = await apiRequest<ApiSuccessResponse<ListingDetail>>(`/listings/${listingId}`, {
     method: "GET",
+    auth: token ? "optional" : "none",
     token,
     cache: "no-store",
   });

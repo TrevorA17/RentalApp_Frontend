@@ -30,7 +30,7 @@ export function InquiryComposer({ listing }: InquiryComposerProps) {
   async function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
 
-    if (!session?.accessToken) {
+    if (!session) {
       setErrorMessage("Sign in to contact the listing owner.");
       return;
     }
@@ -45,7 +45,7 @@ export function InquiryComposer({ listing }: InquiryComposerProps) {
     setSuccessMessage(null);
 
     try {
-      await createInquiry(session.accessToken, listing.id, { message: message.trim() });
+      await createInquiry(listing.id, { message: message.trim() });
       setSuccessMessage("Inquiry sent successfully.");
       setHasSubmitted(true);
     } catch (error) {

@@ -28,7 +28,7 @@ export function AdminUsersView() {
       }
 
       try {
-        const result = await getAdminUsers(session.accessToken);
+        const result = await getAdminUsers();
         setUsers(result);
         setDrafts(Object.fromEntries(result.map((item) => [item.id, item.status])));
       } catch (error) {
@@ -46,7 +46,7 @@ export function AdminUsersView() {
     }
 
     try {
-      const updated = await updateAdminUserStatus(session.accessToken, userId, drafts[userId]);
+      const updated = await updateAdminUserStatus(userId, drafts[userId]);
       setUsers((current) => current.map((item) => (item.id === userId ? updated : item)));
       setSuccessMessage("User status updated.");
       setErrorMessage(null);

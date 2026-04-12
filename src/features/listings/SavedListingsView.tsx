@@ -24,7 +24,7 @@ export function SavedListingsView() {
       }
 
       try {
-        const results = await getSavedListings(session.accessToken);
+        const results = await getSavedListings();
         setListings(results);
       } catch (error) {
         const message = error instanceof Error ? error.message : "Failed to load saved listings.";

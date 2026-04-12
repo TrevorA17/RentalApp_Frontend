@@ -22,12 +22,12 @@ export type EnhanceListingDescriptionResult = {
   provider: string;
 };
 
-export async function enhanceListingDescription(token: string, payload: EnhanceListingDescriptionPayload) {
+export async function enhanceListingDescription(payload: EnhanceListingDescriptionPayload) {
   const response = await apiRequest<ApiSuccessResponse<EnhanceListingDescriptionResult>>(
     "/ai/listings/description-enhance",
     {
       method: "POST",
-      token,
+      auth: "required",
       body: JSON.stringify(payload),
     },
   );

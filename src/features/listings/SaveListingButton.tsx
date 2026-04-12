@@ -39,7 +39,7 @@ export function SaveListingButton({
       }
 
       try {
-        const ids = await getSavedListingIds(session.accessToken);
+        const ids = await getSavedListingIds();
         const saved = ids.includes(listingId);
         setIsSaved(saved);
         onSavedChangeRef.current?.(saved);
@@ -63,11 +63,11 @@ export function SaveListingButton({
 
     try {
       if (isSaved) {
-        await removeSavedListing(session.accessToken, listingId);
+        await removeSavedListing(listingId);
         setIsSaved(false);
         onSavedChangeRef.current?.(false);
       } else {
-        await saveListing(session.accessToken, listingId);
+        await saveListing(listingId);
         setIsSaved(true);
         onSavedChangeRef.current?.(true);
       }

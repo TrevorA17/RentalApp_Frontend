@@ -125,7 +125,6 @@ export function ListingForm({ mode, listingId }: ListingFormProps) {
     return null;
   }
 
-  const accessToken = session.accessToken;
   if (session.user.role !== "AGENT" && session.user.role !== "LANDLORD") {
     return (
       <Alert severity="warning">
@@ -193,8 +192,8 @@ export function ListingForm({ mode, listingId }: ListingFormProps) {
 
       const listing =
         mode === "create"
-          ? await createListing(accessToken, payload)
-          : await updateListing(accessToken, listingId!, payload);
+          ? await createListing(payload)
+          : await updateListing(listingId!, payload);
 
       setSuccessMessage(mode === "create" ? "Listing draft created." : "Listing updated.");
       router.replace(`/my-listings/${listing.id}/edit`);
@@ -216,7 +215,7 @@ export function ListingForm({ mode, listingId }: ListingFormProps) {
     setIsSaving(true);
 
     try {
-      await publishListing(accessToken, listingId);
+      await publishListing(listingId);
       setSuccessMessage("Listing published successfully.");
     } catch (error) {
       const message = error instanceof Error ? error.message : "Failed to publish listing.";
@@ -247,7 +246,6 @@ export function ListingForm({ mode, listingId }: ListingFormProps) {
           <TextField label="Description" value={description} onChange={(e) => setDescription(e.target.value)} required multiline minRows={4} disabled={isLoading || isSaving} />
 
           <AiDescriptionAssist
-            token={accessToken}
             title={title}
             description={description}
             city={city}

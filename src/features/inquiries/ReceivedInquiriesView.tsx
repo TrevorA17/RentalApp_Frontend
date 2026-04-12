@@ -29,7 +29,7 @@ export function ReceivedInquiriesView() {
       }
 
       try {
-        const results = await getReceivedInquiries(session.accessToken);
+        const results = await getReceivedInquiries();
         setInquiries(results);
         setStatusDrafts(
           Object.fromEntries(results.map((inquiry) => [inquiry.id, inquiry.status])),
@@ -49,11 +49,7 @@ export function ReceivedInquiriesView() {
     }
 
     try {
-      const updated = await updateInquiryStatus(
-        session.accessToken,
-        inquiryId,
-        statusDrafts[inquiryId],
-      );
+      const updated = await updateInquiryStatus(inquiryId, statusDrafts[inquiryId]);
       setInquiries((current) =>
         current.map((inquiry) => (inquiry.id === inquiryId ? updated : inquiry)),
       );

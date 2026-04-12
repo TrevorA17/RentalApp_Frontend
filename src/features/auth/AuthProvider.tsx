@@ -8,14 +8,13 @@ import {
   useState,
 } from "react";
 import {
-  clearStoredSession,
-  getCurrentUser,
-  getStoredSession,
   loginUser,
   logoutUser,
   refreshSession,
   registerUser,
 } from "@/lib/auth/authService";
+import { getCurrentUser } from "@/lib/auth/authService";
+import { clearStoredSession, getStoredSession, subscribeToSession } from "@/lib/auth/sessionStore";
 import { AuthSession, LoginRequest, RegisterRequest } from "@/types/auth";
 
 type AuthContextValue = {
@@ -52,11 +51,7 @@ export function AuthProvider({ children }: PropsWithChildren) {
           });
         } catch {
           const refreshedSession = await refreshSession(storedSession.refreshToken);
-          const user = await getCurrentUser(refreshedSession.accessToken);
-          setSession({
-            ...refreshedSession,
-            user,
-          });
+          setSession(refreshedSession);
         }
       } catch {
         clearStoredSession();
@@ -66,7 +61,13 @@ export function AuthProvider({ children }: PropsWithChildren) {
       }
     }
 
+    const unsubscribe = subscribeToSession((nextSession) => {
+      setSession(nextSession);
+    });
+
     void restoreSession();
+
+    return unsubscribe;
   }, []);
 
   async function login(request: LoginRequest) {

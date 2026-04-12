@@ -33,7 +33,7 @@ export function ProfileForm() {
       }
 
       try {
-        const profile = await getMyProfile(session.accessToken);
+        const profile = await getMyProfile();
         setFullName(profile.fullName ?? "");
         setPhoneNumber(profile.phoneNumber ?? "");
         setBio(profile.bio ?? "");
@@ -56,7 +56,6 @@ export function ProfileForm() {
     return null;
   }
 
-  const accessToken = session.accessToken;
   const isAgent = session.user.role === "AGENT";
 
   async function handleSubmit(event: FormEvent<HTMLFormElement>) {
@@ -66,7 +65,7 @@ export function ProfileForm() {
     setIsSaving(true);
 
     try {
-      await saveMyProfile(accessToken, {
+      await saveMyProfile({
         fullName,
         phoneNumber,
         bio,

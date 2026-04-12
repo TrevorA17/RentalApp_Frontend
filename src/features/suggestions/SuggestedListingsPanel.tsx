@@ -25,7 +25,7 @@ export function SuggestedListingsPanel() {
       }
 
       try {
-        const response = await getSuggestedListings(session.accessToken, 3);
+        const response = await getSuggestedListings(3);
         setItems(response);
         setErrorMessage(null);
       } catch (error) {

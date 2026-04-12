@@ -25,7 +25,7 @@ export function MyListingsView() {
       }
 
       try {
-        const result = await getMyListings(session.accessToken);
+        const result = await getMyListings();
         setListings(result);
       } catch (error) {
         const message = error instanceof Error ? error.message : "Failed to load listings.";

@@ -6,40 +6,40 @@ export type CreateInquiryPayload = {
   message: string;
 };
 
-export async function createInquiry(token: string, listingId: string, payload: CreateInquiryPayload) {
+export async function createInquiry(listingId: string, payload: CreateInquiryPayload) {
   const response = await apiRequest<ApiSuccessResponse<Inquiry>>(`/listings/${listingId}/inquiries`, {
     method: "POST",
-    token,
+    auth: "required",
     body: JSON.stringify(payload),
   });
 
   return response.data;
 }
 
-export async function getSentInquiries(token: string) {
+export async function getSentInquiries() {
   const response = await apiRequest<ApiSuccessResponse<Inquiry[]>>("/inquiries/sent", {
     method: "GET",
-    token,
+    auth: "required",
     cache: "no-store",
   });
 
   return response.data;
 }
 
-export async function getReceivedInquiries(token: string) {
+export async function getReceivedInquiries() {
   const response = await apiRequest<ApiSuccessResponse<Inquiry[]>>("/inquiries/received", {
     method: "GET",
-    token,
+    auth: "required",
     cache: "no-store",
   });
 
   return response.data;
 }
 
-export async function updateInquiryStatus(token: string, inquiryId: string, status: InquiryStatus) {
+export async function updateInquiryStatus(inquiryId: string, status: InquiryStatus) {
   const response = await apiRequest<ApiSuccessResponse<Inquiry>>(`/inquiries/${inquiryId}/status`, {
     method: "PATCH",
-    token,
+    auth: "required",
     body: JSON.stringify({ status }),
   });
 

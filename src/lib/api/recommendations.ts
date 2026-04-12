@@ -17,13 +17,12 @@ export async function getAgentRecommendations(agentUserId: string) {
 }
 
 export async function createAgentRecommendation(
-  token: string,
   agentUserId: string,
   payload: CreateAgentRecommendationRequest,
 ) {
   const response = await apiRequest<ApiSuccessResponse<AgentRecommendation>>(`/agents/${agentUserId}/recommendations`, {
     method: "POST",
-    token,
+    auth: "required",
     body: JSON.stringify(payload),
   });
 

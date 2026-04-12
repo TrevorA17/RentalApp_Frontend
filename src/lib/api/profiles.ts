@@ -13,20 +13,20 @@ export type ProfileUpsertRequest = {
   feeStructure?: string;
 };
 
-export async function getMyProfile(token: string) {
+export async function getMyProfile() {
   const response = await apiRequest<ApiSuccessResponse<Profile>>("/profiles/me", {
     method: "GET",
-    token,
+    auth: "required",
     cache: "no-store",
   });
 
   return response.data;
 }
 
-export async function saveMyProfile(token: string, payload: ProfileUpsertRequest) {
+export async function saveMyProfile(payload: ProfileUpsertRequest) {
   const response = await apiRequest<ApiSuccessResponse<Profile>>("/profiles/me", {
     method: "PUT",
-    token,
+    auth: "required",
     body: JSON.stringify(payload),
   });
 

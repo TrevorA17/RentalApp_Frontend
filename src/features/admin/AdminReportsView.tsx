@@ -28,7 +28,7 @@ export function AdminReportsView() {
       }
 
       try {
-        const result = await getAdminReports(session.accessToken);
+        const result = await getAdminReports();
         setReports(result);
         setDrafts(Object.fromEntries(result.map((item) => [item.id, item.status])));
       } catch (error) {
@@ -46,7 +46,7 @@ export function AdminReportsView() {
     }
 
     try {
-      const updated = await updateAdminReportStatus(session.accessToken, reportId, drafts[reportId]);
+      const updated = await updateAdminReportStatus(reportId, drafts[reportId]);
       setReports((current) => current.map((item) => (item.id === reportId ? updated : item)));
       setSuccessMessage("Report status updated.");
       setErrorMessage(null);

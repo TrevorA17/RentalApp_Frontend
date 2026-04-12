@@ -122,7 +122,7 @@ export function ListingsBrowseView() {
       }
 
       try {
-        const ids = await getSavedListingIds(session.accessToken);
+        const ids = await getSavedListingIds();
         setSavedListingIds(ids);
       } catch {
         setSavedListingIds([]);

@@ -11,7 +11,6 @@ import { enhanceListingDescription } from "@/lib/api/ai";
 import { Amenity, AvailabilityStatus, HouseType } from "@/types/domain";
 
 type AiDescriptionAssistProps = {
-  token: string;
   title: string;
   description: string;
   city: string;
@@ -28,7 +27,6 @@ type AiDescriptionAssistProps = {
 };
 
 export function AiDescriptionAssist({
-  token,
   title,
   description,
   city,
@@ -60,7 +58,7 @@ export function AiDescriptionAssist({
         .filter((amenity) => selectedAmenityIds.includes(amenity.id))
         .map((amenity) => amenity.name);
 
-      const response = await enhanceListingDescription(token, {
+      const response = await enhanceListingDescription({
         title,
         description,
         city,
