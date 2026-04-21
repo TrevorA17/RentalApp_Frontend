@@ -108,9 +108,9 @@ export function RegisterForm() {
 
   return (
     <AuthCard
-      eyebrow="Module 1"
+      eyebrow="Join the marketplace"
       title="Create your account"
-      description="Registration already follows the role model defined in the BRD: renter, agent, and landlord."
+      description="Choose the role that matches how you will use the rental marketplace."
     >
       <Stack component="form" spacing={2.5} onSubmit={handleSubmit}>
         {formError ? <Alert severity="error">{formError}</Alert> : null}

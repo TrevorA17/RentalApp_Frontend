@@ -48,7 +48,7 @@ export function MyListingsView() {
     <Stack spacing={3}>
       <Paper sx={{ p: { xs: 3, md: 4 } }}>
         <Stack spacing={2}>
-          <Chip label="Module 3" color="secondary" sx={{ width: "fit-content" }} />
+          <Chip label="Listing workspace" color="secondary" sx={{ width: "fit-content" }} />
           <Typography variant="h3">My listings</Typography>
           <Typography color="text.secondary">
             Manage draft and published rental listings from one place.

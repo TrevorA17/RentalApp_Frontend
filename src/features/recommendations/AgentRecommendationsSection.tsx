@@ -26,7 +26,7 @@ export function AgentRecommendationsSection({
   initialRecommendations,
 }: AgentRecommendationsSectionProps) {
   const { session } = useAuth();
-  const [items, setItems] = useState(initialRecommendations);
+  const [items] = useState(initialRecommendations);
   const [rating, setRating] = useState(5);
   const [comment, setComment] = useState("");
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
@@ -48,14 +48,13 @@ export function AgentRecommendationsSection({
     setSuccessMessage(null);
 
     try {
-      const created = await createAgentRecommendation(agentUserId, {
+      await createAgentRecommendation(agentUserId, {
         rating,
         comment,
       });
-      setItems((current) => [created, ...current]);
       setComment("");
       setRating(5);
-      setSuccessMessage("Recommendation submitted.");
+      setSuccessMessage("Recommendation submitted for admin review. It will appear publicly after approval.");
     } catch (error) {
       const message = error instanceof Error ? error.message : "Failed to submit recommendation.";
       setErrorMessage(message);

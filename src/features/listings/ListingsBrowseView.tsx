@@ -269,7 +269,7 @@ export function ListingsBrowseView() {
     <Stack spacing={3}>
       <Stack spacing={1.5}>
         <Typography variant="overline" color="secondary.main" fontWeight={800}>
-          Module 4
+          Rental search
         </Typography>
         <Typography variant="h2">Browse listings</Typography>
         <Typography color="text.secondary">
@@ -280,8 +280,11 @@ export function ListingsBrowseView() {
       <Paper sx={{ p: 3 }}>
         <Stack component="form" spacing={1.5} onSubmit={handleInterpretSearch} sx={{ mb: 3 }}>
           <Typography fontWeight={700}>Describe what you want</Typography>
-          <Typography color="text.secondary">
+          <Typography color="text.secondary" sx={{ display: "none" }}>
             Try a natural-language request like “2 bedroom in Kilimani under 50k with parking”. We will translate it into the structured filters below.
+          </Typography>
+          <Typography color="text.secondary">
+            Try a natural-language request like &quot;2 bedroom in Kilimani under 50k with parking&quot;. We will translate it into the structured filters below.
           </Typography>
           <Stack direction={{ xs: "column", md: "row" }} spacing={1.5}>
             <TextField

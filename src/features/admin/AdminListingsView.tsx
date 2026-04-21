@@ -62,7 +62,7 @@ export function AdminListingsView() {
     <Stack spacing={3}>
       <Stack spacing={1}>
         <Typography variant="overline" color="secondary.main" fontWeight={800}>
-          Module 9
+          Listing moderation
         </Typography>
         <Typography variant="h2">Moderate listings</Typography>
       </Stack>

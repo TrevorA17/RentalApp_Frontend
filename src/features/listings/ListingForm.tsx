@@ -332,10 +332,10 @@ export function ListingForm({ mode, listingId }: ListingFormProps) {
       />
       <Paper sx={{ p: { xs: 3, md: 4 } }}>
         <Stack spacing={2}>
-          <Chip label="Module 3" color="secondary" sx={{ width: "fit-content" }} />
+          <Chip label={mode === "create" ? "New rental" : "Listing workspace"} color="secondary" sx={{ width: "fit-content" }} />
           <Typography variant="h3">{mode === "create" ? "Create listing" : "Edit listing"}</Typography>
           <Typography color="text.secondary">
-            Start with draft-quality listing data. Search and public discovery will use this foundation in the next module.
+            Create a clear rental listing with pricing, location, amenities, images, and AI-assisted description support.
           </Typography>
         </Stack>
       </Paper>

@@ -63,7 +63,7 @@ export function ReceivedInquiriesView() {
     <Stack spacing={3}>
       <Stack spacing={1.5}>
         <Typography variant="overline" color="secondary.main" fontWeight={800}>
-          Module 6
+          Lead inbox
         </Typography>
         <Typography variant="h2">Received inquiries</Typography>
         <Typography color="text.secondary">

@@ -20,6 +20,7 @@ const roleNavigation: Record<Role, Array<{ href: string; label: string; note: st
   ],
   AGENT: [
     { href: "/dashboard", label: "Dashboard", note: "Recommendations and workflow shortcuts." },
+    { href: "/listings", label: "Browse marketplace", note: "Check the public renter experience." },
     { href: "/my-listings", label: "My listings", note: "Create, edit, publish, and add media." },
     { href: "/my-listings/new", label: "New listing", note: "Use AI assist before publishing." },
     { href: "/inquiries/received", label: "Received inquiries", note: "Respond to renter interest." },
@@ -27,6 +28,7 @@ const roleNavigation: Record<Role, Array<{ href: string; label: string; note: st
   ],
   LANDLORD: [
     { href: "/dashboard", label: "Dashboard", note: "Recommendations and workflow shortcuts." },
+    { href: "/listings", label: "Browse marketplace", note: "Check the public renter experience." },
     { href: "/my-listings", label: "My listings", note: "Create, edit, publish, and add media." },
     { href: "/my-listings/new", label: "New listing", note: "Use AI assist before publishing." },
     { href: "/inquiries/received", label: "Received inquiries", note: "Follow up on interested renters." },
@@ -61,10 +63,11 @@ export function WorkspaceSidebar({ mode }: WorkspaceSidebarProps) {
     <Paper
       sx={{
         p: 3,
-        minWidth: { lg: 300 },
+        minWidth: { lg: 280 },
+        maxWidth: { lg: 320 },
         width: "100%",
         position: { lg: "sticky" },
-        top: { lg: 96 },
+        top: { lg: 88 },
         background:
           mode === "admin"
             ? "linear-gradient(180deg, rgba(14,107,115,0.12), rgba(255,250,244,0.94))"
@@ -77,14 +80,14 @@ export function WorkspaceSidebar({ mode }: WorkspaceSidebarProps) {
           <Typography variant="h6">
             {mode === "admin" ? "Moderation controls" : `${session.user.role.toLowerCase()} workspace`}
           </Typography>
-          <Typography color="text.secondary">
+          <Typography color="text.secondary" sx={{ display: { xs: "none", lg: "block" } }}>
             {mode === "admin"
               ? "Use this panel to walk listing review, reports, and user actions without leaving the UI."
               : "These routes cover the live MVP flow so you can validate behavior from the frontend, not just the API."}
           </Typography>
         </Stack>
 
-        <Stack spacing={1.25}>
+        <Stack spacing={1.1}>
           {items.map((item) => (
             <Box
               key={item.href}
@@ -109,7 +112,7 @@ export function WorkspaceSidebar({ mode }: WorkspaceSidebarProps) {
               }}
             >
               <Typography fontWeight={700}>{item.label}</Typography>
-              <Typography variant="body2" color="text.secondary">
+              <Typography variant="body2" color="text.secondary" sx={{ display: { xs: "none", sm: "block" } }}>
                 {item.note}
               </Typography>
             </Box>

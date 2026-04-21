@@ -61,7 +61,7 @@ export function AdminReportsView() {
     <Stack spacing={3}>
       <Stack spacing={1}>
         <Typography variant="overline" color="secondary.main" fontWeight={800}>
-          Module 9
+          Trust reports
         </Typography>
         <Typography variant="h2">Reports</Typography>
       </Stack>

@@ -17,6 +17,10 @@ function formatTargetLabel(action: AdminModerationAction) {
   return action.targetType.toLowerCase().replaceAll("_", " ");
 }
 
+function formatStatusTransition(action: AdminModerationAction) {
+  return `${action.previousStatus ?? "n/a"} to ${action.newStatus ?? "n/a"}`;
+}
+
 export function AdminModerationHistoryView({ limit = 12 }: AdminModerationHistoryViewProps) {
   const [items, setItems] = useState<AdminModerationAction[]>([]);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
@@ -43,7 +47,7 @@ export function AdminModerationHistoryView({ limit = 12 }: AdminModerationHistor
         </Typography>
         <Typography variant="h4">Recent moderation actions</Typography>
         <Typography color="text.secondary">
-          This is a lightweight operational view of the latest admin trust decisions.
+          Lightweight visibility into the latest admin trust decisions.
         </Typography>
       </Stack>
 
@@ -74,7 +78,7 @@ export function AdminModerationHistoryView({ limit = 12 }: AdminModerationHistor
                 Target ID: {item.targetId}
               </Typography>
               <Typography color="text.secondary">
-                {item.previousStatus ?? "n/a"} → {item.newStatus ?? "n/a"}
+                Status: {formatStatusTransition(item)}
               </Typography>
               {item.reasonOrNote ? <Typography color="text.secondary">{item.reasonOrNote}</Typography> : null}
             </Stack>

@@ -61,7 +61,7 @@ export function AdminUsersView() {
     <Stack spacing={3}>
       <Stack spacing={1}>
         <Typography variant="overline" color="secondary.main" fontWeight={800}>
-          Module 9
+          User operations
         </Typography>
         <Typography variant="h2">Manage users</Typography>
       </Stack>

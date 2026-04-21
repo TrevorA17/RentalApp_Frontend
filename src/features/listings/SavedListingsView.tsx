@@ -45,7 +45,7 @@ export function SavedListingsView() {
     <Stack spacing={3}>
       <Stack spacing={1.5}>
         <Typography variant="overline" color="secondary.main" fontWeight={800}>
-          Module 5
+          Renter shortlist
         </Typography>
         <Typography variant="h2">Saved listings</Typography>
         <Typography color="text.secondary">

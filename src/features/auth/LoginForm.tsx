@@ -73,9 +73,9 @@ export function LoginForm() {
 
   return (
     <AuthCard
-      eyebrow="Module 1"
+      eyebrow="Secure access"
       title="Sign in"
-      description="Sign in against the backend auth API. The same page structure is now using the real register, login, and me endpoints."
+      description="Access your renter, agent, landlord, or admin workspace with the live backend auth flow."
     >
       <Stack component="form" spacing={2} onSubmit={handleSubmit}>
         {formError ? <Alert severity="error">{formError}</Alert> : null}

@@ -30,6 +30,8 @@ function statusColor(status: ApprovalStatus): "default" | "success" | "warning" 
 export function AdminRecommendationsView() {
   const [items, setItems] = useState<AdminAgentRecommendation[]>([]);
   const [drafts, setDrafts] = useState<Record<string, ApprovalStatus>>({});
+  const [isLoading, setIsLoading] = useState(true);
+  const [updatingId, setUpdatingId] = useState<string | null>(null);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [successMessage, setSuccessMessage] = useState<string | null>(null);
 
@@ -42,6 +44,8 @@ export function AdminRecommendationsView() {
       } catch (error) {
         const message = error instanceof Error ? error.message : "Failed to load recommendation moderation queue.";
         setErrorMessage(message);
+      } finally {
+        setIsLoading(false);
       }
     }
 
@@ -50,6 +54,7 @@ export function AdminRecommendationsView() {
 
   async function handleUpdate(recommendationId: string) {
     try {
+      setUpdatingId(recommendationId);
       const updated = await updateAdminRecommendationApproval(recommendationId, drafts[recommendationId]);
       setItems((current) => current.map((item) => (item.id === recommendationId ? updated : item)));
       setSuccessMessage("Recommendation moderation status updated.");
@@ -58,6 +63,8 @@ export function AdminRecommendationsView() {
       const message = error instanceof Error ? error.message : "Failed to update recommendation moderation.";
       setErrorMessage(message);
       setSuccessMessage(null);
+    } finally {
+      setUpdatingId(null);
     }
   }
 
@@ -75,9 +82,10 @@ export function AdminRecommendationsView() {
 
       {errorMessage ? <Alert severity="error">{errorMessage}</Alert> : null}
       {successMessage ? <Alert severity="success">{successMessage}</Alert> : null}
-      {items.length === 0 ? (
+      {isLoading ? <Alert severity="info">Loading recommendation queue...</Alert> : null}
+      {!isLoading && items.length === 0 ? (
         <Paper sx={{ p: 3 }}>
-          <Typography color="text.secondary">No recommendations are currently waiting in the moderation queue.</Typography>
+          <Typography color="text.secondary">No agent recommendations are currently in the moderation queue.</Typography>
         </Paper>
       ) : null}
 
@@ -125,8 +133,12 @@ export function AdminRecommendationsView() {
                     </MenuItem>
                   ))}
                 </TextField>
-                <Button variant="contained" onClick={() => handleUpdate(item.id)}>
-                  Update
+                <Button
+                  variant="contained"
+                  onClick={() => handleUpdate(item.id)}
+                  disabled={updatingId === item.id || drafts[item.id] === item.approvalStatus}
+                >
+                  {updatingId === item.id ? "Updating..." : "Update"}
                 </Button>
               </Stack>
             </Stack>

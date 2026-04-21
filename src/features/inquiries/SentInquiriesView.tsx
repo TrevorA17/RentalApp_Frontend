@@ -38,7 +38,7 @@ export function SentInquiriesView() {
     <Stack spacing={3}>
       <Stack spacing={1.5}>
         <Typography variant="overline" color="secondary.main" fontWeight={800}>
-          Module 6
+          Inquiry tracking
         </Typography>
         <Typography variant="h2">Sent inquiries</Typography>
         <Typography color="text.secondary">
