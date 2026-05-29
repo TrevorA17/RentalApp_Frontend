@@ -1,15 +1,17 @@
 "use client";
 
 import Alert from "@mui/material/Alert";
+import Box from "@mui/material/Box";
 import Button from "@mui/material/Button";
 import MenuItem from "@mui/material/MenuItem";
-import Paper from "@mui/material/Paper";
-import Stack from "@mui/material/Stack";
 import TextField from "@mui/material/TextField";
-import Typography from "@mui/material/Typography";
-import { useEffect, useState } from "react";
+import type { GridColDef, GridRenderCellParams } from "@mui/x-data-grid";
+import { useEffect, useMemo, useState } from "react";
+import { DataTable } from "@/components/ui/DataTable";
+import { PageHeader } from "@/components/ui/PageHeader";
 import { useAuth } from "@/features/auth/AuthProvider";
 import { getAdminReports, updateAdminReportStatus } from "@/lib/api/admin";
+import { extractApiError } from "@/lib/api/client";
 import type { Report, ReportStatus } from "@/types/domain";
 
 const reportStatuses: ReportStatus[] = ["OPEN", "RESOLVED", "DISMISSED"];
@@ -23,10 +25,7 @@ export function AdminReportsView() {
 
   useEffect(() => {
     async function loadReports() {
-      if (!session?.accessToken) {
-        return;
-      }
-
+      if (!session?.accessToken) return;
       try {
         const result = await getAdminReports();
         setReports(result);
@@ -34,20 +33,14 @@ export function AdminReportsView() {
           Object.fromEntries(result.map((item) => [item.id, item.status])),
         );
       } catch (error) {
-        const message =
-          error instanceof Error ? error.message : "Failed to load reports.";
-        setErrorMessage(message);
+        setErrorMessage(extractApiError(error));
       }
     }
-
     void loadReports();
   }, [session?.accessToken]);
 
   async function handleUpdate(reportId: string) {
-    if (!session?.accessToken) {
-      return;
-    }
-
+    if (!session?.accessToken) return;
     try {
       const updated = await updateAdminReportStatus(reportId, drafts[reportId]);
       setReports((current) =>
@@ -56,89 +49,117 @@ export function AdminReportsView() {
       setSuccessMessage("Report status updated.");
       setErrorMessage(null);
     } catch (error) {
-      const message =
-        error instanceof Error
-          ? error.message
-          : "Failed to update report status.";
-      setErrorMessage(message);
+      setErrorMessage(extractApiError(error));
       setSuccessMessage(null);
     }
   }
 
+  // biome-ignore lint/correctness/useExhaustiveDependencies: handleUpdate captured via closure
+  const columns = useMemo<GridColDef<Report>[]>(
+    () => [
+      { field: "reason", headerName: "Reason", flex: 1.2, minWidth: 200 },
+      {
+        field: "reporter",
+        headerName: "Reporter",
+        flex: 1.2,
+        minWidth: 220,
+        valueGetter: (_value, row: Report) =>
+          `${row.reporter.fullName} (${row.reporter.email})`,
+      },
+      {
+        field: "listing",
+        headerName: "Listing",
+        flex: 1.2,
+        minWidth: 220,
+        valueGetter: (_value, row: Report) =>
+          row.listing
+            ? `${row.listing.title} - ${row.listing.area}, ${row.listing.city}`
+            : "-",
+      },
+      {
+        field: "reportedUser",
+        headerName: "Reported user",
+        flex: 1,
+        minWidth: 200,
+        valueGetter: (_value, row: Report) =>
+          row.reportedUser
+            ? `${row.reportedUser.fullName} (${row.reportedUser.email})`
+            : "-",
+      },
+      {
+        field: "status",
+        headerName: "Status",
+        width: 200,
+        sortable: false,
+        renderCell: (params: GridRenderCellParams<Report>) => (
+          <TextField
+            select
+            size="small"
+            value={drafts[params.row.id] ?? params.row.status}
+            onChange={(event) =>
+              setDrafts((current) => ({
+                ...current,
+                [params.row.id]: event.target.value as ReportStatus,
+              }))
+            }
+            sx={{ minWidth: 160 }}
+          >
+            {reportStatuses.map((status) => (
+              <MenuItem key={status} value={status}>
+                {status}
+              </MenuItem>
+            ))}
+          </TextField>
+        ),
+      },
+      {
+        field: "actions",
+        headerName: "",
+        width: 110,
+        sortable: false,
+        filterable: false,
+        renderCell: (params: GridRenderCellParams<Report>) => (
+          <Button
+            size="small"
+            variant="contained"
+            onClick={() => handleUpdate(params.row.id)}
+          >
+            Update
+          </Button>
+        ),
+      },
+    ],
+    [drafts],
+  );
+
   return (
-    <Stack spacing={3}>
-      <Stack spacing={1}>
-        <Typography variant="overline" color="secondary.main" fontWeight={800}>
-          Trust reports
-        </Typography>
-        <Typography variant="h2">Reports</Typography>
-      </Stack>
+    <Box>
+      <PageHeader
+        eyebrow="Trust reports"
+        title="Reports"
+        subtitle="Review user-submitted reports on listings and other accounts."
+      />
 
-      {errorMessage ? <Alert severity="error">{errorMessage}</Alert> : null}
+      {errorMessage ? (
+        <Alert severity="error" sx={{ mb: 2 }}>
+          {errorMessage}
+        </Alert>
+      ) : null}
       {successMessage ? (
-        <Alert severity="success">{successMessage}</Alert>
-      ) : null}
-      {reports.length === 0 ? (
-        <Paper sx={{ p: 3 }}>
-          <Typography color="text.secondary">
-            No reports have been submitted yet.
-          </Typography>
-        </Paper>
+        <Alert severity="success" sx={{ mb: 2 }}>
+          {successMessage}
+        </Alert>
       ) : null}
 
-      <Stack spacing={2}>
-        {reports.map((report) => (
-          <Paper key={report.id} sx={{ p: 3 }}>
-            <Stack spacing={1.5}>
-              <Typography variant="h5">{report.reason}</Typography>
-              <Typography color="text.secondary">
-                Reporter: {report.reporter.fullName} ({report.reporter.email})
-              </Typography>
-              {report.listing ? (
-                <Typography color="text.secondary">
-                  Listing: {report.listing.title} in {report.listing.area},{" "}
-                  {report.listing.city}
-                </Typography>
-              ) : null}
-              {report.reportedUser ? (
-                <Typography color="text.secondary">
-                  Reported user: {report.reportedUser.fullName} (
-                  {report.reportedUser.email})
-                </Typography>
-              ) : null}
-              {report.details ? (
-                <Typography color="text.secondary">{report.details}</Typography>
-              ) : null}
-              <Stack direction={{ xs: "column", sm: "row" }} spacing={1.5}>
-                <TextField
-                  select
-                  label="Status"
-                  value={drafts[report.id] ?? report.status}
-                  onChange={(event) =>
-                    setDrafts((current) => ({
-                      ...current,
-                      [report.id]: event.target.value as ReportStatus,
-                    }))
-                  }
-                  sx={{ minWidth: 220 }}
-                >
-                  {reportStatuses.map((status) => (
-                    <MenuItem key={status} value={status}>
-                      {status}
-                    </MenuItem>
-                  ))}
-                </TextField>
-                <Button
-                  variant="contained"
-                  onClick={() => handleUpdate(report.id)}
-                >
-                  Update
-                </Button>
-              </Stack>
-            </Stack>
-          </Paper>
-        ))}
-      </Stack>
-    </Stack>
+      <DataTable
+        rows={reports}
+        columns={columns}
+        getRowId={(row) => row.id}
+        initialState={{
+          pagination: { paginationModel: { pageSize: 25 } },
+          sorting: { sortModel: [{ field: "status", sort: "asc" }] },
+        }}
+      />
+    </Box>
   );
 }

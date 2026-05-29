@@ -1,15 +1,17 @@
 "use client";
 
 import Alert from "@mui/material/Alert";
+import Box from "@mui/material/Box";
 import Button from "@mui/material/Button";
 import MenuItem from "@mui/material/MenuItem";
-import Paper from "@mui/material/Paper";
-import Stack from "@mui/material/Stack";
 import TextField from "@mui/material/TextField";
-import Typography from "@mui/material/Typography";
-import { useEffect, useState } from "react";
+import type { GridColDef, GridRenderCellParams } from "@mui/x-data-grid";
+import { useEffect, useMemo, useState } from "react";
+import { DataTable } from "@/components/ui/DataTable";
+import { PageHeader } from "@/components/ui/PageHeader";
 import { useAuth } from "@/features/auth/AuthProvider";
 import { getAdminUsers, updateAdminUserStatus } from "@/lib/api/admin";
+import { extractApiError } from "@/lib/api/client";
 import type { AdminUser, UserStatus } from "@/types/domain";
 
 const userStatuses: UserStatus[] = ["ACTIVE", "SUSPENDED"];
@@ -23,10 +25,7 @@ export function AdminUsersView() {
 
   useEffect(() => {
     async function loadUsers() {
-      if (!session?.accessToken) {
-        return;
-      }
-
+      if (!session?.accessToken) return;
       try {
         const result = await getAdminUsers();
         setUsers(result);
@@ -34,20 +33,14 @@ export function AdminUsersView() {
           Object.fromEntries(result.map((item) => [item.id, item.status])),
         );
       } catch (error) {
-        const message =
-          error instanceof Error ? error.message : "Failed to load users.";
-        setErrorMessage(message);
+        setErrorMessage(extractApiError(error));
       }
     }
-
     void loadUsers();
   }, [session?.accessToken]);
 
   async function handleUpdate(userId: string) {
-    if (!session?.accessToken) {
-      return;
-    }
-
+    if (!session?.accessToken) return;
     try {
       const updated = await updateAdminUserStatus(userId, drafts[userId]);
       setUsers((current) =>
@@ -56,76 +49,98 @@ export function AdminUsersView() {
       setSuccessMessage("User status updated.");
       setErrorMessage(null);
     } catch (error) {
-      const message =
-        error instanceof Error
-          ? error.message
-          : "Failed to update user status.";
-      setErrorMessage(message);
+      setErrorMessage(extractApiError(error));
       setSuccessMessage(null);
     }
   }
 
+  // biome-ignore lint/correctness/useExhaustiveDependencies: handleUpdate captured via closure
+  const columns = useMemo<GridColDef<AdminUser>[]>(
+    () => [
+      { field: "fullName", headerName: "Name", flex: 1.2, minWidth: 200 },
+      { field: "email", headerName: "Email", flex: 1.5, minWidth: 240 },
+      { field: "role", headerName: "Role", width: 130 },
+      {
+        field: "emailVerified",
+        headerName: "Verified",
+        width: 110,
+        valueGetter: (_value, row: AdminUser) =>
+          row.emailVerified ? "Yes" : "No",
+      },
+      {
+        field: "status",
+        headerName: "Status",
+        width: 200,
+        sortable: false,
+        renderCell: (params: GridRenderCellParams<AdminUser>) => (
+          <TextField
+            select
+            size="small"
+            value={drafts[params.row.id] ?? params.row.status}
+            onChange={(event) =>
+              setDrafts((current) => ({
+                ...current,
+                [params.row.id]: event.target.value as UserStatus,
+              }))
+            }
+            sx={{ minWidth: 160 }}
+          >
+            {userStatuses.map((status) => (
+              <MenuItem key={status} value={status}>
+                {status}
+              </MenuItem>
+            ))}
+          </TextField>
+        ),
+      },
+      {
+        field: "actions",
+        headerName: "",
+        width: 110,
+        sortable: false,
+        filterable: false,
+        renderCell: (params: GridRenderCellParams<AdminUser>) => (
+          <Button
+            size="small"
+            variant="contained"
+            onClick={() => handleUpdate(params.row.id)}
+          >
+            Update
+          </Button>
+        ),
+      },
+    ],
+    [drafts],
+  );
+
   return (
-    <Stack spacing={3}>
-      <Stack spacing={1}>
-        <Typography variant="overline" color="secondary.main" fontWeight={800}>
-          User operations
-        </Typography>
-        <Typography variant="h2">Manage users</Typography>
-      </Stack>
+    <Box>
+      <PageHeader
+        eyebrow="User operations"
+        title="Manage users"
+        subtitle="Suspend or restore accounts as needed."
+      />
 
-      {errorMessage ? <Alert severity="error">{errorMessage}</Alert> : null}
+      {errorMessage ? (
+        <Alert severity="error" sx={{ mb: 2 }}>
+          {errorMessage}
+        </Alert>
+      ) : null}
       {successMessage ? (
-        <Alert severity="success">{successMessage}</Alert>
-      ) : null}
-      {users.length === 0 ? (
-        <Paper sx={{ p: 3 }}>
-          <Typography color="text.secondary">No users found.</Typography>
-        </Paper>
+        <Alert severity="success" sx={{ mb: 2 }}>
+          {successMessage}
+        </Alert>
       ) : null}
 
-      <Stack spacing={2}>
-        {users.map((user) => (
-          <Paper key={user.id} sx={{ p: 3 }}>
-            <Stack spacing={1.5}>
-              <Typography variant="h5">{user.fullName}</Typography>
-              <Typography color="text.secondary">
-                {user.email} - {user.role}
-              </Typography>
-              <Typography color="text.secondary">
-                Status: {user.status} / Email verified:{" "}
-                {user.emailVerified ? "Yes" : "No"}
-              </Typography>
-              <Stack direction={{ xs: "column", sm: "row" }} spacing={1.5}>
-                <TextField
-                  select
-                  label="Status"
-                  value={drafts[user.id] ?? user.status}
-                  onChange={(event) =>
-                    setDrafts((current) => ({
-                      ...current,
-                      [user.id]: event.target.value as UserStatus,
-                    }))
-                  }
-                  sx={{ minWidth: 220 }}
-                >
-                  {userStatuses.map((status) => (
-                    <MenuItem key={status} value={status}>
-                      {status}
-                    </MenuItem>
-                  ))}
-                </TextField>
-                <Button
-                  variant="contained"
-                  onClick={() => handleUpdate(user.id)}
-                >
-                  Update
-                </Button>
-              </Stack>
-            </Stack>
-          </Paper>
-        ))}
-      </Stack>
-    </Stack>
+      <DataTable
+        rows={users}
+        columns={columns}
+        getRowId={(row) => row.id}
+        initialState={{
+          pagination: { paginationModel: { pageSize: 25 } },
+          sorting: { sortModel: [{ field: "fullName", sort: "asc" }] },
+        }}
+      />
+    </Box>
   );
 }

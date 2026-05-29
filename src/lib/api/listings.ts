@@ -18,7 +18,7 @@ export type ListingSearchParams = {
   furnished?: boolean;
   amenities?: string[];
   page?: number;
-  size?: number;
+  perPage?: number;
   sort?:
     | "PUBLISHED_AT_DESC"
     | "RENT_AMOUNT_ASC"
@@ -143,7 +143,7 @@ export async function searchListings(
     query.furnished = String(params.furnished);
   if (params.amenities?.length) query.amenities = params.amenities;
   if (params.page !== undefined) query.page = String(params.page);
-  if (params.size !== undefined) query.size = String(params.size);
+  if (params.perPage !== undefined) query.perPage = String(params.perPage);
   if (params.sort) query.sort = params.sort;
 
   const res = await client.get<

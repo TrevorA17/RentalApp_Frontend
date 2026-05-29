@@ -10,11 +10,11 @@ import Stack from "@mui/material/Stack";
 import TextField from "@mui/material/TextField";
 import Typography from "@mui/material/Typography";
 import { useEffect, useState } from "react";
-import {
-  getAdminRecommendations,
-  updateAdminRecommendationApproval,
-} from "@/lib/api/admin";
-import type { AdminAgentRecommendation, ApprovalStatus } from "@/types/domain";
+import { useAdminRecommendations } from "@/hooks/useAdminRecommendations";
+import { updateAdminRecommendationApproval } from "@/lib/api/admin";
+import { extractApiError } from "@/lib/api/client";
+import { formatDateTime } from "@/lib/utils/formatDate";
+import type { ApprovalStatus } from "@/types/domain";
 
 const approvalStatuses: ApprovalStatus[] = ["PENDING", "APPROVED", "REJECTED"];
 
@@ -33,60 +33,42 @@ function statusColor(
 }
 
 export function AdminRecommendationsView() {
-  const [items, setItems] = useState<AdminAgentRecommendation[]>([]);
+  const {
+    recommendations: items,
+    loading: isLoading,
+    error,
+    refetch,
+  } = useAdminRecommendations();
   const [drafts, setDrafts] = useState<Record<string, ApprovalStatus>>({});
-  const [isLoading, setIsLoading] = useState(true);
   const [updatingId, setUpdatingId] = useState<string | null>(null);
-  const [errorMessage, setErrorMessage] = useState<string | null>(null);
+  const [mutationError, setMutationError] = useState<string | null>(null);
   const [successMessage, setSuccessMessage] = useState<string | null>(null);
 
   useEffect(() => {
-    async function loadRecommendations() {
-      try {
-        const result = await getAdminRecommendations();
-        setItems(result);
-        setDrafts(
-          Object.fromEntries(
-            result.map((item) => [item.id, item.approvalStatus]),
-          ),
-        );
-      } catch (error) {
-        const message =
-          error instanceof Error
-            ? error.message
-            : "Failed to load recommendation moderation queue.";
-        setErrorMessage(message);
-      } finally {
-        setIsLoading(false);
-      }
-    }
-
-    void loadRecommendations();
-  }, []);
+    setDrafts(
+      Object.fromEntries(items.map((item) => [item.id, item.approvalStatus])),
+    );
+  }, [items]);
 
   async function handleUpdate(recommendationId: string) {
     try {
       setUpdatingId(recommendationId);
-      const updated = await updateAdminRecommendationApproval(
+      await updateAdminRecommendationApproval(
         recommendationId,
         drafts[recommendationId],
       );
-      setItems((current) =>
-        current.map((item) => (item.id === recommendationId ? updated : item)),
-      );
+      await refetch();
       setSuccessMessage("Recommendation moderation status updated.");
-      setErrorMessage(null);
-    } catch (error) {
-      const message =
-        error instanceof Error
-          ? error.message
-          : "Failed to update recommendation moderation.";
-      setErrorMessage(message);
+      setMutationError(null);
+    } catch (err) {
+      setMutationError(extractApiError(err));
       setSuccessMessage(null);
     } finally {
       setUpdatingId(null);
     }
   }
+
+  const errorMessage = error ?? mutationError;
 
   return (
     <Stack spacing={3}>
@@ -145,7 +127,7 @@ export function AdminRecommendationsView() {
                   />
                   <Rating value={item.rating} readOnly />
                   <Typography variant="body2" color="text.secondary">
-                    {new Date(item.createdAt).toLocaleString()}
+                    {formatDateTime(item.createdAt)}
                   </Typography>
                 </Stack>
               </Stack>

@@ -1,14 +1,18 @@
 "use client";
 
 import Alert from "@mui/material/Alert";
+import Box from "@mui/material/Box";
 import Button from "@mui/material/Button";
 import MenuItem from "@mui/material/MenuItem";
 import Paper from "@mui/material/Paper";
 import Stack from "@mui/material/Stack";
 import TextField from "@mui/material/TextField";
 import Typography from "@mui/material/Typography";
+import { Inbox } from "lucide-react";
 import Link from "next/link";
 import { useEffect, useState } from "react";
+import { EmptyState } from "@/components/ui/EmptyState";
+import { PageHeader } from "@/components/ui/PageHeader";
 import { useAuth } from "@/features/auth/AuthProvider";
 import { useReceivedInquiries } from "@/hooks/useInquiries";
 import { extractApiError } from "@/lib/api/client";
@@ -37,7 +41,6 @@ export function ReceivedInquiriesView() {
 
   async function handleUpdateStatus(inquiryId: string) {
     if (!session?.accessToken) return;
-
     try {
       await updateInquiryStatus(inquiryId, statusDrafts[inquiryId]);
       await refetch();
@@ -49,77 +52,93 @@ export function ReceivedInquiriesView() {
   const errorMessage = error ?? mutationError;
 
   return (
-    <Stack spacing={3}>
-      <Stack spacing={1.5}>
-        <Typography variant="overline" color="secondary.main" fontWeight={800}>
-          Lead inbox
-        </Typography>
-        <Typography variant="h2">Received inquiries</Typography>
-        <Typography color="text.secondary">
-          Review incoming renter interest and update each inquiry as you
-          respond.
-        </Typography>
-      </Stack>
+    <Box>
+      <PageHeader
+        title="Received inquiries"
+        subtitle="Review incoming renter interest and update each inquiry as you respond."
+      />
 
-      {errorMessage ? <Alert severity="error">{errorMessage}</Alert> : null}
-
-      {inquiries.length === 0 ? (
-        <Paper sx={{ p: 3 }}>
-          <Typography color="text.secondary">
-            No one has contacted your listings yet.
-          </Typography>
-        </Paper>
+      {errorMessage ? (
+        <Alert severity="error" sx={{ mb: 2 }}>
+          {errorMessage}
+        </Alert>
       ) : null}
 
-      <Stack spacing={2}>
-        {inquiries.map((inquiry) => (
-          <Paper key={inquiry.id} sx={{ p: 3 }}>
-            <Stack spacing={1.5}>
-              <Link href={`/listings/${inquiry.listingId}`}>
-                <Typography variant="h5">{inquiry.listingTitle}</Typography>
-              </Link>
-              <Typography color="primary.main" fontWeight={700}>
-                KES {inquiry.listingRentAmount}
-              </Typography>
-              <Typography color="text.secondary">
-                From: {inquiry.sender.fullName} ({inquiry.sender.role}) -{" "}
-                {inquiry.sender.email}
-              </Typography>
-              <Typography color="text.secondary">{inquiry.message}</Typography>
-              <Stack
-                direction={{ xs: "column", sm: "row" }}
-                spacing={1.5}
-                alignItems={{ xs: "stretch", sm: "center" }}
-              >
-                <TextField
-                  select
-                  label="Status"
-                  value={statusDrafts[inquiry.id] ?? inquiry.status}
-                  onChange={(event) =>
-                    setStatusDrafts((current) => ({
-                      ...current,
-                      [inquiry.id]: event.target.value as InquiryStatus,
-                    }))
-                  }
-                  sx={{ minWidth: 220 }}
+      {inquiries.length === 0 ? (
+        <EmptyState
+          icon={Inbox}
+          title="No inquiries yet"
+          description="When renters contact your listings, the conversations will appear here."
+        />
+      ) : (
+        <Stack spacing={1.5}>
+          {inquiries.map((inquiry) => (
+            <Paper key={inquiry.id} sx={{ p: 2.5 }}>
+              <Stack spacing={1.5}>
+                <Stack
+                  direction="row"
+                  justifyContent="space-between"
+                  alignItems="flex-start"
                 >
-                  {inquiryStatuses.map((status) => (
-                    <MenuItem key={status} value={status}>
-                      {status}
-                    </MenuItem>
-                  ))}
-                </TextField>
-                <Button
-                  variant="contained"
-                  onClick={() => handleUpdateStatus(inquiry.id)}
+                  <Box sx={{ minWidth: 0 }}>
+                    <Typography
+                      component={Link}
+                      href={`/listings/${inquiry.listingId}`}
+                      variant="h5"
+                      sx={{
+                        textDecoration: "none",
+                        color: "text.primary",
+                        "&:hover": { color: "primary.main" },
+                      }}
+                    >
+                      {inquiry.listingTitle}
+                    </Typography>
+                    <Typography variant="body2" color="text.secondary">
+                      From {inquiry.sender.fullName} ({inquiry.sender.role}) ·{" "}
+                      {inquiry.sender.email}
+                    </Typography>
+                  </Box>
+                </Stack>
+                <Typography variant="body2" color="text.secondary">
+                  {inquiry.message}
+                </Typography>
+                <Stack
+                  direction={{ xs: "column", sm: "row" }}
+                  spacing={1}
+                  alignItems={{ xs: "stretch", sm: "center" }}
                 >
-                  Update status
-                </Button>
+                  <TextField
+                    select
+                    size="small"
+                    label="Status"
+                    value={statusDrafts[inquiry.id] ?? inquiry.status}
+                    onChange={(event) =>
+                      setStatusDrafts((current) => ({
+                        ...current,
+                        [inquiry.id]: event.target.value as InquiryStatus,
+                      }))
+                    }
+                    sx={{ minWidth: 180 }}
+                  >
+                    {inquiryStatuses.map((status) => (
+                      <MenuItem key={status} value={status}>
+                        {status}
+                      </MenuItem>
+                    ))}
+                  </TextField>
+                  <Button
+                    variant="contained"
+                    size="small"
+                    onClick={() => handleUpdateStatus(inquiry.id)}
+                  >
+                    Update
+                  </Button>
+                </Stack>
               </Stack>
-            </Stack>
-          </Paper>
-        ))}
-      </Stack>
-    </Stack>
+            </Paper>
+          ))}
+        </Stack>
+      )}
+    </Box>
   );
 }

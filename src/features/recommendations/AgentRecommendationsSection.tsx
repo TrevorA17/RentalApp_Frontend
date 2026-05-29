@@ -14,6 +14,7 @@ import { useState } from "react";
 import { useAuth } from "@/features/auth/AuthProvider";
 import { extractApiError } from "@/lib/api/client";
 import { createAgentRecommendation } from "@/lib/api/recommendations";
+import { formatDate } from "@/lib/utils/formatDate";
 import type { AgentRecommendation } from "@/types/domain";
 import {
   type RecommendationFormValues,
@@ -111,7 +112,7 @@ export function AgentRecommendationsSection({
                       >
                         <Rating value={item.rating} precision={1} readOnly />
                         <Typography variant="body2" color="text.secondary">
-                          {new Date(item.createdAt).toLocaleDateString()}
+                          {formatDate(item.createdAt)}
                         </Typography>
                       </Stack>
                     </Stack>

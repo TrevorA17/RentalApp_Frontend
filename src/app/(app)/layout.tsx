@@ -1,9 +1,9 @@
-import { WorkspaceShell } from "@/components/shell/WorkspaceShell";
+import { DashboardShell } from "@/components/shell/DashboardShell";
 
 export default function AppLayout({
   children,
 }: Readonly<{
   children: React.ReactNode;
 }>) {
-  return <WorkspaceShell mode="app">{children}</WorkspaceShell>;
+  return <DashboardShell mode="app">{children}</DashboardShell>;
 }

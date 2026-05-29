@@ -1,441 +1,307 @@
-import ArrowForwardRounded from "@mui/icons-material/ArrowForwardRounded";
-import AutoAwesomeRounded from "@mui/icons-material/AutoAwesomeRounded";
-import FactCheckRounded from "@mui/icons-material/FactCheckRounded";
-import HomeWorkRounded from "@mui/icons-material/HomeWorkRounded";
-import ImageRounded from "@mui/icons-material/ImageRounded";
-import ReviewsRounded from "@mui/icons-material/ReviewsRounded";
-import SearchRounded from "@mui/icons-material/SearchRounded";
-import ShieldRounded from "@mui/icons-material/ShieldRounded";
+"use client";
+
 import Box from "@mui/material/Box";
 import Button from "@mui/material/Button";
 import Chip from "@mui/material/Chip";
+import Container from "@mui/material/Container";
 import Grid from "@mui/material/Grid";
 import Paper from "@mui/material/Paper";
 import Stack from "@mui/material/Stack";
 import Typography from "@mui/material/Typography";
-import { PageSection } from "@/components/shell/PageSection";
+import {
+  ArrowRight,
+  type LucideIcon,
+  Search,
+  Shield,
+  Sparkles,
+  Star,
+} from "lucide-react";
+import Link from "next/link";
 
-const valueCards = [
+const benefits: Array<{
+  title: string;
+  body: string;
+  icon: LucideIcon;
+}> = [
   {
     title: "Rental-first search",
-    body: "Filters are built around renting decisions: area, budget, bedrooms, amenities, and availability.",
-    icon: <SearchRounded />,
+    body: "Filters built around renting decisions — area, budget, bedrooms, amenities, availability.",
+    icon: Search,
   },
   {
     title: "Trust around agents",
-    body: "Public recommendations and admin moderation help renters judge who they are dealing with.",
-    icon: <ShieldRounded />,
+    body: "Public recommendations and admin moderation help you judge who you're dealing with.",
+    icon: Shield,
   },
   {
-    title: "Richer listing context",
-    body: "Upload-first media, amenities, fees, and descriptions make each rental easier to evaluate.",
-    icon: <ImageRounded />,
+    title: "AI that helps, not hypes",
+    body: "Translate plain-language requests into structured filters. Real search stays in control.",
+    icon: Sparkles,
   },
   {
-    title: "Helpful AI, not hype",
-    body: "AI helps interpret search text and improve listing copy while structured search stays in control.",
-    icon: <AutoAwesomeRounded />,
-  },
-];
-
-const previewListings = [
-  {
-    title: "Modern 2-bedroom apartment",
-    area: "Kilimani, Nairobi",
-    price: "KES 48,000",
-    detail: "Parking, security, balcony",
-  },
-  {
-    title: "Quiet studio near transit",
-    area: "Westlands, Nairobi",
-    price: "KES 28,000",
-    detail: "WiFi-ready, water backup",
-  },
-  {
-    title: "Family maisonette",
-    area: "Kiambu Road",
-    price: "KES 85,000",
-    detail: "Garden, borehole, gated access",
+    title: "Verified reviews",
+    body: "Moderated recommendations on agent profiles give you signal before a viewing.",
+    icon: Star,
   },
 ];
 
 export default function HomePage() {
   return (
     <Box>
-      <PageSection>
-        <Grid container spacing={4} alignItems="center">
-          <Grid size={{ xs: 12, lg: 7 }}>
-            <Stack spacing={3}>
-              <Chip
-                label="Rental-only marketplace MVP"
-                color="secondary"
-                sx={{ width: "fit-content" }}
-              />
-              <Typography variant="h1" sx={{ maxWidth: 840 }}>
-                Search rentals with clearer trust signals before you schedule a
-                viewing.
-              </Typography>
-              <Typography
-                variant="h6"
-                color="text.secondary"
-                sx={{ maxWidth: 760 }}
-              >
-                RentalApp helps renters discover homes by area, budget, and
-                preferences while giving agents and landlords a structured
-                workspace for listings, media, inquiries, and public trust.
-              </Typography>
-              <Stack direction={{ xs: "column", sm: "row" }} spacing={1.5}>
-                <Button
-                  href="/listings"
-                  variant="contained"
-                  size="large"
-                  endIcon={<ArrowForwardRounded />}
-                >
-                  Browse rentals
-                </Button>
-                <Button href="/register" variant="outlined" size="large">
-                  Create account
-                </Button>
-              </Stack>
-            </Stack>
-          </Grid>
+      {/* Hero */}
+      <Box
+        sx={{
+          background: "linear-gradient(180deg, #f8fafc 0%, #ffffff 100%)",
+          borderBottom: "1px solid",
+          borderColor: "divider",
+        }}
+      >
+        <Container maxWidth="lg" sx={{ py: { xs: 6, md: 10 } }}>
+          <Stack spacing={4} alignItems="center" textAlign="center">
+            <Chip
+              label="Rental marketplace"
+              size="small"
+              sx={{ bgcolor: "primary.main", color: "primary.contrastText" }}
+            />
+            <Typography variant="h1" sx={{ maxWidth: 760 }}>
+              Find rentals with the trust signals you actually need.
+            </Typography>
+            <Typography
+              variant="h6"
+              color="text.secondary"
+              sx={{ maxWidth: 620, fontWeight: 400 }}
+            >
+              Browse verified listings, save shortlists, and contact landlords
+              or agents you can vet — all in one place.
+            </Typography>
 
-          <Grid size={{ xs: 12, lg: 5 }}>
+            {/* Search card */}
             <Paper
+              component={Link}
+              href="/listings"
               sx={{
-                p: 3,
-                minHeight: 420,
+                width: "100%",
+                maxWidth: 580,
+                p: 1,
                 display: "flex",
-                flexDirection: "column",
-                justifyContent: "space-between",
-                background:
-                  "linear-gradient(145deg, rgba(14,107,115,0.94), rgba(22,35,56,0.94))",
-                color: "white",
-                overflow: "hidden",
-                position: "relative",
+                alignItems: "center",
+                gap: 1,
+                textDecoration: "none",
+                color: "text.secondary",
+                transition: "border-color 120ms ease",
+                "&:hover": { borderColor: "primary.main" },
               }}
             >
-              <Box
-                sx={{
-                  position: "absolute",
-                  inset: "auto -20% -28% 18%",
-                  height: 260,
-                  borderRadius: "50%",
-                  background:
-                    "radial-gradient(circle, rgba(200,107,42,0.42), transparent 64%)",
-                }}
-              />
-              <Stack spacing={2} sx={{ position: "relative" }}>
-                <Typography variant="overline" sx={{ opacity: 0.8 }}>
-                  Try the search helper
-                </Typography>
-                <Paper
-                  sx={{
-                    p: 2,
-                    background: "rgba(255,255,255,0.12)",
-                    borderColor: "rgba(255,255,255,0.18)",
-                  }}
-                >
-                  <Typography fontWeight={800}>
-                    &quot;2 bedroom in Kilimani under 50k with parking&quot;
-                  </Typography>
-                </Paper>
-                <Stack direction="row" spacing={1} flexWrap="wrap" useFlexGap>
-                  {[
-                    "Area: Kilimani",
-                    "2 bedrooms",
-                    "Max KES 50,000",
-                    "Parking",
-                  ].map((label) => (
-                    <Chip
-                      key={label}
-                      label={label}
-                      sx={{
-                        color: "white",
-                        borderColor: "rgba(255,255,255,0.35)",
-                      }}
-                      variant="outlined"
-                    />
-                  ))}
-                </Stack>
-              </Stack>
-              <Stack spacing={1.2} sx={{ position: "relative" }}>
-                <Typography variant="h5">
-                  Structured discovery stays in control.
-                </Typography>
-                <Typography sx={{ opacity: 0.82 }}>
-                  AI suggests filters, then the marketplace uses real listing
-                  data, pagination, and sorting.
-                </Typography>
-              </Stack>
-            </Paper>
-          </Grid>
-        </Grid>
-      </PageSection>
-
-      <PageSection>
-        <Stack spacing={3}>
-          <Stack spacing={1} maxWidth={760}>
-            <Typography
-              variant="overline"
-              color="secondary.main"
-              fontWeight={900}
-            >
-              Why it exists
-            </Typography>
-            <Typography variant="h2">
-              A cleaner alternative to generic classifieds.
-            </Typography>
-            <Typography color="text.secondary">
-              The MVP focuses on rental-specific workflows: better listing
-              structure, inquiry tracking, agent recommendations, reports, and
-              admin trust operations.
-            </Typography>
-          </Stack>
-
-          <Grid container spacing={3}>
-            {valueCards.map((card) => (
-              <Grid key={card.title} size={{ xs: 12, md: 6, lg: 3 }}>
-                <Paper sx={{ p: 3, height: "100%" }}>
-                  <Stack spacing={2}>
-                    <Box sx={{ color: "primary.main" }}>{card.icon}</Box>
-                    <Typography variant="h5">{card.title}</Typography>
-                    <Typography color="text.secondary">{card.body}</Typography>
-                  </Stack>
-                </Paper>
-              </Grid>
-            ))}
-          </Grid>
-        </Stack>
-      </PageSection>
-
-      <PageSection>
-        <Grid container spacing={3}>
-          <Grid size={{ xs: 12, md: 6 }}>
-            <Paper sx={{ p: { xs: 3, md: 4 }, height: "100%" }}>
-              <Stack spacing={2}>
-                <Chip
-                  label="For renters"
-                  color="primary"
-                  sx={{ width: "fit-content" }}
-                />
-                <Typography variant="h3">
-                  Shortlist homes with less guesswork.
-                </Typography>
-                <Stack spacing={1.2}>
-                  {[
-                    "Browse by area and budget",
-                    "Use AI to fill structured filters",
-                    "Save listings and send inquiries",
-                    "Review agent recommendations before engaging",
-                  ].map((item) => (
-                    <Stack
-                      key={item}
-                      direction="row"
-                      spacing={1.2}
-                      alignItems="center"
-                    >
-                      <FactCheckRounded color="secondary" fontSize="small" />
-                      <Typography>{item}</Typography>
-                    </Stack>
-                  ))}
-                </Stack>
-              </Stack>
-            </Paper>
-          </Grid>
-
-          <Grid size={{ xs: 12, md: 6 }}>
-            <Paper sx={{ p: { xs: 3, md: 4 }, height: "100%" }}>
-              <Stack spacing={2}>
-                <Chip
-                  label="For agents and landlords"
-                  color="secondary"
-                  sx={{ width: "fit-content" }}
-                />
-                <Typography variant="h3">
-                  Manage listings from a real workspace.
-                </Typography>
-                <Stack spacing={1.2}>
-                  {[
-                    "Create and publish rental listings",
-                    "Upload images and clarify fees",
-                    "Use AI to strengthen descriptions",
-                    "Receive inquiries and build profile trust",
-                  ].map((item) => (
-                    <Stack
-                      key={item}
-                      direction="row"
-                      spacing={1.2}
-                      alignItems="center"
-                    >
-                      <HomeWorkRounded color="primary" fontSize="small" />
-                      <Typography>{item}</Typography>
-                    </Stack>
-                  ))}
-                </Stack>
-              </Stack>
-            </Paper>
-          </Grid>
-        </Grid>
-      </PageSection>
-
-      <PageSection>
-        <Stack spacing={3}>
-          <Stack
-            direction={{ xs: "column", md: "row" }}
-            justifyContent="space-between"
-            spacing={2}
-          >
-            <Stack spacing={1} maxWidth={720}>
-              <Typography
-                variant="overline"
-                color="secondary.main"
-                fontWeight={900}
+              <Box sx={{ pl: 1.5, display: "flex", color: "primary.main" }}>
+                <Search size={18} />
+              </Box>
+              <Typography sx={{ flex: 1, py: 1.25 }}>
+                Search by city, area, or budget…
+              </Typography>
+              <Button
+                component="span"
+                variant="contained"
+                size="small"
+                endIcon={<ArrowRight size={16} />}
               >
-                Marketplace preview
-              </Typography>
-              <Typography variant="h2">
-                Listings should feel structured, visual, and comparable.
-              </Typography>
+                Browse
+              </Button>
+            </Paper>
+
+            <Stack direction="row" spacing={2}>
+              <Button
+                component={Link}
+                href="/register"
+                variant="outlined"
+                size="large"
+              >
+                Create account
+              </Button>
+              <Button
+                component={Link}
+                href="/login"
+                variant="text"
+                size="large"
+              >
+                Sign in
+              </Button>
             </Stack>
-            <Button
-              href="/listings"
-              variant="outlined"
-              endIcon={<ArrowForwardRounded />}
-              sx={{ alignSelf: { xs: "flex-start", md: "center" } }}
-            >
-              Open live browse
-            </Button>
           </Stack>
+        </Container>
+      </Box>
 
-          <Grid container spacing={3}>
-            {previewListings.map((listing, index) => (
-              <Grid key={listing.title} size={{ xs: 12, md: 4 }}>
-                <Paper sx={{ p: 2.5, height: "100%" }}>
-                  <Stack spacing={2}>
-                    <Box
-                      sx={{
-                        height: 170,
-                        borderRadius: 4,
-                        background:
-                          index === 0
-                            ? "linear-gradient(135deg, rgba(14,107,115,0.18), rgba(200,107,42,0.26))"
-                            : index === 1
-                              ? "linear-gradient(135deg, rgba(113,158,120,0.2), rgba(14,107,115,0.16))"
-                              : "linear-gradient(135deg, rgba(22,35,56,0.12), rgba(200,107,42,0.22))",
-                        display: "grid",
-                        placeItems: "center",
-                        color: "primary.main",
-                      }}
-                    >
-                      <HomeWorkRounded sx={{ fontSize: 54 }} />
-                    </Box>
-                    <Stack spacing={0.75}>
-                      <Typography variant="h5">{listing.title}</Typography>
-                      <Typography color="text.secondary">
-                        {listing.area}
-                      </Typography>
-                      <Typography color="primary.main" fontWeight={900}>
-                        {listing.price}
-                      </Typography>
-                      <Typography color="text.secondary">
-                        {listing.detail}
-                      </Typography>
-                    </Stack>
-                  </Stack>
-                </Paper>
-              </Grid>
-            ))}
-          </Grid>
+      {/* Benefits */}
+      <Container maxWidth="lg" sx={{ py: { xs: 6, md: 10 } }}>
+        <Stack
+          spacing={1.5}
+          alignItems="center"
+          textAlign="center"
+          sx={{ mb: 5 }}
+        >
+          <Typography variant="overline" color="primary.main">
+            Why RentalApp
+          </Typography>
+          <Typography variant="h2">
+            A cleaner alternative to classifieds.
+          </Typography>
+          <Typography color="text.secondary" sx={{ maxWidth: 560 }}>
+            Built for the specific shape of renting — better listings, better
+            trust, better tools for both sides.
+          </Typography>
         </Stack>
-      </PageSection>
-
-      <PageSection>
-        <Paper
-          sx={{
-            p: { xs: 3, md: 5 },
-            background:
-              "linear-gradient(135deg, rgba(255,250,244,0.96), rgba(14,107,115,0.12))",
-          }}
-        >
-          <Grid container spacing={3} alignItems="center">
-            <Grid size={{ xs: 12, md: 7 }}>
-              <Stack spacing={1.5}>
-                <Chip
-                  icon={<ReviewsRounded />}
-                  label="Trust feature"
-                  color="secondary"
-                  sx={{ width: "fit-content" }}
-                />
-                <Typography variant="h2">
-                  Recommendations are agent testimonials, not listing
-                  suggestions.
-                </Typography>
-                <Typography color="text.secondary">
-                  Public agent profiles can show moderated recommendations from
-                  real users. Personalized listing picks remain separate as
-                  suggestions inside the signed-in workspace.
-                </Typography>
-              </Stack>
+        <Grid container spacing={3}>
+          {benefits.map(({ title, body, icon: Icon }) => (
+            <Grid key={title} size={{ xs: 12, sm: 6, md: 3 }}>
+              <Paper sx={{ p: 2.5, height: "100%" }}>
+                <Stack spacing={1.5}>
+                  <Stack
+                    sx={{
+                      width: 36,
+                      height: 36,
+                      borderRadius: 1.5,
+                      bgcolor: "primary.main",
+                      color: "primary.contrastText",
+                      alignItems: "center",
+                      justifyContent: "center",
+                    }}
+                  >
+                    <Icon size={18} />
+                  </Stack>
+                  <Typography variant="h5">{title}</Typography>
+                  <Typography variant="body2" color="text.secondary">
+                    {body}
+                  </Typography>
+                </Stack>
+              </Paper>
             </Grid>
-            <Grid size={{ xs: 12, md: 5 }}>
-              <Stack spacing={1.5}>
-                <Paper variant="outlined" sx={{ p: 2 }}>
-                  <Typography fontWeight={800}>Clear terminology</Typography>
-                  <Typography color="text.secondary">
-                    Recommendations build public agent trust. Suggestions help
-                    signed-in renters discover listings.
+          ))}
+        </Grid>
+      </Container>
+
+      {/* Two-up role split */}
+      <Box
+        sx={{
+          bgcolor: "grey.50",
+          borderTop: "1px solid",
+          borderColor: "divider",
+        }}
+      >
+        <Container maxWidth="lg" sx={{ py: { xs: 6, md: 10 } }}>
+          <Grid container spacing={3}>
+            <Grid size={{ xs: 12, md: 6 }}>
+              <Paper sx={{ p: { xs: 3, md: 4 }, height: "100%" }}>
+                <Stack spacing={2}>
+                  <Chip
+                    label="For renters"
+                    size="small"
+                    color="primary"
+                    sx={{ width: "fit-content" }}
+                  />
+                  <Typography variant="h3">
+                    Shortlist homes with less guesswork.
                   </Typography>
-                </Paper>
-                <Paper variant="outlined" sx={{ p: 2 }}>
-                  <Typography fontWeight={800}>
-                    Admin-backed moderation
+                  <Stack spacing={1} color="text.secondary">
+                    <Typography>
+                      · Filter by area, budget, and bedrooms
+                    </Typography>
+                    <Typography>· Save listings and track inquiries</Typography>
+                    <Typography>
+                      · Read recommendations before viewing
+                    </Typography>
+                  </Stack>
+                  <Button
+                    component={Link}
+                    href="/listings"
+                    variant="contained"
+                    sx={{ alignSelf: "flex-start", mt: 1 }}
+                  >
+                    Browse rentals
+                  </Button>
+                </Stack>
+              </Paper>
+            </Grid>
+            <Grid size={{ xs: 12, md: 6 }}>
+              <Paper sx={{ p: { xs: 3, md: 4 }, height: "100%" }}>
+                <Stack spacing={2}>
+                  <Chip
+                    label="For agents and landlords"
+                    size="small"
+                    color="secondary"
+                    sx={{ width: "fit-content" }}
+                  />
+                  <Typography variant="h3">
+                    Manage listings from a real workspace.
                   </Typography>
-                  <Typography color="text.secondary">
-                    Admin trust operations review reports, listings, users, and
-                    public recommendations.
-                  </Typography>
-                </Paper>
-              </Stack>
+                  <Stack spacing={1} color="text.secondary">
+                    <Typography>
+                      · Publish listings with photos and fees
+                    </Typography>
+                    <Typography>· Use AI to strengthen descriptions</Typography>
+                    <Typography>
+                      · Reply to inquiries and build trust
+                    </Typography>
+                  </Stack>
+                  <Button
+                    component={Link}
+                    href="/register"
+                    variant="outlined"
+                    sx={{ alignSelf: "flex-start", mt: 1 }}
+                  >
+                    Get started
+                  </Button>
+                </Stack>
+              </Paper>
             </Grid>
           </Grid>
-        </Paper>
-      </PageSection>
+        </Container>
+      </Box>
 
-      <PageSection>
+      {/* CTA */}
+      <Container maxWidth="lg" sx={{ py: { xs: 6, md: 10 } }}>
         <Paper
           sx={{
-            p: { xs: 3, md: 5 },
+            p: { xs: 4, md: 6 },
             textAlign: "center",
-            background:
-              "linear-gradient(135deg, rgba(14,107,115,0.96), rgba(22,35,56,0.94))",
-            color: "white",
+            bgcolor: "primary.main",
+            color: "primary.contrastText",
+            borderColor: "primary.main",
           }}
         >
-          <Stack spacing={2.5} alignItems="center">
-            <Typography variant="h2" maxWidth={820}>
-              Ready to walk through the live rental marketplace flow?
+          <Stack spacing={3} alignItems="center">
+            <Typography variant="h2" sx={{ maxWidth: 640 }}>
+              Ready to find your next rental?
             </Typography>
-            <Typography sx={{ opacity: 0.84 }} maxWidth={700}>
-              Browse public listings, create an account, publish a media-rich
-              rental, test inquiries, and review trust operations from the admin
-              workspace.
+            <Typography sx={{ opacity: 0.9, maxWidth: 540 }}>
+              Free to browse. Save shortlists, message agents, and report issues
+              when you sign in.
             </Typography>
-            <Stack direction={{ xs: "column", sm: "row" }} spacing={1.5}>
-              <Button href="/listings" variant="contained" color="secondary">
+            <Stack direction={{ xs: "column", sm: "row" }} spacing={2}>
+              <Button
+                component={Link}
+                href="/listings"
+                variant="contained"
+                color="secondary"
+                size="large"
+              >
                 Browse rentals
               </Button>
               <Button
+                component={Link}
                 href="/register"
                 variant="outlined"
-                sx={{ color: "white", borderColor: "rgba(255,255,255,0.45)" }}
+                size="large"
+                sx={{
+                  color: "primary.contrastText",
+                  borderColor: "rgba(255,255,255,0.4)",
+                  "&:hover": { borderColor: "primary.contrastText" },
+                }}
               >
                 Create account
               </Button>
             </Stack>
           </Stack>
         </Paper>
-      </PageSection>
+      </Container>
     </Box>
   );
 }

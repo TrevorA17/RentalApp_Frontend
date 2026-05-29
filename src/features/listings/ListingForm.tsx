@@ -14,19 +14,19 @@ import Typography from "@mui/material/Typography";
 import { useFormik } from "formik";
 import { useRouter } from "next/navigation";
 import { type ChangeEvent, useEffect, useRef, useState } from "react";
+import { PageHeader } from "@/components/ui/PageHeader";
 import { AiDescriptionAssist } from "@/features/ai/AiDescriptionAssist";
 import { useAuth } from "@/features/auth/AuthProvider";
+import { useAmenities } from "@/hooks/useAmenities";
 import { extractApiError } from "@/lib/api/client";
 import {
   createListing,
-  getAmenities,
   getListingById,
   publishListing,
   updateListing,
   uploadListingImage,
 } from "@/lib/api/listings";
 import type {
-  Amenity,
   AvailabilityStatus,
   HouseType,
   ListingSummary,
@@ -90,7 +90,7 @@ export function ListingForm({ mode, listingId }: ListingFormProps) {
   const [isLoading, setIsLoading] = useState(true);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [successMessage, setSuccessMessage] = useState<string | null>(null);
-  const [amenities, setAmenities] = useState<Amenity[]>([]);
+  const { amenities } = useAmenities();
   const [selectedAmenityIds, setSelectedAmenityIds] = useState<string[]>([]);
   const [mediaItems, setMediaItems] = useState<ListingMediaDraft[]>([]);
   const isUploadingMedia = mediaItems.some((item) => item.isUploading);
@@ -167,14 +167,10 @@ export function ListingForm({ mode, listingId }: ListingFormProps) {
       }
 
       try {
-        const [amenityOptions, existingListing] = await Promise.all([
-          getAmenities(),
+        const existingListing =
           mode === "edit" && listingId
-            ? getListingById(listingId, session.accessToken)
-            : Promise.resolve(null),
-        ]);
-
-        setAmenities(amenityOptions);
+            ? await getListingById(listingId, session.accessToken)
+            : null;
 
         if (existingListing) {
           formik.resetForm({
@@ -371,22 +367,11 @@ export function ListingForm({ mode, listingId }: ListingFormProps) {
         hidden
         onChange={handleMediaFilesSelected}
       />
-      <Paper sx={{ p: { xs: 3, md: 4 } }}>
-        <Stack spacing={2}>
-          <Chip
-            label={mode === "create" ? "New rental" : "Listing workspace"}
-            color="secondary"
-            sx={{ width: "fit-content" }}
-          />
-          <Typography variant="h3">
-            {mode === "create" ? "Create listing" : "Edit listing"}
-          </Typography>
-          <Typography color="text.secondary">
-            Create a clear rental listing with pricing, location, amenities,
-            images, and AI-assisted description support.
-          </Typography>
-        </Stack>
-      </Paper>
+      <PageHeader
+        eyebrow={mode === "create" ? "New rental" : "Listing workspace"}
+        title={mode === "create" ? "Create listing" : "Edit listing"}
+        subtitle="Create a clear rental listing with pricing, location, amenities, images, and AI-assisted description support."
+      />
 
       <Paper sx={{ p: { xs: 3, md: 4 } }}>
         <Stack component="form" spacing={2.5} onSubmit={formik.handleSubmit}>

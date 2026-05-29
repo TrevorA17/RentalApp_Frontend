@@ -122,22 +122,21 @@ export function RegisterForm() {
               const isSelected = option.role === formik.values.role;
 
               return (
-                // biome-ignore lint/a11y/useSemanticElements: refactor to ButtonBase planned post-migration
                 <Paper
                   key={option.role}
-                  role="button"
-                  tabIndex={0}
+                  component="button"
+                  type="button"
+                  aria-pressed={isSelected}
                   onClick={() => formik.setFieldValue("role", option.role)}
-                  onKeyDown={(event) => {
-                    if (event.key === "Enter" || event.key === " ") {
-                      event.preventDefault();
-                      formik.setFieldValue("role", option.role);
-                    }
-                  }}
                   sx={{
                     flex: 1,
                     p: 2,
                     cursor: "pointer",
+                    textAlign: "left",
+                    font: "inherit",
+                    color: "inherit",
+                    background: "transparent",
+                    border: 0,
                     borderColor: isSelected
                       ? "primary.main"
                       : "rgba(19, 34, 58, 0.08)",

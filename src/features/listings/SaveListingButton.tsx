@@ -2,6 +2,9 @@
 
 import Alert from "@mui/material/Alert";
 import Button from "@mui/material/Button";
+import IconButton from "@mui/material/IconButton";
+import Tooltip from "@mui/material/Tooltip";
+import { Heart } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 import { useAuth } from "@/features/auth/AuthProvider";
 import {
@@ -13,12 +16,14 @@ import {
 type SaveListingButtonProps = {
   listingId: string;
   variant?: "contained" | "outlined" | "text";
+  iconOnly?: boolean;
   onSavedChange?: (saved: boolean) => void;
 };
 
 export function SaveListingButton({
   listingId,
   variant = "outlined",
+  iconOnly = false,
   onSavedChange,
 }: SaveListingButtonProps) {
   const { session } = useAuth();
@@ -85,6 +90,33 @@ export function SaveListingButton({
     }
   }
 
+  if (iconOnly) {
+    return (
+      <Tooltip title={isSaved ? "Remove from saved" : "Save listing"}>
+        <IconButton
+          onClick={(event) => {
+            event.preventDefault();
+            event.stopPropagation();
+            void handleToggle();
+          }}
+          disabled={isLoading}
+          sx={{
+            bgcolor: "rgba(255,255,255,0.92)",
+            backdropFilter: "blur(4px)",
+            "&:hover": { bgcolor: "rgba(255,255,255,1)" },
+          }}
+          size="small"
+        >
+          <Heart
+            size={18}
+            fill={isSaved ? "#c86b2a" : "none"}
+            color={isSaved ? "#c86b2a" : "#475569"}
+          />
+        </IconButton>
+      </Tooltip>
+    );
+  }
+
   return (
     <>
       {errorMessage ? <Alert severity="info">{errorMessage}</Alert> : null}
@@ -93,6 +125,7 @@ export function SaveListingButton({
         color={isSaved ? "secondary" : "primary"}
         onClick={handleToggle}
         disabled={isLoading}
+        startIcon={<Heart size={16} fill={isSaved ? "currentColor" : "none"} />}
       >
         {isSaved ? "Saved" : "Save listing"}
       </Button>

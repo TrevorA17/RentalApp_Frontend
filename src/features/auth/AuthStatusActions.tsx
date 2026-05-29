@@ -1,47 +1,36 @@
 "use client";
 
 import Button from "@mui/material/Button";
-import Chip from "@mui/material/Chip";
 import CircularProgress from "@mui/material/CircularProgress";
 import Stack from "@mui/material/Stack";
-import Typography from "@mui/material/Typography";
-import { useRouter } from "next/navigation";
+import Link from "next/link";
+import { UserMenu } from "@/components/shell/UserMenu";
 import { useAuth } from "@/features/auth/AuthProvider";
 
 export function AuthStatusActions() {
-  const router = useRouter();
-  const { session, isLoading, logout } = useAuth();
-
-  async function handleLogout() {
-    await logout();
-    router.replace("/login");
-  }
+  const { session, isLoading } = useAuth();
 
   if (isLoading) {
-    return <CircularProgress size={24} />;
+    return <CircularProgress size={20} />;
   }
 
   if (!session) {
     return (
-      <Stack
-        direction="row"
-        spacing={{ xs: 0.75, sm: 1.5 }}
-        alignItems="center"
-      >
+      <Stack direction="row" spacing={1} alignItems="center">
         <Button
-          href="/listings"
+          component={Link}
+          href="/login"
           color="inherit"
+          size="small"
           sx={{ display: { xs: "none", sm: "inline-flex" } }}
         >
-          Browse
-        </Button>
-        <Button href="/login" color="inherit">
-          Login
+          Sign in
         </Button>
         <Button
+          component={Link}
           href="/register"
           variant="contained"
-          sx={{ whiteSpace: "nowrap" }}
+          size="small"
         >
           Get started
         </Button>
@@ -49,65 +38,18 @@ export function AuthStatusActions() {
     );
   }
 
-  const primaryHref =
-    session.user.role === "ADMIN"
-      ? "/admin"
-      : session.user.role === "RENTER"
-        ? "/saved-listings"
-        : "/my-listings";
-
   return (
-    <Stack direction="row" spacing={1.5} alignItems="center">
-      <Stack
-        spacing={0.3}
-        sx={{ display: { xs: "none", md: "flex" }, minWidth: 0 }}
-      >
-        <Typography color="text.primary" fontWeight={700} noWrap>
-          {session.user.fullName}
-        </Typography>
-        <Chip
-          label={session.user.role.toLowerCase()}
-          size="small"
-          sx={{
-            width: "fit-content",
-            textTransform: "capitalize",
-            bgcolor: "rgba(14,107,115,0.08)",
-          }}
-        />
-      </Stack>
+    <Stack direction="row" spacing={1} alignItems="center">
       <Button
-        href="/listings"
-        color="inherit"
-        sx={{ display: { xs: "none", sm: "inline-flex" } }}
-      >
-        Browse
-      </Button>
-      <Button
+        component={Link}
         href={session.user.role === "ADMIN" ? "/admin" : "/dashboard"}
         color="inherit"
-        sx={{ display: { xs: "none", md: "inline-flex" } }}
+        size="small"
+        sx={{ display: { xs: "none", sm: "inline-flex" } }}
       >
-        Workspace
+        Dashboard
       </Button>
-      <Button
-        href={primaryHref}
-        color="inherit"
-        sx={{ display: { xs: "none", md: "inline-flex" } }}
-      >
-        {session.user.role === "ADMIN"
-          ? "Reports"
-          : session.user.role === "RENTER"
-            ? "Saved"
-            : "Listings"}
-      </Button>
-      <Button
-        onClick={handleLogout}
-        variant="contained"
-        color="secondary"
-        sx={{ whiteSpace: "nowrap" }}
-      >
-        Logout
-      </Button>
+      <UserMenu />
     </Stack>
   );
 }
