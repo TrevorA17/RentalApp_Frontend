@@ -6,9 +6,9 @@ export type ApiSuccessResponse<T> = {
 
 export type PaginatedResponse<T> = {
   items: T[];
-  page: number;
-  size: number;
-  totalElements: number;
+  currentPage: number;
+  perPage: number;
+  totalItems: number;
   totalPages: number;
   hasNext: boolean;
   hasPrevious: boolean;

@@ -65,9 +65,9 @@ type ListingSort = (typeof sortOptions)[number]["value"];
 
 const emptyResults: PaginatedResponse<ListingSummary> = {
   items: [],
-  page: 0,
-  size: 12,
-  totalElements: 0,
+  currentPage: 1,
+  perPage: 12,
+  totalItems: 0,
   totalPages: 0,
   hasNext: false,
   hasPrevious: false,
@@ -118,8 +118,8 @@ export function ListingsBrowseView() {
     async function loadBrowseData() {
       try {
         setErrorMessage(null);
-        const pageParam = Number(searchParams.get("page") ?? "0");
-        const sizeParam = Number(searchParams.get("size") ?? "12");
+        const pageParam = Number(searchParams.get("page") ?? "1");
+        const perPageParam = Number(searchParams.get("perPage") ?? "12");
         const listingResults = await searchListings({
           city: searchParams.get("city") || undefined,
           area: searchParams.get("area") || undefined,
@@ -133,8 +133,8 @@ export function ListingsBrowseView() {
           amenities: searchParams.get("amenities")
             ? [searchParams.get("amenities") as string]
             : undefined,
-          page: Number.isNaN(pageParam) ? 0 : pageParam,
-          size: Number.isNaN(sizeParam) ? 12 : sizeParam,
+          page: Number.isNaN(pageParam) || pageParam < 1 ? 1 : pageParam,
+          perPage: Number.isNaN(perPageParam) ? 12 : perPageParam,
           sort:
             (searchParams.get("sort") as ListingSort) || "PUBLISHED_AT_DESC",
         });
@@ -195,8 +195,8 @@ export function ListingsBrowseView() {
       houseType: houseType || undefined,
       amenities: selectedAmenity || undefined,
       sort,
-      page: "0",
-      size: String(results.size || 12),
+      page: "1",
+      perPage: String(results.perPage || 12),
     });
   }
 
@@ -224,8 +224,8 @@ export function ListingsBrowseView() {
         houseType: interpreted.filters.houseType || undefined,
         amenities: interpreted.filters.amenities[0]?.id || undefined,
         sort,
-        page: "0",
-        size: String(results.size || 12),
+        page: "1",
+        perPage: String(results.perPage || 12),
       });
     } finally {
       setIsInterpreting(false);
@@ -251,12 +251,12 @@ export function ListingsBrowseView() {
   function handleSortChange(nextSort: ListingSort) {
     setSort(nextSort);
     setIsSearching(true);
-    updateQuery({ sort: nextSort, page: "0" });
+    updateQuery({ sort: nextSort, page: "1" });
   }
 
   function handlePageChange(nextPage: number) {
     setIsSearching(true);
-    updateQuery({ page: String(nextPage - 1) });
+    updateQuery({ page: String(nextPage) });
   }
 
   const activeFilterLabels = useMemo(
@@ -465,8 +465,8 @@ export function ListingsBrowseView() {
           useFlexGap
         >
           <Typography variant="h6" sx={{ mr: 1 }}>
-            {results.totalElements} rental
-            {results.totalElements === 1 ? "" : "s"}
+            {results.totalItems} rental
+            {results.totalItems === 1 ? "" : "s"}
           </Typography>
           {activeFilterLabels.map((label) => (
             <Chip key={label} label={label} size="small" />
@@ -537,7 +537,7 @@ export function ListingsBrowseView() {
         <Stack alignItems="center" sx={{ mt: 4 }}>
           <Pagination
             count={results.totalPages}
-            page={results.page + 1}
+            page={results.currentPage}
             onChange={(_, page) => handlePageChange(page)}
             shape="rounded"
             color="primary"
