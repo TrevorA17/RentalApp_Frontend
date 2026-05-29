@@ -10,7 +10,7 @@ import Typography from "@mui/material/Typography";
 import { useEffect, useState } from "react";
 import { useAuth } from "@/features/auth/AuthProvider";
 import { getAdminUsers, updateAdminUserStatus } from "@/lib/api/admin";
-import { AdminUser, UserStatus } from "@/types/domain";
+import type { AdminUser, UserStatus } from "@/types/domain";
 
 const userStatuses: UserStatus[] = ["ACTIVE", "SUSPENDED"];
 
@@ -30,9 +30,12 @@ export function AdminUsersView() {
       try {
         const result = await getAdminUsers();
         setUsers(result);
-        setDrafts(Object.fromEntries(result.map((item) => [item.id, item.status])));
+        setDrafts(
+          Object.fromEntries(result.map((item) => [item.id, item.status])),
+        );
       } catch (error) {
-        const message = error instanceof Error ? error.message : "Failed to load users.";
+        const message =
+          error instanceof Error ? error.message : "Failed to load users.";
         setErrorMessage(message);
       }
     }
@@ -47,11 +50,16 @@ export function AdminUsersView() {
 
     try {
       const updated = await updateAdminUserStatus(userId, drafts[userId]);
-      setUsers((current) => current.map((item) => (item.id === userId ? updated : item)));
+      setUsers((current) =>
+        current.map((item) => (item.id === userId ? updated : item)),
+      );
       setSuccessMessage("User status updated.");
       setErrorMessage(null);
     } catch (error) {
-      const message = error instanceof Error ? error.message : "Failed to update user status.";
+      const message =
+        error instanceof Error
+          ? error.message
+          : "Failed to update user status.";
       setErrorMessage(message);
       setSuccessMessage(null);
     }
@@ -61,13 +69,15 @@ export function AdminUsersView() {
     <Stack spacing={3}>
       <Stack spacing={1}>
         <Typography variant="overline" color="secondary.main" fontWeight={800}>
-          Module 9
+          User operations
         </Typography>
         <Typography variant="h2">Manage users</Typography>
       </Stack>
 
       {errorMessage ? <Alert severity="error">{errorMessage}</Alert> : null}
-      {successMessage ? <Alert severity="success">{successMessage}</Alert> : null}
+      {successMessage ? (
+        <Alert severity="success">{successMessage}</Alert>
+      ) : null}
       {users.length === 0 ? (
         <Paper sx={{ p: 3 }}>
           <Typography color="text.secondary">No users found.</Typography>
@@ -83,7 +93,8 @@ export function AdminUsersView() {
                 {user.email} - {user.role}
               </Typography>
               <Typography color="text.secondary">
-                Status: {user.status} / Email verified: {user.emailVerified ? "Yes" : "No"}
+                Status: {user.status} / Email verified:{" "}
+                {user.emailVerified ? "Yes" : "No"}
               </Typography>
               <Stack direction={{ xs: "column", sm: "row" }} spacing={1.5}>
                 <TextField
@@ -104,7 +115,10 @@ export function AdminUsersView() {
                     </MenuItem>
                   ))}
                 </TextField>
-                <Button variant="contained" onClick={() => handleUpdate(user.id)}>
+                <Button
+                  variant="contained"
+                  onClick={() => handleUpdate(user.id)}
+                >
                   Update
                 </Button>
               </Stack>

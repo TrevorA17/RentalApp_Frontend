@@ -1,33 +1,41 @@
+import axios, { type AxiosError, type InternalAxiosRequestConfig } from "axios";
+import axiosRetry from "axios-retry";
 import { apiConfig } from "@/lib/api/config";
-import { clearStoredSession, getStoredSession, storeSession } from "@/lib/auth/sessionStore";
-import { ApiErrorItem, ApiErrorResponse, ApiSuccessResponse } from "@/types/api";
-import { AuthResponse, AuthSession } from "@/types/auth";
+import { useAuthStore } from "@/stores/auth-store";
+import type {
+  ApiErrorItem,
+  ApiErrorResponse,
+  ApiSuccessResponse,
+} from "@/types/api";
+import type { AuthResponse } from "@/types/auth";
 
 type AuthMode = "none" | "optional" | "required";
 
-type RequestOptions = RequestInit & {
+type RequestMeta = {
   auth?: AuthMode;
-  retryOnAuthFailure?: boolean;
-  token?: string | null;
+  skipRefresh?: boolean;
   hasRetried?: boolean;
 };
 
-type ParsedError = {
-  message: string;
-  code?: string;
-  errors?: ApiErrorItem[];
-};
-
-type InternalRequestOptions = RequestOptions;
-
-let refreshPromise: Promise<AuthSession | null> | null = null;
+declare module "axios" {
+  export interface InternalAxiosRequestConfig {
+    meta?: RequestMeta;
+  }
+  export interface AxiosRequestConfig {
+    meta?: RequestMeta;
+  }
+}
 
 export class ApiError extends Error {
   status: number;
   code?: string;
   errors?: ApiErrorItem[];
 
-  constructor(status: number, message: string, options: { code?: string; errors?: ApiErrorItem[] } = {}) {
+  constructor(
+    status: number,
+    message: string,
+    options: { code?: string; errors?: ApiErrorItem[] } = {},
+  ) {
     super(message);
     this.name = "ApiError";
     this.status = status;
@@ -40,132 +48,209 @@ function isBrowser() {
   return typeof window !== "undefined";
 }
 
-async function parseError(response: Response): Promise<ParsedError> {
-  try {
-    const errorBody = (await response.json()) as ApiErrorResponse;
-    return {
-      message: errorBody.message || `API request failed with status ${response.status}`,
-      code: errorBody.code,
-      errors: errorBody.errors,
-    };
-  } catch {
-    return {
-      message: `API request failed with status ${response.status}`,
-    };
-  }
-}
-
-async function parseJson<T>(response: Response): Promise<T> {
-  return response.json() as Promise<T>;
-}
-
-function buildHeaders(options: InternalRequestOptions, token?: string | null) {
-  const headers = new Headers(options.headers);
-
-  if (!headers.has("Content-Type") && options.body && !(options.body instanceof FormData)) {
-    headers.set("Content-Type", "application/json");
-  }
-
-  if (token) {
-    headers.set("Authorization", `Bearer ${token}`);
-  }
-
-  return headers;
-}
-
-async function performRequest(path: string, options: InternalRequestOptions, token?: string | null): Promise<Response> {
-  return fetch(`${apiConfig.baseUrl}${path}`, {
-    ...options,
-    headers: buildHeaders(options, token),
-  });
-}
-
-async function refreshAccessToken(): Promise<AuthSession | null> {
-  if (!isBrowser()) {
-    return null;
-  }
-
-  const session = getStoredSession();
-
-  if (!session?.refreshToken) {
-    clearStoredSession();
-    return null;
-  }
-
-  if (!refreshPromise) {
-    refreshPromise = (async () => {
-      const response = await fetch(`${apiConfig.baseUrl}/auth/refresh`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({ refreshToken: session.refreshToken }),
-      });
-
-      if (!response.ok) {
-        clearStoredSession();
-        return null;
-      }
-
-      const parsed = await parseJson<ApiSuccessResponse<AuthResponse>>(response);
-      storeSession(parsed.data);
-      return parsed.data;
-    })()
-      .catch(() => {
-        clearStoredSession();
-        return null;
-      })
-      .finally(() => {
-        refreshPromise = null;
-      });
-  }
-
-  return refreshPromise;
-}
-
-export async function apiRequest<T>(path: string, options: RequestOptions = {}): Promise<T> {
-  const requestOptions: InternalRequestOptions = options;
-  const auth = requestOptions.auth ?? (requestOptions.token ? "optional" : "none");
-  const retryOnAuthFailure = requestOptions.retryOnAuthFailure ?? auth !== "none";
-  const session = auth === "none" ? null : getStoredSession();
-  const token = requestOptions.token ?? session?.accessToken ?? null;
-
-  if (auth === "required" && !token) {
-    clearStoredSession();
-    throw new ApiError(401, "Your session has expired. Please sign in again.", { code: "AUTH_REQUIRED" });
-  }
-
-  const response = await performRequest(path, requestOptions, token);
-
-  if (response.ok) {
-    return parseJson<T>(response);
-  }
-
+function generateRequestId(): string {
   if (
-    response.status === 401 &&
-    auth !== "none" &&
-    retryOnAuthFailure &&
-    !requestOptions.hasRetried &&
-    isBrowser()
+    typeof crypto !== "undefined" &&
+    typeof crypto.randomUUID === "function"
   ) {
-    const refreshedSession = await refreshAccessToken();
+    return crypto.randomUUID();
+  }
+  return `req-${Date.now()}-${Math.random().toString(36).slice(2, 11)}`;
+}
 
-    if (refreshedSession?.accessToken) {
-      return apiRequest<T>(path, {
-        ...options,
-        token: refreshedSession.accessToken,
-        hasRetried: true,
-      });
+const client = axios.create({
+  baseURL: apiConfig.baseUrl,
+  timeout: 60000,
+  headers: { "Content-Type": "application/json" },
+});
+
+// Retry network errors and idempotent 5xx only. Mutations are not retried by default.
+axiosRetry(client, {
+  retries: 2,
+  retryDelay: axiosRetry.exponentialDelay,
+  retryCondition: axiosRetry.isNetworkOrIdempotentRequestError,
+});
+
+// Request interceptor: attach access token + correlation id.
+client.interceptors.request.use((config) => {
+  const meta = config.meta ?? {};
+  const auth: AuthMode = meta.auth ?? "optional";
+
+  if (auth !== "none") {
+    const token = useAuthStore.getState().accessToken;
+    if (token) {
+      config.headers.set("Authorization", `Bearer ${token}`);
+    } else if (auth === "required") {
+      useAuthStore.getState().logout();
+      const synthetic = new axios.AxiosError(
+        "Your session has expired. Please sign in again.",
+        "AUTH_REQUIRED",
+        config,
+      );
+      synthetic.response = {
+        status: 401,
+        statusText: "Unauthorized",
+        headers: {},
+        config,
+        data: {
+          success: false,
+          message: "Your session has expired. Please sign in again.",
+          code: "AUTH_REQUIRED",
+        } satisfies ApiErrorResponse,
+      };
+      throw synthetic;
     }
   }
 
-  if (response.status === 401 && auth !== "none") {
-    clearStoredSession();
+  if (!config.headers.has("X-Request-Id")) {
+    config.headers.set("X-Request-Id", generateRequestId());
   }
 
-  const parsedError = await parseError(response);
-  throw new ApiError(response.status, parsedError.message, {
-    code: parsedError.code,
-    errors: parsedError.errors,
+  if (config.data instanceof FormData) {
+    config.headers.delete("Content-Type");
+  }
+
+  return config;
+});
+
+// Refresh-queue: serializes concurrent 401s so we only refresh once.
+let isRefreshing = false;
+let refreshQueue: Array<{
+  resolve: (token: string) => void;
+  reject: (err: unknown) => void;
+}> = [];
+
+function processQueue(error: unknown, token: string | null) {
+  refreshQueue.forEach(({ resolve, reject }) => {
+    if (token) resolve(token);
+    else reject(error);
   });
+  refreshQueue = [];
 }
+
+const SKIP_REFRESH_PATHS = [
+  "/auth/login",
+  "/auth/refresh",
+  "/auth/register",
+  "/auth/logout",
+  "/auth/forgot-password",
+  "/auth/reset-password",
+  "/auth/verify-email",
+];
+
+client.interceptors.response.use(
+  (response) => response,
+  async (error: AxiosError) => {
+    const originalRequest = error.config as
+      | InternalAxiosRequestConfig
+      | undefined;
+
+    if (!originalRequest || error.response?.status !== 401) {
+      return Promise.reject(error);
+    }
+
+    const url = originalRequest.url ?? "";
+    const meta = originalRequest.meta ?? {};
+    const skipRefresh =
+      meta.skipRefresh === true ||
+      meta.auth === "none" ||
+      SKIP_REFRESH_PATHS.some((path) => url.startsWith(path)) ||
+      !isBrowser();
+
+    if (skipRefresh || meta.hasRetried) {
+      if (!skipRefresh) {
+        useAuthStore.getState().logout();
+      }
+      return Promise.reject(error);
+    }
+
+    if (isRefreshing) {
+      return new Promise<string>((resolve, reject) => {
+        refreshQueue.push({ resolve, reject });
+      }).then((token) => {
+        originalRequest.headers.set("Authorization", `Bearer ${token}`);
+        originalRequest.meta = { ...meta, hasRetried: true };
+        return client(originalRequest);
+      });
+    }
+
+    isRefreshing = true;
+    const currentRefreshToken = useAuthStore.getState().refreshToken;
+
+    if (!currentRefreshToken) {
+      isRefreshing = false;
+      useAuthStore.getState().logout();
+      return Promise.reject(error);
+    }
+
+    try {
+      const res = await axios.post<ApiSuccessResponse<AuthResponse>>(
+        `${apiConfig.baseUrl}/auth/refresh`,
+        { refreshToken: currentRefreshToken },
+        { headers: { "Content-Type": "application/json" } },
+      );
+      const refreshed = res.data.data;
+      useAuthStore.getState().setSession(refreshed);
+      processQueue(null, refreshed.accessToken);
+
+      originalRequest.headers.set(
+        "Authorization",
+        `Bearer ${refreshed.accessToken}`,
+      );
+      originalRequest.meta = { ...meta, hasRetried: true };
+      return client(originalRequest);
+    } catch (refreshError) {
+      processQueue(refreshError, null);
+      useAuthStore.getState().logout();
+      return Promise.reject(refreshError);
+    } finally {
+      isRefreshing = false;
+    }
+  },
+);
+
+// ---------------------------------------------------------------------------
+// Error helpers (mirrors swirra-frontend).
+// ---------------------------------------------------------------------------
+
+export function extractApiError(err: unknown): string {
+  if (err instanceof ApiError) {
+    if (err.errors?.length) {
+      return err.errors
+        .map((item) =>
+          item.field ? `${item.field}: ${item.message}` : item.message,
+        )
+        .join(", ");
+    }
+    return err.message;
+  }
+  if (axios.isAxiosError(err)) {
+    const data = err.response?.data as ApiErrorResponse | undefined;
+    if (data?.errors?.length) {
+      return data.errors
+        .map((item) =>
+          item.field ? `${item.field}: ${item.message}` : item.message,
+        )
+        .join(", ");
+    }
+    if (data?.message) return data.message;
+    return err.message;
+  }
+  if (err instanceof Error) return err.message;
+  return String(err);
+}
+
+export async function extractBlobApiError(err: unknown): Promise<string> {
+  if (axios.isAxiosError(err) && err.response?.data instanceof Blob) {
+    try {
+      const text = await err.response.data.text();
+      const parsed = JSON.parse(text);
+      err.response.data = parsed;
+    } catch {
+      // Body wasn't JSON — fall through to plain extractApiError.
+    }
+  }
+  return extractApiError(err);
+}
+
+export default client;

@@ -1,6 +1,6 @@
-import { apiRequest } from "@/lib/api/client";
-import { ApiSuccessResponse } from "@/types/api";
-import { Report } from "@/types/domain";
+import client from "@/lib/api/client";
+import type { ApiSuccessResponse } from "@/types/api";
+import type { Report } from "@/types/domain";
 
 export type CreateReportPayload = {
   listingId?: string;
@@ -9,12 +9,13 @@ export type CreateReportPayload = {
   details?: string;
 };
 
-export async function createReport(payload: CreateReportPayload) {
-  const response = await apiRequest<ApiSuccessResponse<Report>>("/reports", {
-    method: "POST",
-    auth: "required",
-    body: JSON.stringify(payload),
-  });
-
-  return response.data;
+export async function createReport(
+  payload: CreateReportPayload,
+): Promise<Report> {
+  const res = await client.post<ApiSuccessResponse<Report>>(
+    "/reports",
+    payload,
+    { meta: { auth: "required" } },
+  );
+  return res.data.data;
 }

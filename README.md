@@ -20,6 +20,7 @@ This repo is no longer scaffold-only. The frontend currently includes:
 - admin moderation screens for listings, reports, and users
 - admin recommendation moderation and recent moderation history
 - AI description assist in listing forms
+- AI natural-language search interpretation on the public browse page
 
 ## Stack
 
@@ -116,11 +117,11 @@ npm run build
 - the public listings page keeps filter, page, and sort state in the URL
 - listing media uploads go through the backend and are served from `/media/...`
 - suggestions are a signed-in personalization feature, not a public trust feature
-- AI support is currently lightweight listing-description assistance only
+- AI support is currently lightweight listing-description assistance and natural-language search interpretation only
 
 ## Not yet implemented
 
-- advanced AI workflows beyond listing description assist
+- advanced AI workflows beyond description assist and search interpretation
 - object-storage/CDN media pipeline
 
 ## Source-of-truth docs

@@ -26,8 +26,20 @@ export function AppHeader() {
         borderBottom: "1px solid rgba(19, 34, 58, 0.08)",
       }}
     >
-      <Stack direction="row" alignItems="center" justifyContent="space-between" spacing={2}>
-        <Stack component={Link} href="/" direction="row" spacing={1.25} alignItems="center" sx={{ minWidth: 0 }}>
+      <Stack
+        direction="row"
+        alignItems="center"
+        justifyContent="space-between"
+        spacing={2}
+      >
+        <Stack
+          component={Link}
+          href="/"
+          direction="row"
+          spacing={1.25}
+          alignItems="center"
+          sx={{ minWidth: 0 }}
+        >
           <ApartmentRounded color="primary" />
           <Stack spacing={0.15}>
             <Typography variant="h6" fontWeight={800}>

@@ -1,6 +1,10 @@
-import { apiRequest } from "@/lib/api/client";
-import { ApiSuccessResponse } from "@/types/api";
-import { AvailabilityStatus, HouseType, InterpretedListingSearch } from "@/types/domain";
+import client from "@/lib/api/client";
+import type { ApiSuccessResponse } from "@/types/api";
+import type {
+  AvailabilityStatus,
+  HouseType,
+  InterpretedListingSearch,
+} from "@/types/domain";
 
 export type EnhanceListingDescriptionPayload = {
   title: string;
@@ -22,27 +26,23 @@ export type EnhanceListingDescriptionResult = {
   provider: string;
 };
 
-export async function enhanceListingDescription(payload: EnhanceListingDescriptionPayload) {
-  const response = await apiRequest<ApiSuccessResponse<EnhanceListingDescriptionResult>>(
-    "/ai/listings/description-enhance",
-    {
-      method: "POST",
-      auth: "required",
-      body: JSON.stringify(payload),
-    },
-  );
-
-  return response.data;
+export async function enhanceListingDescription(
+  payload: EnhanceListingDescriptionPayload,
+): Promise<EnhanceListingDescriptionResult> {
+  const res = await client.post<
+    ApiSuccessResponse<EnhanceListingDescriptionResult>
+  >("/ai/listings/description-enhance", payload, {
+    meta: { auth: "required" },
+  });
+  return res.data.data;
 }
 
-export async function interpretListingSearch(query: string) {
-  const response = await apiRequest<ApiSuccessResponse<InterpretedListingSearch>>(
+export async function interpretListingSearch(
+  query: string,
+): Promise<InterpretedListingSearch> {
+  const res = await client.post<ApiSuccessResponse<InterpretedListingSearch>>(
     "/ai/search/interpret",
-    {
-      method: "POST",
-      body: JSON.stringify({ query }),
-    },
+    { query },
   );
-
-  return response.data;
+  return res.data.data;
 }

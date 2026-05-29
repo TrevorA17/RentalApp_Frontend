@@ -1,6 +1,6 @@
-import { apiRequest } from "@/lib/api/client";
-import { ApiSuccessResponse } from "@/types/api";
-import {
+import client from "@/lib/api/client";
+import type { ApiSuccessResponse } from "@/types/api";
+import type {
   AdminAgentRecommendation,
   AdminListing,
   AdminModerationAction,
@@ -11,98 +11,96 @@ import {
   UserStatus,
 } from "@/types/domain";
 
-export async function getAdminListings() {
-  const response = await apiRequest<ApiSuccessResponse<AdminListing[]>>("/admin/listings", {
-    method: "GET",
-    auth: "required",
-    cache: "no-store",
-  });
+const authed = { meta: { auth: "required" as const } };
 
-  return response.data;
+export async function getAdminListings(): Promise<AdminListing[]> {
+  const res = await client.get<ApiSuccessResponse<AdminListing[]>>(
+    "/admin/listings",
+    authed,
+  );
+  return res.data.data;
 }
 
-export async function updateAdminListingApproval(listingId: string, approvalStatus: ApprovalStatus) {
-  const response = await apiRequest<ApiSuccessResponse<AdminListing>>(`/admin/listings/${listingId}/approval`, {
-    method: "PATCH",
-    auth: "required",
-    body: JSON.stringify({ approvalStatus }),
-  });
-
-  return response.data;
+export async function updateAdminListingApproval(
+  listingId: string,
+  approvalStatus: ApprovalStatus,
+): Promise<AdminListing> {
+  const res = await client.patch<ApiSuccessResponse<AdminListing>>(
+    `/admin/listings/${listingId}/approval`,
+    { approvalStatus },
+    authed,
+  );
+  return res.data.data;
 }
 
-export async function getAdminReports() {
-  const response = await apiRequest<ApiSuccessResponse<Report[]>>("/admin/reports", {
-    method: "GET",
-    auth: "required",
-    cache: "no-store",
-  });
-
-  return response.data;
+export async function getAdminReports(): Promise<Report[]> {
+  const res = await client.get<ApiSuccessResponse<Report[]>>(
+    "/admin/reports",
+    authed,
+  );
+  return res.data.data;
 }
 
-export async function updateAdminReportStatus(reportId: string, status: ReportStatus) {
-  const response = await apiRequest<ApiSuccessResponse<Report>>(`/admin/reports/${reportId}/status`, {
-    method: "PATCH",
-    auth: "required",
-    body: JSON.stringify({ status }),
-  });
-
-  return response.data;
+export async function updateAdminReportStatus(
+  reportId: string,
+  status: ReportStatus,
+): Promise<Report> {
+  const res = await client.patch<ApiSuccessResponse<Report>>(
+    `/admin/reports/${reportId}/status`,
+    { status },
+    authed,
+  );
+  return res.data.data;
 }
 
-export async function getAdminUsers() {
-  const response = await apiRequest<ApiSuccessResponse<AdminUser[]>>("/admin/users", {
-    method: "GET",
-    auth: "required",
-    cache: "no-store",
-  });
-
-  return response.data;
+export async function getAdminUsers(): Promise<AdminUser[]> {
+  const res = await client.get<ApiSuccessResponse<AdminUser[]>>(
+    "/admin/users",
+    authed,
+  );
+  return res.data.data;
 }
 
-export async function updateAdminUserStatus(userId: string, status: UserStatus) {
-  const response = await apiRequest<ApiSuccessResponse<AdminUser>>(`/admin/users/${userId}/status`, {
-    method: "PATCH",
-    auth: "required",
-    body: JSON.stringify({ status }),
-  });
-
-  return response.data;
+export async function updateAdminUserStatus(
+  userId: string,
+  status: UserStatus,
+): Promise<AdminUser> {
+  const res = await client.patch<ApiSuccessResponse<AdminUser>>(
+    `/admin/users/${userId}/status`,
+    { status },
+    authed,
+  );
+  return res.data.data;
 }
 
-export async function getAdminRecommendations() {
-  const response = await apiRequest<ApiSuccessResponse<AdminAgentRecommendation[]>>("/admin/recommendations", {
-    method: "GET",
-    auth: "required",
-    cache: "no-store",
-  });
-
-  return response.data;
+export async function getAdminRecommendations(): Promise<
+  AdminAgentRecommendation[]
+> {
+  const res = await client.get<ApiSuccessResponse<AdminAgentRecommendation[]>>(
+    "/admin/recommendations",
+    authed,
+  );
+  return res.data.data;
 }
 
-export async function updateAdminRecommendationApproval(recommendationId: string, approvalStatus: ApprovalStatus) {
-  const response = await apiRequest<ApiSuccessResponse<AdminAgentRecommendation>>(
+export async function updateAdminRecommendationApproval(
+  recommendationId: string,
+  approvalStatus: ApprovalStatus,
+): Promise<AdminAgentRecommendation> {
+  const res = await client.patch<ApiSuccessResponse<AdminAgentRecommendation>>(
     `/admin/recommendations/${recommendationId}/approval`,
-    {
-      method: "PATCH",
-      auth: "required",
-      body: JSON.stringify({ approvalStatus }),
-    },
+    { approvalStatus },
+    authed,
   );
-
-  return response.data;
+  return res.data.data;
 }
 
-export async function getRecentModerationActions(limit = 12) {
-  const response = await apiRequest<ApiSuccessResponse<AdminModerationAction[]>>(
-    `/admin/moderation-actions?limit=${limit}`,
-    {
-      method: "GET",
-      auth: "required",
-      cache: "no-store",
-    },
+export async function getRecentModerationActions(
+  limit = 12,
+): Promise<AdminModerationAction[]> {
+  const res = await client.get<ApiSuccessResponse<AdminModerationAction[]>>(
+    "/admin/moderation-actions",
+    { ...authed, params: { limit } },
   );
-
-  return response.data;
+  return res.data.data;
 }

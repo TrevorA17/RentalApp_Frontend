@@ -8,7 +8,7 @@ import Link from "next/link";
 import { useEffect, useState } from "react";
 import { useAuth } from "@/features/auth/AuthProvider";
 import { getSavedListings } from "@/lib/api/savedListings";
-import { ListingSummary } from "@/types/domain";
+import type { ListingSummary } from "@/types/domain";
 import { SaveListingButton } from "./SaveListingButton";
 
 export function SavedListingsView() {
@@ -27,7 +27,10 @@ export function SavedListingsView() {
         const results = await getSavedListings();
         setListings(results);
       } catch (error) {
-        const message = error instanceof Error ? error.message : "Failed to load saved listings.";
+        const message =
+          error instanceof Error
+            ? error.message
+            : "Failed to load saved listings.";
         setErrorMessage(message);
       }
     }
@@ -37,7 +40,9 @@ export function SavedListingsView() {
 
   function handleSavedChange(listingId: string, saved: boolean) {
     if (!saved) {
-      setListings((current) => current.filter((listing) => listing.id !== listingId));
+      setListings((current) =>
+        current.filter((listing) => listing.id !== listingId),
+      );
     }
   }
 
@@ -45,11 +50,12 @@ export function SavedListingsView() {
     <Stack spacing={3}>
       <Stack spacing={1.5}>
         <Typography variant="overline" color="secondary.main" fontWeight={800}>
-          Module 5
+          Renter shortlist
         </Typography>
         <Typography variant="h2">Saved listings</Typography>
         <Typography color="text.secondary">
-          Shortlist published listings here before you start contacting owners and agents.
+          Shortlist published listings here before you start contacting owners
+          and agents.
         </Typography>
       </Stack>
 
@@ -58,7 +64,8 @@ export function SavedListingsView() {
       {listings.length === 0 ? (
         <Paper sx={{ p: 3 }}>
           <Typography color="text.secondary">
-            You have not saved any listings yet. Browse public listings and add a few to your shortlist.
+            You have not saved any listings yet. Browse public listings and add
+            a few to your shortlist.
           </Typography>
         </Paper>
       ) : null}
@@ -67,7 +74,11 @@ export function SavedListingsView() {
         {listings.map((listing) => (
           <Paper key={listing.id} sx={{ p: 3 }}>
             <Stack spacing={1.5}>
-              <Stack direction={{ xs: "column", sm: "row" }} justifyContent="space-between" spacing={2}>
+              <Stack
+                direction={{ xs: "column", sm: "row" }}
+                justifyContent="space-between"
+                spacing={2}
+              >
                 <Stack spacing={1}>
                   <Link href={`/listings/${listing.id}`}>
                     <Typography variant="h5">{listing.title}</Typography>
@@ -76,7 +87,8 @@ export function SavedListingsView() {
                     KES {listing.rentAmount}
                   </Typography>
                   <Typography color="text.secondary">
-                    {listing.bedrooms} bed - {listing.bathrooms} bath - {listing.houseType}
+                    {listing.bedrooms} bed - {listing.bathrooms} bath -{" "}
+                    {listing.houseType}
                   </Typography>
                   <Typography color="text.secondary">
                     {listing.area}, {listing.city}
@@ -85,7 +97,9 @@ export function SavedListingsView() {
                 <Stack alignItems={{ xs: "stretch", sm: "flex-end" }}>
                   <SaveListingButton
                     listingId={listing.id}
-                    onSavedChange={(saved) => handleSavedChange(listing.id, saved)}
+                    onSavedChange={(saved) =>
+                      handleSavedChange(listing.id, saved)
+                    }
                   />
                 </Stack>
               </Stack>

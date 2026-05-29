@@ -5,9 +5,9 @@ import Paper from "@mui/material/Paper";
 import Stack from "@mui/material/Stack";
 import Typography from "@mui/material/Typography";
 import { usePathname, useRouter } from "next/navigation";
-import { PropsWithChildren, useEffect } from "react";
+import { type PropsWithChildren, useEffect } from "react";
 import { useAuth } from "@/features/auth/AuthProvider";
-import { Role } from "@/types/domain";
+import type { Role } from "@/types/domain";
 
 type AuthGuardProps = PropsWithChildren<{
   allowedRoles?: Role[];
@@ -33,12 +33,18 @@ export function AuthGuard({ allowedRoles, children }: AuthGuardProps) {
     }
   }, [allowedRoles, isLoading, pathname, router, session]);
 
-  if (isLoading || !session || (allowedRoles && !allowedRoles.includes(session.user.role))) {
+  if (
+    isLoading ||
+    !session ||
+    (allowedRoles && !allowedRoles.includes(session.user.role))
+  ) {
     return (
       <Paper sx={{ p: 6 }}>
         <Stack spacing={2} alignItems="center">
           <CircularProgress />
-          <Typography color="text.secondary">Preparing your workspace...</Typography>
+          <Typography color="text.secondary">
+            Preparing your workspace...
+          </Typography>
         </Stack>
       </Paper>
     );

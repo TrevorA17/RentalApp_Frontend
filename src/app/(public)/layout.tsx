@@ -1,14 +1,9 @@
-import { AppHeader } from "@/components/shell/AppHeader";
+import { PublicMarketplaceShell } from "@/components/shell/PublicMarketplaceShell";
 
 export default function PublicLayout({
   children,
 }: Readonly<{
   children: React.ReactNode;
 }>) {
-  return (
-    <>
-      <AppHeader />
-      {children}
-    </>
-  );
+  return <PublicMarketplaceShell>{children}</PublicMarketplaceShell>;
 }

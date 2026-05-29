@@ -44,7 +44,10 @@ export function SaveListingButton({
         setIsSaved(saved);
         onSavedChangeRef.current?.(saved);
       } catch (error) {
-        const message = error instanceof Error ? error.message : "Failed to load saved listing state.";
+        const message =
+          error instanceof Error
+            ? error.message
+            : "Failed to load saved listing state.";
         setErrorMessage(message);
       }
     }
@@ -72,7 +75,10 @@ export function SaveListingButton({
         onSavedChangeRef.current?.(true);
       }
     } catch (error) {
-      const message = error instanceof Error ? error.message : "Failed to update saved listing state.";
+      const message =
+        error instanceof Error
+          ? error.message
+          : "Failed to update saved listing state.";
       setErrorMessage(message);
     } finally {
       setIsLoading(false);
@@ -82,7 +88,12 @@ export function SaveListingButton({
   return (
     <>
       {errorMessage ? <Alert severity="info">{errorMessage}</Alert> : null}
-      <Button variant={variant} color={isSaved ? "secondary" : "primary"} onClick={handleToggle} disabled={isLoading}>
+      <Button
+        variant={variant}
+        color={isSaved ? "secondary" : "primary"}
+        onClick={handleToggle}
+        disabled={isLoading}
+      >
         {isSaved ? "Saved" : "Save listing"}
       </Button>
     </>

@@ -23,15 +23,27 @@ export function AuthStatusActions() {
 
   if (!session) {
     return (
-      <Stack direction="row" spacing={1.5}>
-        <Button href="/listings" color="inherit">
+      <Stack
+        direction="row"
+        spacing={{ xs: 0.75, sm: 1.5 }}
+        alignItems="center"
+      >
+        <Button
+          href="/listings"
+          color="inherit"
+          sx={{ display: { xs: "none", sm: "inline-flex" } }}
+        >
           Browse
         </Button>
         <Button href="/login" color="inherit">
           Login
         </Button>
-        <Button href="/register" variant="contained">
-          Get Started
+        <Button
+          href="/register"
+          variant="contained"
+          sx={{ whiteSpace: "nowrap" }}
+        >
+          Get started
         </Button>
       </Stack>
     );
@@ -46,30 +58,54 @@ export function AuthStatusActions() {
 
   return (
     <Stack direction="row" spacing={1.5} alignItems="center">
-      <Stack spacing={0.3} sx={{ display: { xs: "none", md: "flex" }, minWidth: 0 }}>
+      <Stack
+        spacing={0.3}
+        sx={{ display: { xs: "none", md: "flex" }, minWidth: 0 }}
+      >
         <Typography color="text.primary" fontWeight={700} noWrap>
           {session.user.fullName}
         </Typography>
         <Chip
           label={session.user.role.toLowerCase()}
           size="small"
-          sx={{ width: "fit-content", textTransform: "capitalize", bgcolor: "rgba(14,107,115,0.08)" }}
+          sx={{
+            width: "fit-content",
+            textTransform: "capitalize",
+            bgcolor: "rgba(14,107,115,0.08)",
+          }}
         />
       </Stack>
-      <Button href="/listings" color="inherit">
+      <Button
+        href="/listings"
+        color="inherit"
+        sx={{ display: { xs: "none", sm: "inline-flex" } }}
+      >
         Browse
       </Button>
-      <Button href={session.user.role === "ADMIN" ? "/admin" : "/dashboard"} color="inherit">
-        Dashboard
+      <Button
+        href={session.user.role === "ADMIN" ? "/admin" : "/dashboard"}
+        color="inherit"
+        sx={{ display: { xs: "none", md: "inline-flex" } }}
+      >
+        Workspace
       </Button>
-      <Button href={primaryHref} color="inherit" sx={{ display: { xs: "none", md: "inline-flex" } }}>
+      <Button
+        href={primaryHref}
+        color="inherit"
+        sx={{ display: { xs: "none", md: "inline-flex" } }}
+      >
         {session.user.role === "ADMIN"
           ? "Reports"
           : session.user.role === "RENTER"
             ? "Saved"
             : "Listings"}
       </Button>
-      <Button onClick={handleLogout} variant="contained" color="secondary">
+      <Button
+        onClick={handleLogout}
+        variant="contained"
+        color="secondary"
+        sx={{ whiteSpace: "nowrap" }}
+      >
         Logout
       </Button>
     </Stack>

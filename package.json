@@ -6,23 +6,28 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "lint": "eslint ."
+    "lint": "biome check",
+    "format": "biome check --write"
   },
   "dependencies": {
     "@emotion/react": "^11.14.0",
     "@emotion/styled": "^11.14.1",
     "@mui/icons-material": "^7.3.2",
     "@mui/material": "^7.3.2",
+    "axios": "^1.16.1",
+    "axios-retry": "^4.5.0",
+    "formik": "^2.4.9",
     "next": "^16.2.2",
     "react": "^19.2.0",
-    "react-dom": "^19.2.0"
+    "react-dom": "^19.2.0",
+    "yup": "^1.7.1",
+    "zustand": "^5.0.14"
   },
   "devDependencies": {
+    "@biomejs/biome": "2.2.0",
     "@types/node": "^24.6.1",
     "@types/react": "^19.2.2",
     "@types/react-dom": "^19.2.2",
-    "eslint": "^9.38.0",
-    "eslint-config-next": "^16.2.2",
     "typescript": "^5.9.3"
   }
 }

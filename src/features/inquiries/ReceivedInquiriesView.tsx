@@ -10,64 +10,54 @@ import Typography from "@mui/material/Typography";
 import Link from "next/link";
 import { useEffect, useState } from "react";
 import { useAuth } from "@/features/auth/AuthProvider";
-import { getReceivedInquiries, updateInquiryStatus } from "@/lib/api/inquiries";
-import { Inquiry, InquiryStatus } from "@/types/domain";
+import { useReceivedInquiries } from "@/hooks/useInquiries";
+import { extractApiError } from "@/lib/api/client";
+import { updateInquiryStatus } from "@/lib/api/inquiries";
+import type { InquiryStatus } from "@/types/domain";
 
 const inquiryStatuses: InquiryStatus[] = ["NEW", "CONTACTED", "CLOSED"];
 
 export function ReceivedInquiriesView() {
   const { session } = useAuth();
-  const [inquiries, setInquiries] = useState<Inquiry[]>([]);
-  const [errorMessage, setErrorMessage] = useState<string | null>(null);
-  const [statusDrafts, setStatusDrafts] = useState<Record<string, InquiryStatus>>({});
+  const { inquiries, error, refetch } = useReceivedInquiries(
+    Boolean(session?.accessToken),
+  );
+  const [mutationError, setMutationError] = useState<string | null>(null);
+  const [statusDrafts, setStatusDrafts] = useState<
+    Record<string, InquiryStatus>
+  >({});
 
   useEffect(() => {
-    async function loadInquiries() {
-      if (!session?.accessToken) {
-        setInquiries([]);
-        return;
-      }
-
-      try {
-        const results = await getReceivedInquiries();
-        setInquiries(results);
-        setStatusDrafts(
-          Object.fromEntries(results.map((inquiry) => [inquiry.id, inquiry.status])),
-        );
-      } catch (error) {
-        const message = error instanceof Error ? error.message : "Failed to load inquiries.";
-        setErrorMessage(message);
-      }
-    }
-
-    void loadInquiries();
-  }, [session?.accessToken]);
+    setStatusDrafts(
+      Object.fromEntries(
+        inquiries.map((inquiry) => [inquiry.id, inquiry.status]),
+      ),
+    );
+  }, [inquiries]);
 
   async function handleUpdateStatus(inquiryId: string) {
-    if (!session?.accessToken) {
-      return;
-    }
+    if (!session?.accessToken) return;
 
     try {
-      const updated = await updateInquiryStatus(inquiryId, statusDrafts[inquiryId]);
-      setInquiries((current) =>
-        current.map((inquiry) => (inquiry.id === inquiryId ? updated : inquiry)),
-      );
-    } catch (error) {
-      const message = error instanceof Error ? error.message : "Failed to update inquiry status.";
-      setErrorMessage(message);
+      await updateInquiryStatus(inquiryId, statusDrafts[inquiryId]);
+      await refetch();
+    } catch (err) {
+      setMutationError(extractApiError(err));
     }
   }
+
+  const errorMessage = error ?? mutationError;
 
   return (
     <Stack spacing={3}>
       <Stack spacing={1.5}>
         <Typography variant="overline" color="secondary.main" fontWeight={800}>
-          Module 6
+          Lead inbox
         </Typography>
         <Typography variant="h2">Received inquiries</Typography>
         <Typography color="text.secondary">
-          Review incoming renter interest and update each inquiry as you respond.
+          Review incoming renter interest and update each inquiry as you
+          respond.
         </Typography>
       </Stack>
 
@@ -75,7 +65,9 @@ export function ReceivedInquiriesView() {
 
       {inquiries.length === 0 ? (
         <Paper sx={{ p: 3 }}>
-          <Typography color="text.secondary">No one has contacted your listings yet.</Typography>
+          <Typography color="text.secondary">
+            No one has contacted your listings yet.
+          </Typography>
         </Paper>
       ) : null}
 
@@ -90,10 +82,15 @@ export function ReceivedInquiriesView() {
                 KES {inquiry.listingRentAmount}
               </Typography>
               <Typography color="text.secondary">
-                From: {inquiry.sender.fullName} ({inquiry.sender.role}) - {inquiry.sender.email}
+                From: {inquiry.sender.fullName} ({inquiry.sender.role}) -{" "}
+                {inquiry.sender.email}
               </Typography>
               <Typography color="text.secondary">{inquiry.message}</Typography>
-              <Stack direction={{ xs: "column", sm: "row" }} spacing={1.5} alignItems={{ xs: "stretch", sm: "center" }}>
+              <Stack
+                direction={{ xs: "column", sm: "row" }}
+                spacing={1.5}
+                alignItems={{ xs: "stretch", sm: "center" }}
+              >
                 <TextField
                   select
                   label="Status"
@@ -112,7 +109,10 @@ export function ReceivedInquiriesView() {
                     </MenuItem>
                   ))}
                 </TextField>
-                <Button variant="contained" onClick={() => handleUpdateStatus(inquiry.id)}>
+                <Button
+                  variant="contained"
+                  onClick={() => handleUpdateStatus(inquiry.id)}
+                >
                   Update status
                 </Button>
               </Stack>
