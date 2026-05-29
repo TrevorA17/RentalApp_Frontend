@@ -16,17 +16,16 @@ import { useRouter } from "next/navigation";
 import { type ChangeEvent, useEffect, useRef, useState } from "react";
 import { AiDescriptionAssist } from "@/features/ai/AiDescriptionAssist";
 import { useAuth } from "@/features/auth/AuthProvider";
+import { useAmenities } from "@/hooks/useAmenities";
 import { extractApiError } from "@/lib/api/client";
 import {
   createListing,
-  getAmenities,
   getListingById,
   publishListing,
   updateListing,
   uploadListingImage,
 } from "@/lib/api/listings";
 import type {
-  Amenity,
   AvailabilityStatus,
   HouseType,
   ListingSummary,
@@ -90,7 +89,7 @@ export function ListingForm({ mode, listingId }: ListingFormProps) {
   const [isLoading, setIsLoading] = useState(true);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [successMessage, setSuccessMessage] = useState<string | null>(null);
-  const [amenities, setAmenities] = useState<Amenity[]>([]);
+  const { amenities } = useAmenities();
   const [selectedAmenityIds, setSelectedAmenityIds] = useState<string[]>([]);
   const [mediaItems, setMediaItems] = useState<ListingMediaDraft[]>([]);
   const isUploadingMedia = mediaItems.some((item) => item.isUploading);
@@ -167,14 +166,10 @@ export function ListingForm({ mode, listingId }: ListingFormProps) {
       }
 
       try {
-        const [amenityOptions, existingListing] = await Promise.all([
-          getAmenities(),
+        const existingListing =
           mode === "edit" && listingId
-            ? getListingById(listingId, session.accessToken)
-            : Promise.resolve(null),
-        ]);
-
-        setAmenities(amenityOptions);
+            ? await getListingById(listingId, session.accessToken)
+            : null;
 
         if (existingListing) {
           formik.resetForm({

@@ -5,8 +5,8 @@ import Chip from "@mui/material/Chip";
 import Paper from "@mui/material/Paper";
 import Stack from "@mui/material/Stack";
 import Typography from "@mui/material/Typography";
-import { useEffect, useState } from "react";
-import { getRecentModerationActions } from "@/lib/api/admin";
+import { useAdminModerationHistory } from "@/hooks/useAdminModerationHistory";
+import { formatDateTime } from "@/lib/utils/formatDate";
 import type { AdminModerationAction } from "@/types/domain";
 
 type AdminModerationHistoryViewProps = {
@@ -24,25 +24,7 @@ function formatStatusTransition(action: AdminModerationAction) {
 export function AdminModerationHistoryView({
   limit = 12,
 }: AdminModerationHistoryViewProps) {
-  const [items, setItems] = useState<AdminModerationAction[]>([]);
-  const [errorMessage, setErrorMessage] = useState<string | null>(null);
-
-  useEffect(() => {
-    async function loadActions() {
-      try {
-        const result = await getRecentModerationActions(limit);
-        setItems(result);
-      } catch (error) {
-        const message =
-          error instanceof Error
-            ? error.message
-            : "Failed to load moderation history.";
-        setErrorMessage(message);
-      }
-    }
-
-    void loadActions();
-  }, [limit]);
+  const { actions: items, error } = useAdminModerationHistory(limit);
 
   return (
     <Stack spacing={2.5}>
@@ -56,7 +38,7 @@ export function AdminModerationHistoryView({
         </Typography>
       </Stack>
 
-      {errorMessage ? <Alert severity="error">{errorMessage}</Alert> : null}
+      {error ? <Alert severity="error">{error}</Alert> : null}
       {items.length === 0 ? (
         <Paper sx={{ p: 3 }}>
           <Typography color="text.secondary">
@@ -79,7 +61,7 @@ export function AdminModerationHistoryView({
                   <Chip label={formatTargetLabel(item)} variant="outlined" />
                 </Stack>
                 <Typography variant="body2" color="text.secondary">
-                  {new Date(item.createdAt).toLocaleString()}
+                  {formatDateTime(item.createdAt)}
                 </Typography>
               </Stack>
               <Typography color="text.secondary">

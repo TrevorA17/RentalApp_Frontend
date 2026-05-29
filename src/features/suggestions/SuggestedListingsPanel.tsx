@@ -7,38 +7,15 @@ import Paper from "@mui/material/Paper";
 import Stack from "@mui/material/Stack";
 import Typography from "@mui/material/Typography";
 import Link from "next/link";
-import { useEffect, useState } from "react";
 import { useAuth } from "@/features/auth/AuthProvider";
-import { getSuggestedListings } from "@/lib/api/suggestions";
-import type { ListingSuggestion } from "@/types/domain";
+import { useSuggestedListings } from "@/hooks/useSuggestedListings";
 
 export function SuggestedListingsPanel() {
   const { session } = useAuth();
-  const [items, setItems] = useState<ListingSuggestion[]>([]);
-  const [errorMessage, setErrorMessage] = useState<string | null>(null);
-
-  useEffect(() => {
-    async function loadSuggestions() {
-      if (!session?.accessToken) {
-        setItems([]);
-        return;
-      }
-
-      try {
-        const response = await getSuggestedListings(3);
-        setItems(response);
-        setErrorMessage(null);
-      } catch (error) {
-        const message =
-          error instanceof Error
-            ? error.message
-            : "Failed to load listing suggestions.";
-        setErrorMessage(message);
-      }
-    }
-
-    void loadSuggestions();
-  }, [session?.accessToken]);
+  const { suggestions, error } = useSuggestedListings(
+    3,
+    Boolean(session?.accessToken),
+  );
 
   if (!session) {
     return null;
@@ -60,9 +37,9 @@ export function SuggestedListingsPanel() {
           </Typography>
         </Stack>
 
-        {errorMessage ? <Alert severity="error">{errorMessage}</Alert> : null}
+        {error ? <Alert severity="error">{error}</Alert> : null}
 
-        {items.length === 0 ? (
+        {suggestions.length === 0 ? (
           <Typography color="text.secondary">
             Suggestions will appear once you have a bit more browsing or profile
             activity.
@@ -70,7 +47,7 @@ export function SuggestedListingsPanel() {
         ) : null}
 
         <Stack spacing={2}>
-          {items.map((item) => (
+          {suggestions.map((item) => (
             <Paper key={item.listing.id} variant="outlined" sx={{ p: 2.5 }}>
               <Stack spacing={1.25}>
                 <Stack

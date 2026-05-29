@@ -5,44 +5,19 @@ import Paper from "@mui/material/Paper";
 import Stack from "@mui/material/Stack";
 import Typography from "@mui/material/Typography";
 import Link from "next/link";
-import { useEffect, useState } from "react";
 import { useAuth } from "@/features/auth/AuthProvider";
-import { getSavedListings } from "@/lib/api/savedListings";
-import type { ListingSummary } from "@/types/domain";
+import { useSavedListings } from "@/hooks/useSavedListings";
 import { SaveListingButton } from "./SaveListingButton";
 
 export function SavedListingsView() {
   const { session } = useAuth();
-  const [listings, setListings] = useState<ListingSummary[]>([]);
-  const [errorMessage, setErrorMessage] = useState<string | null>(null);
+  const { savedListings, error, refetch } = useSavedListings(
+    Boolean(session?.accessToken),
+  );
 
-  useEffect(() => {
-    async function loadSavedListings() {
-      if (!session?.accessToken) {
-        setListings([]);
-        return;
-      }
-
-      try {
-        const results = await getSavedListings();
-        setListings(results);
-      } catch (error) {
-        const message =
-          error instanceof Error
-            ? error.message
-            : "Failed to load saved listings.";
-        setErrorMessage(message);
-      }
-    }
-
-    void loadSavedListings();
-  }, [session?.accessToken]);
-
-  function handleSavedChange(listingId: string, saved: boolean) {
+  function handleSavedChange(_listingId: string, saved: boolean) {
     if (!saved) {
-      setListings((current) =>
-        current.filter((listing) => listing.id !== listingId),
-      );
+      void refetch();
     }
   }
 
@@ -59,9 +34,9 @@ export function SavedListingsView() {
         </Typography>
       </Stack>
 
-      {errorMessage ? <Alert severity="error">{errorMessage}</Alert> : null}
+      {error ? <Alert severity="error">{error}</Alert> : null}
 
-      {listings.length === 0 ? (
+      {savedListings.length === 0 ? (
         <Paper sx={{ p: 3 }}>
           <Typography color="text.secondary">
             You have not saved any listings yet. Browse public listings and add
@@ -71,7 +46,7 @@ export function SavedListingsView() {
       ) : null}
 
       <Stack spacing={2}>
-        {listings.map((listing) => (
+        {savedListings.map((listing) => (
           <Paper key={listing.id} sx={{ p: 3 }}>
             <Stack spacing={1.5}>
               <Stack

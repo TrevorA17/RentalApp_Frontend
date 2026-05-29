@@ -14,12 +14,12 @@ import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { type FormEvent, useEffect, useMemo, useState } from "react";
 import { useAuth } from "@/features/auth/AuthProvider";
+import { useAmenities } from "@/hooks/useAmenities";
+import { useSavedListingIds } from "@/hooks/useSavedListings";
 import { interpretListingSearch } from "@/lib/api/ai";
-import { getAmenities, searchListings } from "@/lib/api/listings";
-import { getSavedListingIds } from "@/lib/api/savedListings";
+import { searchListings } from "@/lib/api/listings";
 import type { PaginatedResponse } from "@/types/api";
 import type {
-  Amenity,
   HouseType,
   InterpretedListingSearch,
   ListingSummary,
@@ -70,7 +70,7 @@ export function ListingsBrowseView() {
   const { session } = useAuth();
   const [results, setResults] =
     useState<PaginatedResponse<ListingSummary>>(emptyResults);
-  const [amenities, setAmenities] = useState<Amenity[]>([]);
+  const { amenities } = useAmenities();
   const [savedListingIds, setSavedListingIds] = useState<string[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [isSearching, setIsSearching] = useState(false);
@@ -110,29 +110,25 @@ export function ListingsBrowseView() {
         setErrorMessage(null);
         const pageParam = Number(searchParams.get("page") ?? "0");
         const sizeParam = Number(searchParams.get("size") ?? "12");
-        const [listingResults, amenityOptions] = await Promise.all([
-          searchListings({
-            city: searchParams.get("city") || undefined,
-            area: searchParams.get("area") || undefined,
-            maxPrice: searchParams.get("maxPrice")
-              ? Number(searchParams.get("maxPrice"))
-              : undefined,
-            bedrooms: searchParams.get("bedrooms")
-              ? Number(searchParams.get("bedrooms"))
-              : undefined,
-            houseType: searchParams.get("houseType") || undefined,
-            amenities: searchParams.get("amenities")
-              ? [searchParams.get("amenities") as string]
-              : undefined,
-            page: Number.isNaN(pageParam) ? 0 : pageParam,
-            size: Number.isNaN(sizeParam) ? 12 : sizeParam,
-            sort:
-              (searchParams.get("sort") as ListingSort) || "PUBLISHED_AT_DESC",
-          }),
-          getAmenities(),
-        ]);
+        const listingResults = await searchListings({
+          city: searchParams.get("city") || undefined,
+          area: searchParams.get("area") || undefined,
+          maxPrice: searchParams.get("maxPrice")
+            ? Number(searchParams.get("maxPrice"))
+            : undefined,
+          bedrooms: searchParams.get("bedrooms")
+            ? Number(searchParams.get("bedrooms"))
+            : undefined,
+          houseType: searchParams.get("houseType") || undefined,
+          amenities: searchParams.get("amenities")
+            ? [searchParams.get("amenities") as string]
+            : undefined,
+          page: Number.isNaN(pageParam) ? 0 : pageParam,
+          size: Number.isNaN(sizeParam) ? 12 : sizeParam,
+          sort:
+            (searchParams.get("sort") as ListingSort) || "PUBLISHED_AT_DESC",
+        });
         setResults(listingResults);
-        setAmenities(amenityOptions);
       } catch (error) {
         const message =
           error instanceof Error ? error.message : "Failed to load listings.";
@@ -147,23 +143,11 @@ export function ListingsBrowseView() {
     void loadBrowseData();
   }, [searchParams]);
 
+  const { savedIds } = useSavedListingIds(Boolean(session?.accessToken));
+
   useEffect(() => {
-    async function loadSavedIds() {
-      if (!session?.accessToken) {
-        setSavedListingIds([]);
-        return;
-      }
-
-      try {
-        const ids = await getSavedListingIds();
-        setSavedListingIds(ids);
-      } catch {
-        setSavedListingIds([]);
-      }
-    }
-
-    void loadSavedIds();
-  }, [session?.accessToken]);
+    setSavedListingIds(savedIds);
+  }, [savedIds]);
 
   function handleSavedChange(listingId: string, saved: boolean) {
     setSavedListingIds((current) => {
