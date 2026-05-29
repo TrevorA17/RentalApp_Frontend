@@ -1,17 +1,17 @@
 "use client";
 
 import Alert from "@mui/material/Alert";
+import Box from "@mui/material/Box";
 import Button from "@mui/material/Button";
 import Chip from "@mui/material/Chip";
 import Paper from "@mui/material/Paper";
 import Stack from "@mui/material/Stack";
 import Typography from "@mui/material/Typography";
-import Box from "@mui/material/Box";
 import Link from "next/link";
 import { useEffect, useState } from "react";
-import { getMyListings } from "@/lib/api/listings";
 import { useAuth } from "@/features/auth/AuthProvider";
-import { ListingSummary } from "@/types/domain";
+import { getMyListings } from "@/lib/api/listings";
+import type { ListingSummary } from "@/types/domain";
 
 export function MyListingsView() {
   const { session } = useAuth();
@@ -28,7 +28,8 @@ export function MyListingsView() {
         const result = await getMyListings();
         setListings(result);
       } catch (error) {
-        const message = error instanceof Error ? error.message : "Failed to load listings.";
+        const message =
+          error instanceof Error ? error.message : "Failed to load listings.";
         setErrorMessage(message);
       }
     }
@@ -41,20 +42,32 @@ export function MyListingsView() {
   }
 
   if (session.user.role !== "AGENT" && session.user.role !== "LANDLORD") {
-    return <Alert severity="warning">Only agent and landlord accounts can manage listings.</Alert>;
+    return (
+      <Alert severity="warning">
+        Only agent and landlord accounts can manage listings.
+      </Alert>
+    );
   }
 
   return (
     <Stack spacing={3}>
       <Paper sx={{ p: { xs: 3, md: 4 } }}>
         <Stack spacing={2}>
-          <Chip label="Listing workspace" color="secondary" sx={{ width: "fit-content" }} />
+          <Chip
+            label="Listing workspace"
+            color="secondary"
+            sx={{ width: "fit-content" }}
+          />
           <Typography variant="h3">My listings</Typography>
           <Typography color="text.secondary">
             Manage draft and published rental listings from one place.
           </Typography>
           <Stack direction="row">
-            <Button component={Link} href="/my-listings/new" variant="contained">
+            <Button
+              component={Link}
+              href="/my-listings/new"
+              variant="contained"
+            >
               Create listing
             </Button>
           </Stack>
@@ -71,7 +84,12 @@ export function MyListingsView() {
                 component="img"
                 src={listing.thumbnailUrl}
                 alt={listing.title}
-                sx={{ width: "100%", maxHeight: 220, objectFit: "cover", borderRadius: 3 }}
+                sx={{
+                  width: "100%",
+                  maxHeight: 220,
+                  objectFit: "cover",
+                  borderRadius: 3,
+                }}
               />
             ) : null}
             <Typography variant="h5">{listing.title}</Typography>
@@ -85,10 +103,18 @@ export function MyListingsView() {
               Media items: {listing.media.length}
             </Typography>
             <Stack direction="row" spacing={1}>
-              <Button component={Link} href={`/my-listings/${listing.id}/edit`} variant="outlined">
+              <Button
+                component={Link}
+                href={`/my-listings/${listing.id}/edit`}
+                variant="outlined"
+              >
                 Edit
               </Button>
-              <Button component={Link} href={`/listings/${listing.id}`} variant="contained">
+              <Button
+                component={Link}
+                href={`/listings/${listing.id}`}
+                variant="contained"
+              >
                 View
               </Button>
             </Stack>

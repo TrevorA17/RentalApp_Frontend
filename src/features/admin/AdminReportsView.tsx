@@ -10,7 +10,7 @@ import Typography from "@mui/material/Typography";
 import { useEffect, useState } from "react";
 import { useAuth } from "@/features/auth/AuthProvider";
 import { getAdminReports, updateAdminReportStatus } from "@/lib/api/admin";
-import { Report, ReportStatus } from "@/types/domain";
+import type { Report, ReportStatus } from "@/types/domain";
 
 const reportStatuses: ReportStatus[] = ["OPEN", "RESOLVED", "DISMISSED"];
 
@@ -30,9 +30,12 @@ export function AdminReportsView() {
       try {
         const result = await getAdminReports();
         setReports(result);
-        setDrafts(Object.fromEntries(result.map((item) => [item.id, item.status])));
+        setDrafts(
+          Object.fromEntries(result.map((item) => [item.id, item.status])),
+        );
       } catch (error) {
-        const message = error instanceof Error ? error.message : "Failed to load reports.";
+        const message =
+          error instanceof Error ? error.message : "Failed to load reports.";
         setErrorMessage(message);
       }
     }
@@ -47,11 +50,16 @@ export function AdminReportsView() {
 
     try {
       const updated = await updateAdminReportStatus(reportId, drafts[reportId]);
-      setReports((current) => current.map((item) => (item.id === reportId ? updated : item)));
+      setReports((current) =>
+        current.map((item) => (item.id === reportId ? updated : item)),
+      );
       setSuccessMessage("Report status updated.");
       setErrorMessage(null);
     } catch (error) {
-      const message = error instanceof Error ? error.message : "Failed to update report status.";
+      const message =
+        error instanceof Error
+          ? error.message
+          : "Failed to update report status.";
       setErrorMessage(message);
       setSuccessMessage(null);
     }
@@ -67,10 +75,14 @@ export function AdminReportsView() {
       </Stack>
 
       {errorMessage ? <Alert severity="error">{errorMessage}</Alert> : null}
-      {successMessage ? <Alert severity="success">{successMessage}</Alert> : null}
+      {successMessage ? (
+        <Alert severity="success">{successMessage}</Alert>
+      ) : null}
       {reports.length === 0 ? (
         <Paper sx={{ p: 3 }}>
-          <Typography color="text.secondary">No reports have been submitted yet.</Typography>
+          <Typography color="text.secondary">
+            No reports have been submitted yet.
+          </Typography>
         </Paper>
       ) : null}
 
@@ -84,15 +96,19 @@ export function AdminReportsView() {
               </Typography>
               {report.listing ? (
                 <Typography color="text.secondary">
-                  Listing: {report.listing.title} in {report.listing.area}, {report.listing.city}
+                  Listing: {report.listing.title} in {report.listing.area},{" "}
+                  {report.listing.city}
                 </Typography>
               ) : null}
               {report.reportedUser ? (
                 <Typography color="text.secondary">
-                  Reported user: {report.reportedUser.fullName} ({report.reportedUser.email})
+                  Reported user: {report.reportedUser.fullName} (
+                  {report.reportedUser.email})
                 </Typography>
               ) : null}
-              {report.details ? <Typography color="text.secondary">{report.details}</Typography> : null}
+              {report.details ? (
+                <Typography color="text.secondary">{report.details}</Typography>
+              ) : null}
               <Stack direction={{ xs: "column", sm: "row" }} spacing={1.5}>
                 <TextField
                   select
@@ -112,7 +128,10 @@ export function AdminReportsView() {
                     </MenuItem>
                   ))}
                 </TextField>
-                <Button variant="contained" onClick={() => handleUpdate(report.id)}>
+                <Button
+                  variant="contained"
+                  onClick={() => handleUpdate(report.id)}
+                >
                   Update
                 </Button>
               </Stack>

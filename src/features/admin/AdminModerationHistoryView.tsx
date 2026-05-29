@@ -7,7 +7,7 @@ import Stack from "@mui/material/Stack";
 import Typography from "@mui/material/Typography";
 import { useEffect, useState } from "react";
 import { getRecentModerationActions } from "@/lib/api/admin";
-import { AdminModerationAction } from "@/types/domain";
+import type { AdminModerationAction } from "@/types/domain";
 
 type AdminModerationHistoryViewProps = {
   limit?: number;
@@ -21,7 +21,9 @@ function formatStatusTransition(action: AdminModerationAction) {
   return `${action.previousStatus ?? "n/a"} to ${action.newStatus ?? "n/a"}`;
 }
 
-export function AdminModerationHistoryView({ limit = 12 }: AdminModerationHistoryViewProps) {
+export function AdminModerationHistoryView({
+  limit = 12,
+}: AdminModerationHistoryViewProps) {
   const [items, setItems] = useState<AdminModerationAction[]>([]);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
@@ -31,7 +33,10 @@ export function AdminModerationHistoryView({ limit = 12 }: AdminModerationHistor
         const result = await getRecentModerationActions(limit);
         setItems(result);
       } catch (error) {
-        const message = error instanceof Error ? error.message : "Failed to load moderation history.";
+        const message =
+          error instanceof Error
+            ? error.message
+            : "Failed to load moderation history.";
         setErrorMessage(message);
       }
     }
@@ -54,7 +59,9 @@ export function AdminModerationHistoryView({ limit = 12 }: AdminModerationHistor
       {errorMessage ? <Alert severity="error">{errorMessage}</Alert> : null}
       {items.length === 0 ? (
         <Paper sx={{ p: 3 }}>
-          <Typography color="text.secondary">No moderation actions have been recorded yet.</Typography>
+          <Typography color="text.secondary">
+            No moderation actions have been recorded yet.
+          </Typography>
         </Paper>
       ) : null}
 
@@ -62,7 +69,11 @@ export function AdminModerationHistoryView({ limit = 12 }: AdminModerationHistor
         {items.map((item) => (
           <Paper key={item.id} sx={{ p: 2.5 }}>
             <Stack spacing={1}>
-              <Stack direction={{ xs: "column", md: "row" }} justifyContent="space-between" spacing={1.5}>
+              <Stack
+                direction={{ xs: "column", md: "row" }}
+                justifyContent="space-between"
+                spacing={1.5}
+              >
                 <Stack direction="row" spacing={1} flexWrap="wrap" useFlexGap>
                   <Chip label={item.actionType} color="secondary" />
                   <Chip label={formatTargetLabel(item)} variant="outlined" />
@@ -80,7 +91,11 @@ export function AdminModerationHistoryView({ limit = 12 }: AdminModerationHistor
               <Typography color="text.secondary">
                 Status: {formatStatusTransition(item)}
               </Typography>
-              {item.reasonOrNote ? <Typography color="text.secondary">{item.reasonOrNote}</Typography> : null}
+              {item.reasonOrNote ? (
+                <Typography color="text.secondary">
+                  {item.reasonOrNote}
+                </Typography>
+              ) : null}
             </Stack>
           </Paper>
         ))}

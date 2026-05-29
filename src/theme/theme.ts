@@ -33,28 +33,28 @@ export const appTheme = createTheme({
       fontWeight: 700,
       lineHeight: 1.02,
       letterSpacing: "-0.04em",
-      fontFamily: 'var(--font-display), Georgia, serif',
+      fontFamily: "var(--font-display), Georgia, serif",
     },
     h2: {
       fontSize: "2.5rem",
       fontWeight: 700,
       letterSpacing: "-0.03em",
-      fontFamily: 'var(--font-display), Georgia, serif',
+      fontFamily: "var(--font-display), Georgia, serif",
     },
     h3: {
       fontSize: "1.75rem",
       fontWeight: 700,
       letterSpacing: "-0.02em",
-      fontFamily: 'var(--font-display), Georgia, serif',
+      fontFamily: "var(--font-display), Georgia, serif",
     },
     h4: {
-      fontFamily: 'var(--font-display), Georgia, serif',
+      fontFamily: "var(--font-display), Georgia, serif",
     },
     h5: {
-      fontFamily: 'var(--font-display), Georgia, serif',
+      fontFamily: "var(--font-display), Georgia, serif",
     },
     h6: {
-      fontFamily: 'var(--font-display), Georgia, serif',
+      fontFamily: "var(--font-display), Georgia, serif",
     },
     button: {
       textTransform: "none",

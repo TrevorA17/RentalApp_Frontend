@@ -3,7 +3,7 @@
 import Paper from "@mui/material/Paper";
 import Stack from "@mui/material/Stack";
 import Typography from "@mui/material/Typography";
-import { PropsWithChildren } from "react";
+import type { PropsWithChildren } from "react";
 
 type AuthCardProps = PropsWithChildren<{
   eyebrow: string;
@@ -11,7 +11,12 @@ type AuthCardProps = PropsWithChildren<{
   description: string;
 }>;
 
-export function AuthCard({ eyebrow, title, description, children }: AuthCardProps) {
+export function AuthCard({
+  eyebrow,
+  title,
+  description,
+  children,
+}: AuthCardProps) {
   return (
     <Paper
       sx={{

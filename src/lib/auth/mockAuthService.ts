@@ -1,4 +1,10 @@
-import { AuthResult, AuthSession, AuthUser, LoginRequest, RegisterRequest } from "@/types/auth";
+import type {
+  AuthResult,
+  AuthSession,
+  AuthUser,
+  LoginRequest,
+  RegisterRequest,
+} from "@/types/auth";
 
 type StoredMockUser = {
   id: string;
@@ -86,7 +92,9 @@ export function getStoredSession(): AuthSession | null {
   }
 }
 
-export async function registerMockUser(request: RegisterRequest): Promise<AuthResult> {
+export async function registerMockUser(
+  request: RegisterRequest,
+): Promise<AuthResult> {
   await wait(500);
 
   const users = readUsers();
@@ -117,7 +125,9 @@ export async function registerMockUser(request: RegisterRequest): Promise<AuthRe
   };
 }
 
-export async function loginMockUser(request: LoginRequest): Promise<AuthResult> {
+export async function loginMockUser(
+  request: LoginRequest,
+): Promise<AuthResult> {
   await wait(400);
 
   const users = readUsers();

@@ -1,4 +1,4 @@
-import { AuthSession } from "@/types/auth";
+import type { AuthSession } from "@/types/auth";
 
 const SESSION_KEY = "rentalapp.auth.session";
 
@@ -11,7 +11,9 @@ function canUseBrowserStorage() {
 }
 
 function notifyListeners(session: AuthSession | null) {
-  listeners.forEach((listener) => listener(session));
+  listeners.forEach((listener) => {
+    listener(session);
+  });
 }
 
 export function getStoredSession(): AuthSession | null {

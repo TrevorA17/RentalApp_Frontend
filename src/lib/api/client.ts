@@ -1,7 +1,15 @@
 import { apiConfig } from "@/lib/api/config";
-import { clearStoredSession, getStoredSession, storeSession } from "@/lib/auth/sessionStore";
-import { ApiErrorItem, ApiErrorResponse, ApiSuccessResponse } from "@/types/api";
-import { AuthResponse, AuthSession } from "@/types/auth";
+import {
+  clearStoredSession,
+  getStoredSession,
+  storeSession,
+} from "@/lib/auth/sessionStore";
+import type {
+  ApiErrorItem,
+  ApiErrorResponse,
+  ApiSuccessResponse,
+} from "@/types/api";
+import type { AuthResponse, AuthSession } from "@/types/auth";
 
 type AuthMode = "none" | "optional" | "required";
 
@@ -27,7 +35,11 @@ export class ApiError extends Error {
   code?: string;
   errors?: ApiErrorItem[];
 
-  constructor(status: number, message: string, options: { code?: string; errors?: ApiErrorItem[] } = {}) {
+  constructor(
+    status: number,
+    message: string,
+    options: { code?: string; errors?: ApiErrorItem[] } = {},
+  ) {
     super(message);
     this.name = "ApiError";
     this.status = status;
@@ -44,7 +56,9 @@ async function parseError(response: Response): Promise<ParsedError> {
   try {
     const errorBody = (await response.json()) as ApiErrorResponse;
     return {
-      message: errorBody.message || `API request failed with status ${response.status}`,
+      message:
+        errorBody.message ||
+        `API request failed with status ${response.status}`,
       code: errorBody.code,
       errors: errorBody.errors,
     };
@@ -62,7 +76,11 @@ async function parseJson<T>(response: Response): Promise<T> {
 function buildHeaders(options: InternalRequestOptions, token?: string | null) {
   const headers = new Headers(options.headers);
 
-  if (!headers.has("Content-Type") && options.body && !(options.body instanceof FormData)) {
+  if (
+    !headers.has("Content-Type") &&
+    options.body &&
+    !(options.body instanceof FormData)
+  ) {
     headers.set("Content-Type", "application/json");
   }
 
@@ -73,7 +91,11 @@ function buildHeaders(options: InternalRequestOptions, token?: string | null) {
   return headers;
 }
 
-async function performRequest(path: string, options: InternalRequestOptions, token?: string | null): Promise<Response> {
+async function performRequest(
+  path: string,
+  options: InternalRequestOptions,
+  token?: string | null,
+): Promise<Response> {
   return fetch(`${apiConfig.baseUrl}${path}`, {
     ...options,
     headers: buildHeaders(options, token),
@@ -107,7 +129,8 @@ async function refreshAccessToken(): Promise<AuthSession | null> {
         return null;
       }
 
-      const parsed = await parseJson<ApiSuccessResponse<AuthResponse>>(response);
+      const parsed =
+        await parseJson<ApiSuccessResponse<AuthResponse>>(response);
       storeSession(parsed.data);
       return parsed.data;
     })()
@@ -123,16 +146,23 @@ async function refreshAccessToken(): Promise<AuthSession | null> {
   return refreshPromise;
 }
 
-export async function apiRequest<T>(path: string, options: RequestOptions = {}): Promise<T> {
+export async function apiRequest<T>(
+  path: string,
+  options: RequestOptions = {},
+): Promise<T> {
   const requestOptions: InternalRequestOptions = options;
-  const auth = requestOptions.auth ?? (requestOptions.token ? "optional" : "none");
-  const retryOnAuthFailure = requestOptions.retryOnAuthFailure ?? auth !== "none";
+  const auth =
+    requestOptions.auth ?? (requestOptions.token ? "optional" : "none");
+  const retryOnAuthFailure =
+    requestOptions.retryOnAuthFailure ?? auth !== "none";
   const session = auth === "none" ? null : getStoredSession();
   const token = requestOptions.token ?? session?.accessToken ?? null;
 
   if (auth === "required" && !token) {
     clearStoredSession();
-    throw new ApiError(401, "Your session has expired. Please sign in again.", { code: "AUTH_REQUIRED" });
+    throw new ApiError(401, "Your session has expired. Please sign in again.", {
+      code: "AUTH_REQUIRED",
+    });
   }
 
   const response = await performRequest(path, requestOptions, token);

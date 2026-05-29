@@ -8,7 +8,7 @@ import TextField from "@mui/material/TextField";
 import Typography from "@mui/material/Typography";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
-import { FormEvent, useEffect, useState } from "react";
+import { type FormEvent, useEffect, useState } from "react";
 import { AuthCard } from "@/features/auth/AuthCard";
 import { useAuth } from "@/features/auth/AuthProvider";
 
@@ -66,7 +66,8 @@ export function LoginForm() {
       });
       router.replace(redirectTarget);
     } catch (error) {
-      const message = error instanceof Error ? error.message : "Unable to log in.";
+      const message =
+        error instanceof Error ? error.message : "Unable to log in.";
       setFormError(message);
     }
   }
@@ -105,7 +106,8 @@ export function LoginForm() {
         <Divider />
         <Stack spacing={0.75}>
           <Typography variant="body2" color="text.secondary">
-            Use an account created through the registration page, then sign in with the same credentials.
+            Use an account created through the registration page, then sign in
+            with the same credentials.
           </Typography>
         </Stack>
         <Typography color="text.secondary">

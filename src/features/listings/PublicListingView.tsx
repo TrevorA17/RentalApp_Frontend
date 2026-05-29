@@ -7,7 +7,7 @@ import Typography from "@mui/material/Typography";
 import Link from "next/link";
 import { InquiryComposer } from "@/features/inquiries/InquiryComposer";
 import { ReportComposer } from "@/features/reports/ReportComposer";
-import { ListingDetail } from "@/types/domain";
+import type { ListingDetail } from "@/types/domain";
 import { SaveListingButton } from "./SaveListingButton";
 
 type PublicListingViewProps = {
@@ -40,18 +40,36 @@ export function PublicListingView({ listing }: PublicListingViewProps) {
           <Grid size={{ xs: 12, md: heroMedia ? 7 : 12 }}>
             <Stack spacing={2}>
               <Stack direction="row" spacing={1} flexWrap="wrap" useFlexGap>
-                <Chip label={formatEnumLabel(listing.houseType)} color="secondary" sx={{ width: "fit-content" }} />
-                <Chip label={formatEnumLabel(listing.availabilityStatus)} variant="outlined" sx={{ width: "fit-content" }} />
-                {listing.furnished ? <Chip label="Furnished" variant="outlined" sx={{ width: "fit-content" }} /> : null}
+                <Chip
+                  label={formatEnumLabel(listing.houseType)}
+                  color="secondary"
+                  sx={{ width: "fit-content" }}
+                />
+                <Chip
+                  label={formatEnumLabel(listing.availabilityStatus)}
+                  variant="outlined"
+                  sx={{ width: "fit-content" }}
+                />
+                {listing.furnished ? (
+                  <Chip
+                    label="Furnished"
+                    variant="outlined"
+                    sx={{ width: "fit-content" }}
+                  />
+                ) : null}
               </Stack>
               <Typography variant="h3">{listing.title}</Typography>
               <Typography variant="h5" color="primary.main">
                 {formatKes(listing.rentAmount)}
               </Typography>
-              <Typography color="text.secondary">{listing.description}</Typography>
+              <Typography color="text.secondary">
+                {listing.description}
+              </Typography>
               <Stack direction={{ xs: "column", sm: "row" }} spacing={1.5}>
                 <SaveListingButton listingId={listing.id} variant="contained" />
-                <Link href={`/agents/${listing.poster.userId}`}>View agent profile</Link>
+                <Link href={`/agents/${listing.poster.userId}`}>
+                  View agent profile
+                </Link>
               </Stack>
             </Stack>
           </Grid>
@@ -61,7 +79,13 @@ export function PublicListingView({ listing }: PublicListingViewProps) {
                 component="img"
                 src={heroMedia.mediaUrl}
                 alt={heroMedia.caption || listing.title}
-                sx={{ width: "100%", height: "100%", minHeight: 300, objectFit: "cover", borderRadius: 4 }}
+                sx={{
+                  width: "100%",
+                  height: "100%",
+                  minHeight: 300,
+                  objectFit: "cover",
+                  borderRadius: 4,
+                }}
               />
             </Grid>
           ) : null}
@@ -89,7 +113,12 @@ export function PublicListingView({ listing }: PublicListingViewProps) {
                         component="img"
                         src={media.mediaUrl}
                         alt={media.caption || listing.title}
-                        sx={{ width: "100%", display: "block", height: 260, objectFit: "cover" }}
+                        sx={{
+                          width: "100%",
+                          display: "block",
+                          height: 260,
+                          objectFit: "cover",
+                        }}
                       />
                     ) : (
                       <Box
@@ -118,11 +147,15 @@ export function PublicListingView({ listing }: PublicListingViewProps) {
           <Grid container spacing={2}>
             <Grid size={{ xs: 12, md: 6 }}>
               <Typography color="text.secondary">Location</Typography>
-              <Typography>{listing.area}, {listing.city}</Typography>
+              <Typography>
+                {listing.area}, {listing.city}
+              </Typography>
             </Grid>
             <Grid size={{ xs: 12, md: 6 }}>
               <Typography color="text.secondary">Rooms</Typography>
-              <Typography>{listing.bedrooms} bed, {listing.bathrooms} bath</Typography>
+              <Typography>
+                {listing.bedrooms} bed, {listing.bathrooms} bath
+              </Typography>
             </Grid>
             <Grid size={{ xs: 12, md: 6 }}>
               <Typography color="text.secondary">Deposit</Typography>
@@ -135,7 +168,13 @@ export function PublicListingView({ listing }: PublicListingViewProps) {
           </Grid>
           <Stack direction="row" spacing={1} flexWrap="wrap" useFlexGap>
             {listing.amenities.length > 0 ? (
-              listing.amenities.map((amenity) => <Chip key={amenity.id} label={amenity.name} variant="outlined" />)
+              listing.amenities.map((amenity) => (
+                <Chip
+                  key={amenity.id}
+                  label={amenity.name}
+                  variant="outlined"
+                />
+              ))
             ) : (
               <Chip label="No amenities listed" variant="outlined" />
             )}
@@ -146,14 +185,21 @@ export function PublicListingView({ listing }: PublicListingViewProps) {
       <Paper sx={{ p: { xs: 3, md: 4 } }}>
         <Stack spacing={1.5}>
           <Typography variant="h5">Posted by</Typography>
-          <Typography color="text.secondary">{listing.poster.fullName} ({formatEnumLabel(listing.poster.role)})</Typography>
+          <Typography color="text.secondary">
+            {listing.poster.fullName} ({formatEnumLabel(listing.poster.role)})
+          </Typography>
           <Typography color="text.secondary">{listing.poster.email}</Typography>
-          <Link href={`/agents/${listing.poster.userId}`}>Open public profile</Link>
+          <Link href={`/agents/${listing.poster.userId}`}>
+            Open public profile
+          </Link>
         </Stack>
       </Paper>
 
       <InquiryComposer listing={listing} />
-      <ReportComposer listingId={listing.id} reportedUserId={listing.poster.userId} />
+      <ReportComposer
+        listingId={listing.id}
+        reportedUserId={listing.poster.userId}
+      />
     </Stack>
   );
 }

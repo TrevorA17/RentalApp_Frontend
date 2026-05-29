@@ -66,15 +66,31 @@ export default function HomePage() {
         <Grid container spacing={4} alignItems="center">
           <Grid size={{ xs: 12, lg: 7 }}>
             <Stack spacing={3}>
-              <Chip label="Rental-only marketplace MVP" color="secondary" sx={{ width: "fit-content" }} />
+              <Chip
+                label="Rental-only marketplace MVP"
+                color="secondary"
+                sx={{ width: "fit-content" }}
+              />
               <Typography variant="h1" sx={{ maxWidth: 840 }}>
-                Search rentals with clearer trust signals before you schedule a viewing.
+                Search rentals with clearer trust signals before you schedule a
+                viewing.
               </Typography>
-              <Typography variant="h6" color="text.secondary" sx={{ maxWidth: 760 }}>
-                RentalApp helps renters discover homes by area, budget, and preferences while giving agents and landlords a structured workspace for listings, media, inquiries, and public trust.
+              <Typography
+                variant="h6"
+                color="text.secondary"
+                sx={{ maxWidth: 760 }}
+              >
+                RentalApp helps renters discover homes by area, budget, and
+                preferences while giving agents and landlords a structured
+                workspace for listings, media, inquiries, and public trust.
               </Typography>
               <Stack direction={{ xs: "column", sm: "row" }} spacing={1.5}>
-                <Button href="/listings" variant="contained" size="large" endIcon={<ArrowForwardRounded />}>
+                <Button
+                  href="/listings"
+                  variant="contained"
+                  size="large"
+                  endIcon={<ArrowForwardRounded />}
+                >
                   Browse rentals
                 </Button>
                 <Button href="/register" variant="outlined" size="large">
@@ -105,26 +121,51 @@ export default function HomePage() {
                   inset: "auto -20% -28% 18%",
                   height: 260,
                   borderRadius: "50%",
-                  background: "radial-gradient(circle, rgba(200,107,42,0.42), transparent 64%)",
+                  background:
+                    "radial-gradient(circle, rgba(200,107,42,0.42), transparent 64%)",
                 }}
               />
               <Stack spacing={2} sx={{ position: "relative" }}>
                 <Typography variant="overline" sx={{ opacity: 0.8 }}>
                   Try the search helper
                 </Typography>
-                <Paper sx={{ p: 2, background: "rgba(255,255,255,0.12)", borderColor: "rgba(255,255,255,0.18)" }}>
-                  <Typography fontWeight={800}>&quot;2 bedroom in Kilimani under 50k with parking&quot;</Typography>
+                <Paper
+                  sx={{
+                    p: 2,
+                    background: "rgba(255,255,255,0.12)",
+                    borderColor: "rgba(255,255,255,0.18)",
+                  }}
+                >
+                  <Typography fontWeight={800}>
+                    &quot;2 bedroom in Kilimani under 50k with parking&quot;
+                  </Typography>
                 </Paper>
                 <Stack direction="row" spacing={1} flexWrap="wrap" useFlexGap>
-                  {["Area: Kilimani", "2 bedrooms", "Max KES 50,000", "Parking"].map((label) => (
-                    <Chip key={label} label={label} sx={{ color: "white", borderColor: "rgba(255,255,255,0.35)" }} variant="outlined" />
+                  {[
+                    "Area: Kilimani",
+                    "2 bedrooms",
+                    "Max KES 50,000",
+                    "Parking",
+                  ].map((label) => (
+                    <Chip
+                      key={label}
+                      label={label}
+                      sx={{
+                        color: "white",
+                        borderColor: "rgba(255,255,255,0.35)",
+                      }}
+                      variant="outlined"
+                    />
                   ))}
                 </Stack>
               </Stack>
               <Stack spacing={1.2} sx={{ position: "relative" }}>
-                <Typography variant="h5">Structured discovery stays in control.</Typography>
+                <Typography variant="h5">
+                  Structured discovery stays in control.
+                </Typography>
                 <Typography sx={{ opacity: 0.82 }}>
-                  AI suggests filters, then the marketplace uses real listing data, pagination, and sorting.
+                  AI suggests filters, then the marketplace uses real listing
+                  data, pagination, and sorting.
                 </Typography>
               </Stack>
             </Paper>
@@ -135,12 +176,20 @@ export default function HomePage() {
       <PageSection>
         <Stack spacing={3}>
           <Stack spacing={1} maxWidth={760}>
-            <Typography variant="overline" color="secondary.main" fontWeight={900}>
+            <Typography
+              variant="overline"
+              color="secondary.main"
+              fontWeight={900}
+            >
               Why it exists
             </Typography>
-            <Typography variant="h2">A cleaner alternative to generic classifieds.</Typography>
+            <Typography variant="h2">
+              A cleaner alternative to generic classifieds.
+            </Typography>
             <Typography color="text.secondary">
-              The MVP focuses on rental-specific workflows: better listing structure, inquiry tracking, agent recommendations, reports, and admin trust operations.
+              The MVP focuses on rental-specific workflows: better listing
+              structure, inquiry tracking, agent recommendations, reports, and
+              admin trust operations.
             </Typography>
           </Stack>
 
@@ -165,11 +214,27 @@ export default function HomePage() {
           <Grid size={{ xs: 12, md: 6 }}>
             <Paper sx={{ p: { xs: 3, md: 4 }, height: "100%" }}>
               <Stack spacing={2}>
-                <Chip label="For renters" color="primary" sx={{ width: "fit-content" }} />
-                <Typography variant="h3">Shortlist homes with less guesswork.</Typography>
+                <Chip
+                  label="For renters"
+                  color="primary"
+                  sx={{ width: "fit-content" }}
+                />
+                <Typography variant="h3">
+                  Shortlist homes with less guesswork.
+                </Typography>
                 <Stack spacing={1.2}>
-                  {["Browse by area and budget", "Use AI to fill structured filters", "Save listings and send inquiries", "Review agent recommendations before engaging"].map((item) => (
-                    <Stack key={item} direction="row" spacing={1.2} alignItems="center">
+                  {[
+                    "Browse by area and budget",
+                    "Use AI to fill structured filters",
+                    "Save listings and send inquiries",
+                    "Review agent recommendations before engaging",
+                  ].map((item) => (
+                    <Stack
+                      key={item}
+                      direction="row"
+                      spacing={1.2}
+                      alignItems="center"
+                    >
                       <FactCheckRounded color="secondary" fontSize="small" />
                       <Typography>{item}</Typography>
                     </Stack>
@@ -182,11 +247,27 @@ export default function HomePage() {
           <Grid size={{ xs: 12, md: 6 }}>
             <Paper sx={{ p: { xs: 3, md: 4 }, height: "100%" }}>
               <Stack spacing={2}>
-                <Chip label="For agents and landlords" color="secondary" sx={{ width: "fit-content" }} />
-                <Typography variant="h3">Manage listings from a real workspace.</Typography>
+                <Chip
+                  label="For agents and landlords"
+                  color="secondary"
+                  sx={{ width: "fit-content" }}
+                />
+                <Typography variant="h3">
+                  Manage listings from a real workspace.
+                </Typography>
                 <Stack spacing={1.2}>
-                  {["Create and publish rental listings", "Upload images and clarify fees", "Use AI to strengthen descriptions", "Receive inquiries and build profile trust"].map((item) => (
-                    <Stack key={item} direction="row" spacing={1.2} alignItems="center">
+                  {[
+                    "Create and publish rental listings",
+                    "Upload images and clarify fees",
+                    "Use AI to strengthen descriptions",
+                    "Receive inquiries and build profile trust",
+                  ].map((item) => (
+                    <Stack
+                      key={item}
+                      direction="row"
+                      spacing={1.2}
+                      alignItems="center"
+                    >
                       <HomeWorkRounded color="primary" fontSize="small" />
                       <Typography>{item}</Typography>
                     </Stack>
@@ -200,14 +281,29 @@ export default function HomePage() {
 
       <PageSection>
         <Stack spacing={3}>
-          <Stack direction={{ xs: "column", md: "row" }} justifyContent="space-between" spacing={2}>
+          <Stack
+            direction={{ xs: "column", md: "row" }}
+            justifyContent="space-between"
+            spacing={2}
+          >
             <Stack spacing={1} maxWidth={720}>
-              <Typography variant="overline" color="secondary.main" fontWeight={900}>
+              <Typography
+                variant="overline"
+                color="secondary.main"
+                fontWeight={900}
+              >
                 Marketplace preview
               </Typography>
-              <Typography variant="h2">Listings should feel structured, visual, and comparable.</Typography>
+              <Typography variant="h2">
+                Listings should feel structured, visual, and comparable.
+              </Typography>
             </Stack>
-            <Button href="/listings" variant="outlined" endIcon={<ArrowForwardRounded />} sx={{ alignSelf: { xs: "flex-start", md: "center" } }}>
+            <Button
+              href="/listings"
+              variant="outlined"
+              endIcon={<ArrowForwardRounded />}
+              sx={{ alignSelf: { xs: "flex-start", md: "center" } }}
+            >
               Open live browse
             </Button>
           </Stack>
@@ -236,9 +332,15 @@ export default function HomePage() {
                     </Box>
                     <Stack spacing={0.75}>
                       <Typography variant="h5">{listing.title}</Typography>
-                      <Typography color="text.secondary">{listing.area}</Typography>
-                      <Typography color="primary.main" fontWeight={900}>{listing.price}</Typography>
-                      <Typography color="text.secondary">{listing.detail}</Typography>
+                      <Typography color="text.secondary">
+                        {listing.area}
+                      </Typography>
+                      <Typography color="primary.main" fontWeight={900}>
+                        {listing.price}
+                      </Typography>
+                      <Typography color="text.secondary">
+                        {listing.detail}
+                      </Typography>
                     </Stack>
                   </Stack>
                 </Paper>
@@ -252,16 +354,27 @@ export default function HomePage() {
         <Paper
           sx={{
             p: { xs: 3, md: 5 },
-            background: "linear-gradient(135deg, rgba(255,250,244,0.96), rgba(14,107,115,0.12))",
+            background:
+              "linear-gradient(135deg, rgba(255,250,244,0.96), rgba(14,107,115,0.12))",
           }}
         >
           <Grid container spacing={3} alignItems="center">
             <Grid size={{ xs: 12, md: 7 }}>
               <Stack spacing={1.5}>
-                <Chip icon={<ReviewsRounded />} label="Trust feature" color="secondary" sx={{ width: "fit-content" }} />
-                <Typography variant="h2">Recommendations are agent testimonials, not listing suggestions.</Typography>
+                <Chip
+                  icon={<ReviewsRounded />}
+                  label="Trust feature"
+                  color="secondary"
+                  sx={{ width: "fit-content" }}
+                />
+                <Typography variant="h2">
+                  Recommendations are agent testimonials, not listing
+                  suggestions.
+                </Typography>
                 <Typography color="text.secondary">
-                  Public agent profiles can show moderated recommendations from real users. Personalized listing picks remain separate as suggestions inside the signed-in workspace.
+                  Public agent profiles can show moderated recommendations from
+                  real users. Personalized listing picks remain separate as
+                  suggestions inside the signed-in workspace.
                 </Typography>
               </Stack>
             </Grid>
@@ -269,11 +382,19 @@ export default function HomePage() {
               <Stack spacing={1.5}>
                 <Paper variant="outlined" sx={{ p: 2 }}>
                   <Typography fontWeight={800}>Clear terminology</Typography>
-                  <Typography color="text.secondary">Recommendations build public agent trust. Suggestions help signed-in renters discover listings.</Typography>
+                  <Typography color="text.secondary">
+                    Recommendations build public agent trust. Suggestions help
+                    signed-in renters discover listings.
+                  </Typography>
                 </Paper>
                 <Paper variant="outlined" sx={{ p: 2 }}>
-                  <Typography fontWeight={800}>Admin-backed moderation</Typography>
-                  <Typography color="text.secondary">Admin trust operations review reports, listings, users, and public recommendations.</Typography>
+                  <Typography fontWeight={800}>
+                    Admin-backed moderation
+                  </Typography>
+                  <Typography color="text.secondary">
+                    Admin trust operations review reports, listings, users, and
+                    public recommendations.
+                  </Typography>
                 </Paper>
               </Stack>
             </Grid>
@@ -286,7 +407,8 @@ export default function HomePage() {
           sx={{
             p: { xs: 3, md: 5 },
             textAlign: "center",
-            background: "linear-gradient(135deg, rgba(14,107,115,0.96), rgba(22,35,56,0.94))",
+            background:
+              "linear-gradient(135deg, rgba(14,107,115,0.96), rgba(22,35,56,0.94))",
             color: "white",
           }}
         >
@@ -295,13 +417,19 @@ export default function HomePage() {
               Ready to walk through the live rental marketplace flow?
             </Typography>
             <Typography sx={{ opacity: 0.84 }} maxWidth={700}>
-              Browse public listings, create an account, publish a media-rich rental, test inquiries, and review trust operations from the admin workspace.
+              Browse public listings, create an account, publish a media-rich
+              rental, test inquiries, and review trust operations from the admin
+              workspace.
             </Typography>
             <Stack direction={{ xs: "column", sm: "row" }} spacing={1.5}>
               <Button href="/listings" variant="contained" color="secondary">
                 Browse rentals
               </Button>
-              <Button href="/register" variant="outlined" sx={{ color: "white", borderColor: "rgba(255,255,255,0.45)" }}>
+              <Button
+                href="/register"
+                variant="outlined"
+                sx={{ color: "white", borderColor: "rgba(255,255,255,0.45)" }}
+              >
                 Create account
               </Button>
             </Stack>

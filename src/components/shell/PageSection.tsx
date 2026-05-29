@@ -1,5 +1,5 @@
 import Container from "@mui/material/Container";
-import { PropsWithChildren } from "react";
+import type { PropsWithChildren } from "react";
 
 export function PageSection({ children }: PropsWithChildren) {
   return (

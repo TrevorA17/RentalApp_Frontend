@@ -7,7 +7,7 @@ import Paper from "@mui/material/Paper";
 import Stack from "@mui/material/Stack";
 import TextField from "@mui/material/TextField";
 import Typography from "@mui/material/Typography";
-import { FormEvent, useState } from "react";
+import { type FormEvent, useState } from "react";
 import { useAuth } from "@/features/auth/AuthProvider";
 import { createReport } from "@/lib/api/reports";
 
@@ -23,14 +23,20 @@ const defaultReasons = [
   "Inappropriate media or description",
 ];
 
-export function ReportComposer({ listingId, reportedUserId }: ReportComposerProps) {
+export function ReportComposer({
+  listingId,
+  reportedUserId,
+}: ReportComposerProps) {
   const { session } = useAuth();
   const [reason, setReason] = useState(defaultReasons[0]);
   const [details, setDetails] = useState("");
   const [successMessage, setSuccessMessage] = useState<string | null>(null);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const canReport = !!session && session.user.role !== "ADMIN" && session.user.id !== reportedUserId;
+  const canReport =
+    !!session &&
+    session.user.role !== "ADMIN" &&
+    session.user.id !== reportedUserId;
 
   async function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -41,7 +47,9 @@ export function ReportComposer({ listingId, reportedUserId }: ReportComposerProp
     }
 
     if (!canReport) {
-      setErrorMessage("You cannot report this listing from your current account.");
+      setErrorMessage(
+        "You cannot report this listing from your current account.",
+      );
       return;
     }
 
@@ -59,7 +67,8 @@ export function ReportComposer({ listingId, reportedUserId }: ReportComposerProp
       setSuccessMessage("Report submitted successfully.");
       setDetails("");
     } catch (error) {
-      const message = error instanceof Error ? error.message : "Failed to submit report.";
+      const message =
+        error instanceof Error ? error.message : "Failed to submit report.";
       setErrorMessage(message);
     } finally {
       setIsSubmitting(false);
@@ -76,10 +85,18 @@ export function ReportComposer({ listingId, reportedUserId }: ReportComposerProp
           </Typography>
         </Stack>
 
-        {successMessage ? <Alert severity="success">{successMessage}</Alert> : null}
+        {successMessage ? (
+          <Alert severity="success">{successMessage}</Alert>
+        ) : null}
         {errorMessage ? <Alert severity="error">{errorMessage}</Alert> : null}
 
-        <TextField select label="Reason" value={reason} onChange={(event) => setReason(event.target.value)} fullWidth>
+        <TextField
+          select
+          label="Reason"
+          value={reason}
+          onChange={(event) => setReason(event.target.value)}
+          fullWidth
+        >
           {defaultReasons.map((option) => (
             <MenuItem key={option} value={option}>
               {option}
@@ -97,7 +114,12 @@ export function ReportComposer({ listingId, reportedUserId }: ReportComposerProp
         />
 
         <Stack direction="row">
-          <Button type="submit" variant="outlined" color="error" disabled={isSubmitting || !canReport}>
+          <Button
+            type="submit"
+            variant="outlined"
+            color="error"
+            disabled={isSubmitting || !canReport}
+          >
             Submit report
           </Button>
         </Stack>

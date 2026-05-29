@@ -10,12 +10,17 @@ import Stack from "@mui/material/Stack";
 import TextField from "@mui/material/TextField";
 import Typography from "@mui/material/Typography";
 import { useEffect, useState } from "react";
-import { getAdminRecommendations, updateAdminRecommendationApproval } from "@/lib/api/admin";
-import { AdminAgentRecommendation, ApprovalStatus } from "@/types/domain";
+import {
+  getAdminRecommendations,
+  updateAdminRecommendationApproval,
+} from "@/lib/api/admin";
+import type { AdminAgentRecommendation, ApprovalStatus } from "@/types/domain";
 
 const approvalStatuses: ApprovalStatus[] = ["PENDING", "APPROVED", "REJECTED"];
 
-function statusColor(status: ApprovalStatus): "default" | "success" | "warning" | "error" {
+function statusColor(
+  status: ApprovalStatus,
+): "default" | "success" | "warning" | "error" {
   if (status === "APPROVED") {
     return "success";
   }
@@ -40,9 +45,16 @@ export function AdminRecommendationsView() {
       try {
         const result = await getAdminRecommendations();
         setItems(result);
-        setDrafts(Object.fromEntries(result.map((item) => [item.id, item.approvalStatus])));
+        setDrafts(
+          Object.fromEntries(
+            result.map((item) => [item.id, item.approvalStatus]),
+          ),
+        );
       } catch (error) {
-        const message = error instanceof Error ? error.message : "Failed to load recommendation moderation queue.";
+        const message =
+          error instanceof Error
+            ? error.message
+            : "Failed to load recommendation moderation queue.";
         setErrorMessage(message);
       } finally {
         setIsLoading(false);
@@ -55,12 +67,20 @@ export function AdminRecommendationsView() {
   async function handleUpdate(recommendationId: string) {
     try {
       setUpdatingId(recommendationId);
-      const updated = await updateAdminRecommendationApproval(recommendationId, drafts[recommendationId]);
-      setItems((current) => current.map((item) => (item.id === recommendationId ? updated : item)));
+      const updated = await updateAdminRecommendationApproval(
+        recommendationId,
+        drafts[recommendationId],
+      );
+      setItems((current) =>
+        current.map((item) => (item.id === recommendationId ? updated : item)),
+      );
       setSuccessMessage("Recommendation moderation status updated.");
       setErrorMessage(null);
     } catch (error) {
-      const message = error instanceof Error ? error.message : "Failed to update recommendation moderation.";
+      const message =
+        error instanceof Error
+          ? error.message
+          : "Failed to update recommendation moderation.";
       setErrorMessage(message);
       setSuccessMessage(null);
     } finally {
@@ -76,16 +96,23 @@ export function AdminRecommendationsView() {
         </Typography>
         <Typography variant="h2">Moderate recommendations</Typography>
         <Typography color="text.secondary">
-          Review public agent testimonials before they shape trust on agent profiles.
+          Review public agent testimonials before they shape trust on agent
+          profiles.
         </Typography>
       </Stack>
 
       {errorMessage ? <Alert severity="error">{errorMessage}</Alert> : null}
-      {successMessage ? <Alert severity="success">{successMessage}</Alert> : null}
-      {isLoading ? <Alert severity="info">Loading recommendation queue...</Alert> : null}
+      {successMessage ? (
+        <Alert severity="success">{successMessage}</Alert>
+      ) : null}
+      {isLoading ? (
+        <Alert severity="info">Loading recommendation queue...</Alert>
+      ) : null}
       {!isLoading && items.length === 0 ? (
         <Paper sx={{ p: 3 }}>
-          <Typography color="text.secondary">No agent recommendations are currently in the moderation queue.</Typography>
+          <Typography color="text.secondary">
+            No agent recommendations are currently in the moderation queue.
+          </Typography>
         </Paper>
       ) : null}
 
@@ -93,16 +120,29 @@ export function AdminRecommendationsView() {
         {items.map((item) => (
           <Paper key={item.id} sx={{ p: 3 }}>
             <Stack spacing={1.5}>
-              <Stack direction={{ xs: "column", md: "row" }} justifyContent="space-between" spacing={2}>
+              <Stack
+                direction={{ xs: "column", md: "row" }}
+                justifyContent="space-between"
+                spacing={2}
+              >
                 <Stack spacing={0.75}>
                   <Typography variant="h5">{item.agent.fullName}</Typography>
-                  <Typography color="text.secondary">Agent: {item.agent.email}</Typography>
                   <Typography color="text.secondary">
-                    Author: {item.author.fullName} ({item.author.role}) - {item.author.email}
+                    Agent: {item.agent.email}
+                  </Typography>
+                  <Typography color="text.secondary">
+                    Author: {item.author.fullName} ({item.author.role}) -{" "}
+                    {item.author.email}
                   </Typography>
                 </Stack>
-                <Stack spacing={1} alignItems={{ xs: "flex-start", md: "flex-end" }}>
-                  <Chip label={item.approvalStatus} color={statusColor(item.approvalStatus)} />
+                <Stack
+                  spacing={1}
+                  alignItems={{ xs: "flex-start", md: "flex-end" }}
+                >
+                  <Chip
+                    label={item.approvalStatus}
+                    color={statusColor(item.approvalStatus)}
+                  />
                   <Rating value={item.rating} readOnly />
                   <Typography variant="body2" color="text.secondary">
                     {new Date(item.createdAt).toLocaleString()}
@@ -136,7 +176,10 @@ export function AdminRecommendationsView() {
                 <Button
                   variant="contained"
                   onClick={() => handleUpdate(item.id)}
-                  disabled={updatingId === item.id || drafts[item.id] === item.approvalStatus}
+                  disabled={
+                    updatingId === item.id ||
+                    drafts[item.id] === item.approvalStatus
+                  }
                 >
                   {updatingId === item.id ? "Updating..." : "Update"}
                 </Button>

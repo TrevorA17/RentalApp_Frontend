@@ -11,7 +11,10 @@ export type HouseType =
   | "HOUSE"
   | "TOWNHOUSE";
 
-export type AvailabilityStatus = "AVAILABLE_NOW" | "AVAILABLE_SOON" | "OCCUPIED";
+export type AvailabilityStatus =
+  | "AVAILABLE_NOW"
+  | "AVAILABLE_SOON"
+  | "OCCUPIED";
 
 export type InquiryStatus = "NEW" | "CONTACTED" | "CLOSED";
 
@@ -69,7 +72,12 @@ export type AgentRecommendation = {
   };
 };
 
-export type ListingStatus = "DRAFT" | "PUBLISHED" | "UNPUBLISHED" | "ARCHIVED" | "DISABLED";
+export type ListingStatus =
+  | "DRAFT"
+  | "PUBLISHED"
+  | "UNPUBLISHED"
+  | "ARCHIVED"
+  | "DISABLED";
 
 export type ApprovalStatus = "PENDING" | "APPROVED" | "REJECTED";
 
@@ -251,7 +259,10 @@ export type ModerationActionType =
   | "RESOLVE"
   | "STATUS_CHANGE";
 
-export type ModerationTargetType = "LISTING" | "REPORT" | "AGENT_RECOMMENDATION";
+export type ModerationTargetType =
+  | "LISTING"
+  | "REPORT"
+  | "AGENT_RECOMMENDATION";
 
 export type AdminModerationAction = {
   id: string;

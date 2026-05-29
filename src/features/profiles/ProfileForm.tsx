@@ -7,9 +7,9 @@ import Paper from "@mui/material/Paper";
 import Stack from "@mui/material/Stack";
 import TextField from "@mui/material/TextField";
 import Typography from "@mui/material/Typography";
-import { FormEvent, useEffect, useState } from "react";
-import { getMyProfile, saveMyProfile } from "@/lib/api/profiles";
+import { type FormEvent, useEffect, useState } from "react";
 import { useAuth } from "@/features/auth/AuthProvider";
+import { getMyProfile, saveMyProfile } from "@/lib/api/profiles";
 
 export function ProfileForm() {
   const { session } = useAuth();
@@ -42,7 +42,8 @@ export function ProfileForm() {
         setCompanyName(profile.companyName ?? "");
         setFeeStructure(profile.feeStructure ?? "");
       } catch (error) {
-        const message = error instanceof Error ? error.message : "Failed to load profile.";
+        const message =
+          error instanceof Error ? error.message : "Failed to load profile.";
         setErrorMessage(message);
       } finally {
         setIsLoading(false);
@@ -80,7 +81,8 @@ export function ProfileForm() {
 
       setSuccessMessage("Profile saved successfully.");
     } catch (error) {
-      const message = error instanceof Error ? error.message : "Failed to save profile.";
+      const message =
+        error instanceof Error ? error.message : "Failed to save profile.";
       setErrorMessage(message);
     } finally {
       setIsSaving(false);
@@ -91,10 +93,15 @@ export function ProfileForm() {
     <Stack spacing={3}>
       <Paper sx={{ p: { xs: 3, md: 4 } }}>
         <Stack spacing={2}>
-          <Chip label={`${session.user.role} profile`} color="secondary" sx={{ width: "fit-content" }} />
+          <Chip
+            label={`${session.user.role} profile`}
+            color="secondary"
+            sx={{ width: "fit-content" }}
+          />
           <Typography variant="h3">Manage profile</Typography>
           <Typography color="text.secondary" maxWidth={720}>
-            This profile data will power listing poster summaries, public trust signals, and later agent profile views.
+            This profile data will power listing poster summaries, public trust
+            signals, and later agent profile views.
           </Typography>
         </Stack>
       </Paper>
@@ -102,7 +109,9 @@ export function ProfileForm() {
       <Paper sx={{ p: { xs: 3, md: 4 } }}>
         <Stack component="form" spacing={2.5} onSubmit={handleSubmit}>
           {errorMessage ? <Alert severity="error">{errorMessage}</Alert> : null}
-          {successMessage ? <Alert severity="success">{successMessage}</Alert> : null}
+          {successMessage ? (
+            <Alert severity="success">{successMessage}</Alert>
+          ) : null}
 
           <TextField
             label="Full name"
@@ -166,7 +175,11 @@ export function ProfileForm() {
           ) : null}
 
           <Stack direction="row">
-            <Button type="submit" variant="contained" disabled={isLoading || isSaving}>
+            <Button
+              type="submit"
+              variant="contained"
+              disabled={isLoading || isSaving}
+            >
               {isSaving ? "Saving..." : "Save profile"}
             </Button>
           </Stack>

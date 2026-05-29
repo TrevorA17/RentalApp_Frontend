@@ -11,7 +11,7 @@ import Link from "next/link";
 import { useEffect, useState } from "react";
 import { useAuth } from "@/features/auth/AuthProvider";
 import { getAdminListings, updateAdminListingApproval } from "@/lib/api/admin";
-import { AdminListing, ApprovalStatus } from "@/types/domain";
+import type { AdminListing, ApprovalStatus } from "@/types/domain";
 
 const approvalStatuses: ApprovalStatus[] = ["PENDING", "APPROVED", "REJECTED"];
 
@@ -31,9 +31,16 @@ export function AdminListingsView() {
       try {
         const result = await getAdminListings();
         setListings(result);
-        setDrafts(Object.fromEntries(result.map((item) => [item.id, item.approvalStatus])));
+        setDrafts(
+          Object.fromEntries(
+            result.map((item) => [item.id, item.approvalStatus]),
+          ),
+        );
       } catch (error) {
-        const message = error instanceof Error ? error.message : "Failed to load admin listings.";
+        const message =
+          error instanceof Error
+            ? error.message
+            : "Failed to load admin listings.";
         setErrorMessage(message);
       }
     }
@@ -47,12 +54,20 @@ export function AdminListingsView() {
     }
 
     try {
-      const updated = await updateAdminListingApproval(listingId, drafts[listingId]);
-      setListings((current) => current.map((item) => (item.id === listingId ? updated : item)));
+      const updated = await updateAdminListingApproval(
+        listingId,
+        drafts[listingId],
+      );
+      setListings((current) =>
+        current.map((item) => (item.id === listingId ? updated : item)),
+      );
       setSuccessMessage("Listing moderation status updated.");
       setErrorMessage(null);
     } catch (error) {
-      const message = error instanceof Error ? error.message : "Failed to update listing moderation status.";
+      const message =
+        error instanceof Error
+          ? error.message
+          : "Failed to update listing moderation status.";
       setErrorMessage(message);
       setSuccessMessage(null);
     }
@@ -68,10 +83,14 @@ export function AdminListingsView() {
       </Stack>
 
       {errorMessage ? <Alert severity="error">{errorMessage}</Alert> : null}
-      {successMessage ? <Alert severity="success">{successMessage}</Alert> : null}
+      {successMessage ? (
+        <Alert severity="success">{successMessage}</Alert>
+      ) : null}
       {listings.length === 0 ? (
         <Paper sx={{ p: 3 }}>
-          <Typography color="text.secondary">No listings are waiting in the moderation workspace yet.</Typography>
+          <Typography color="text.secondary">
+            No listings are waiting in the moderation workspace yet.
+          </Typography>
         </Paper>
       ) : null}
 
@@ -89,7 +108,8 @@ export function AdminListingsView() {
                 Owner: {listing.owner.fullName} ({listing.owner.email})
               </Typography>
               <Typography color="text.secondary">
-                Listing: {listing.listingStatus} / Approval: {listing.approvalStatus}
+                Listing: {listing.listingStatus} / Approval:{" "}
+                {listing.approvalStatus}
               </Typography>
               <Stack direction={{ xs: "column", sm: "row" }} spacing={1.5}>
                 <TextField
@@ -110,7 +130,10 @@ export function AdminListingsView() {
                     </MenuItem>
                   ))}
                 </TextField>
-                <Button variant="contained" onClick={() => handleUpdate(listing.id)}>
+                <Button
+                  variant="contained"
+                  onClick={() => handleUpdate(listing.id)}
+                >
                   Update
                 </Button>
               </Stack>

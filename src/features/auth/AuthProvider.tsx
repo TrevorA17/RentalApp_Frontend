@@ -2,20 +2,24 @@
 
 import {
   createContext,
-  PropsWithChildren,
+  type PropsWithChildren,
   useContext,
   useEffect,
   useState,
 } from "react";
 import {
+  getCurrentUser,
   loginUser,
   logoutUser,
   refreshSession,
   registerUser,
 } from "@/lib/auth/authService";
-import { getCurrentUser } from "@/lib/auth/authService";
-import { clearStoredSession, getStoredSession, subscribeToSession } from "@/lib/auth/sessionStore";
-import { AuthSession, LoginRequest, RegisterRequest } from "@/types/auth";
+import {
+  clearStoredSession,
+  getStoredSession,
+  subscribeToSession,
+} from "@/lib/auth/sessionStore";
+import type { AuthSession, LoginRequest, RegisterRequest } from "@/types/auth";
 
 type AuthContextValue = {
   session: AuthSession | null;
@@ -50,7 +54,9 @@ export function AuthProvider({ children }: PropsWithChildren) {
             user,
           });
         } catch {
-          const refreshedSession = await refreshSession(storedSession.refreshToken);
+          const refreshedSession = await refreshSession(
+            storedSession.refreshToken,
+          );
           setSession(refreshedSession);
         }
       } catch {

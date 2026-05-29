@@ -7,7 +7,7 @@ import Container from "@mui/material/Container";
 import Stack from "@mui/material/Stack";
 import Typography from "@mui/material/Typography";
 import Link from "next/link";
-import { PropsWithChildren } from "react";
+import type { PropsWithChildren } from "react";
 import { AuthGuard } from "@/features/auth/AuthGuard";
 import { AuthStatusActions } from "@/features/auth/AuthStatusActions";
 import { WorkspaceSidebar } from "./WorkspaceSidebar";
@@ -40,20 +40,39 @@ export function WorkspaceShell({ children, mode }: WorkspaceShellProps) {
           }}
         >
           <Container maxWidth={false} sx={{ px: { xs: 2, md: 3 }, py: 1.3 }}>
-            <Stack direction="row" alignItems="center" justifyContent="space-between" spacing={2}>
-              <Stack component={Link} href="/dashboard" direction="row" alignItems="center" spacing={1.1}>
+            <Stack
+              direction="row"
+              alignItems="center"
+              justifyContent="space-between"
+              spacing={2}
+            >
+              <Stack
+                component={Link}
+                href="/dashboard"
+                direction="row"
+                alignItems="center"
+                spacing={1.1}
+              >
                 <ApartmentRounded color="primary" />
                 <Stack spacing={0}>
                   <Typography fontWeight={900} lineHeight={1}>
                     RentalApp
                   </Typography>
-                  <Typography variant="caption" color="text.secondary" sx={{ display: { xs: "none", sm: "block" } }}>
+                  <Typography
+                    variant="caption"
+                    color="text.secondary"
+                    sx={{ display: { xs: "none", sm: "block" } }}
+                  >
                     {mode === "admin" ? "Trust operations" : "Workspace"}
                   </Typography>
                 </Stack>
               </Stack>
               <Stack direction="row" alignItems="center" spacing={1}>
-                <Button href="/listings" color="inherit" sx={{ display: { xs: "none", md: "inline-flex" } }}>
+                <Button
+                  href="/listings"
+                  color="inherit"
+                  sx={{ display: { xs: "none", md: "inline-flex" } }}
+                >
                   Marketplace
                 </Button>
                 <AuthStatusActions />
@@ -62,12 +81,17 @@ export function WorkspaceShell({ children, mode }: WorkspaceShellProps) {
           </Container>
         </Box>
 
-        <Container maxWidth={false} sx={{ px: { xs: 2, md: 3 }, py: { xs: 2.5, md: 3.5 } }}>
-          <Stack direction={{ xs: "column", lg: "row" }} spacing={3} alignItems="flex-start">
+        <Container
+          maxWidth={false}
+          sx={{ px: { xs: 2, md: 3 }, py: { xs: 2.5, md: 3.5 } }}
+        >
+          <Stack
+            direction={{ xs: "column", lg: "row" }}
+            spacing={3}
+            alignItems="flex-start"
+          >
             <WorkspaceSidebar mode={mode} />
-            <Box sx={{ flex: 1, width: "100%", minWidth: 0 }}>
-              {children}
-            </Box>
+            <Box sx={{ flex: 1, width: "100%", minWidth: 0 }}>{children}</Box>
           </Stack>
         </Container>
       </Box>

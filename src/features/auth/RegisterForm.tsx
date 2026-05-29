@@ -9,10 +9,10 @@ import TextField from "@mui/material/TextField";
 import Typography from "@mui/material/Typography";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { FormEvent, useEffect, useState } from "react";
+import { type FormEvent, useEffect, useState } from "react";
 import { AuthCard } from "@/features/auth/AuthCard";
 import { useAuth } from "@/features/auth/AuthProvider";
-import { RegisterRequest } from "@/types/auth";
+import type { RegisterRequest } from "@/types/auth";
 
 type RegisterErrors = {
   fullName?: string;
@@ -101,7 +101,8 @@ export function RegisterForm() {
       });
       router.replace("/dashboard");
     } catch (error) {
-      const message = error instanceof Error ? error.message : "Unable to create account.";
+      const message =
+        error instanceof Error ? error.message : "Unable to create account.";
       setFormError(message);
     }
   }
@@ -139,7 +140,9 @@ export function RegisterForm() {
           value={password}
           onChange={(event) => setPassword(event.target.value)}
           error={Boolean(errors.password)}
-          helperText={errors.password || "Use at least 8 characters for the mock flow."}
+          helperText={
+            errors.password || "Use at least 8 characters for the mock flow."
+          }
           autoComplete="new-password"
           fullWidth
         />
@@ -150,6 +153,7 @@ export function RegisterForm() {
               const isSelected = option.role === role;
 
               return (
+                // biome-ignore lint/a11y/useSemanticElements: refactor to ButtonBase planned post-migration
                 <Paper
                   key={option.role}
                   role="button"
@@ -165,8 +169,12 @@ export function RegisterForm() {
                     flex: 1,
                     p: 2,
                     cursor: "pointer",
-                    borderColor: isSelected ? "primary.main" : "rgba(19, 34, 58, 0.08)",
-                    outline: isSelected ? "2px solid rgba(19, 93, 102, 0.18)" : "none",
+                    borderColor: isSelected
+                      ? "primary.main"
+                      : "rgba(19, 34, 58, 0.08)",
+                    outline: isSelected
+                      ? "2px solid rgba(19, 93, 102, 0.18)"
+                      : "none",
                   }}
                 >
                   <Stack spacing={1}>
@@ -179,14 +187,17 @@ export function RegisterForm() {
               );
             })}
           </Stack>
-          {errors.role ? <Typography color="error">{errors.role}</Typography> : null}
+          {errors.role ? (
+            <Typography color="error">{errors.role}</Typography>
+          ) : null}
         </Stack>
         <Button type="submit" variant="contained" disabled={isSubmitting}>
           {isSubmitting ? "Creating account..." : "Create account"}
         </Button>
         <Divider />
         <Typography variant="body2" color="text.secondary">
-          Account creation now calls the backend register endpoint and signs you in immediately after success.
+          Account creation now calls the backend register endpoint and signs you
+          in immediately after success.
         </Typography>
         <Typography color="text.secondary">
           Already registered? <Link href="/login">Sign in here</Link>.

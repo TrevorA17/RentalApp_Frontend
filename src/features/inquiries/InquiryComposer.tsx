@@ -6,10 +6,10 @@ import Paper from "@mui/material/Paper";
 import Stack from "@mui/material/Stack";
 import TextField from "@mui/material/TextField";
 import Typography from "@mui/material/Typography";
-import { FormEvent, useState } from "react";
+import { type FormEvent, useState } from "react";
 import { useAuth } from "@/features/auth/AuthProvider";
 import { createInquiry } from "@/lib/api/inquiries";
-import { ListingDetail } from "@/types/domain";
+import type { ListingDetail } from "@/types/domain";
 
 type InquiryComposerProps = {
   listing: ListingDetail;
@@ -25,7 +25,10 @@ export function InquiryComposer({ listing }: InquiryComposerProps) {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [hasSubmitted, setHasSubmitted] = useState(false);
 
-  const canInquire = !!session && session.user.id !== listing.poster.userId && session.user.role !== "ADMIN";
+  const canInquire =
+    !!session &&
+    session.user.id !== listing.poster.userId &&
+    session.user.role !== "ADMIN";
 
   async function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -49,7 +52,8 @@ export function InquiryComposer({ listing }: InquiryComposerProps) {
       setSuccessMessage("Inquiry sent successfully.");
       setHasSubmitted(true);
     } catch (error) {
-      const nextMessage = error instanceof Error ? error.message : "Failed to send inquiry.";
+      const nextMessage =
+        error instanceof Error ? error.message : "Failed to send inquiry.";
       setErrorMessage(nextMessage);
     } finally {
       setIsSubmitting(false);
@@ -62,7 +66,8 @@ export function InquiryComposer({ listing }: InquiryComposerProps) {
         <Stack spacing={1}>
           <Typography variant="h5">Contact about this listing</Typography>
           <Typography color="text.secondary">
-            Send a direct inquiry to the poster. They will see it in their received inquiries inbox.
+            Send a direct inquiry to the poster. They will see it in their
+            received inquiries inbox.
           </Typography>
         </Stack>
 
@@ -76,7 +81,9 @@ export function InquiryComposer({ listing }: InquiryComposerProps) {
           </Alert>
         ) : null}
 
-        {successMessage ? <Alert severity="success">{successMessage}</Alert> : null}
+        {successMessage ? (
+          <Alert severity="success">{successMessage}</Alert>
+        ) : null}
         {errorMessage ? <Alert severity="error">{errorMessage}</Alert> : null}
 
         <TextField
@@ -89,7 +96,11 @@ export function InquiryComposer({ listing }: InquiryComposerProps) {
         />
 
         <Stack direction="row" justifyContent="flex-start">
-          <Button type="submit" variant="contained" disabled={!canInquire || isSubmitting || hasSubmitted}>
+          <Button
+            type="submit"
+            variant="contained"
+            disabled={!canInquire || isSubmitting || hasSubmitted}
+          >
             Send inquiry
           </Button>
         </Stack>

@@ -8,7 +8,7 @@ import Link from "next/link";
 import { useEffect, useState } from "react";
 import { useAuth } from "@/features/auth/AuthProvider";
 import { getSentInquiries } from "@/lib/api/inquiries";
-import { Inquiry } from "@/types/domain";
+import type { Inquiry } from "@/types/domain";
 
 export function SentInquiriesView() {
   const { session } = useAuth();
@@ -26,7 +26,8 @@ export function SentInquiriesView() {
         const results = await getSentInquiries();
         setInquiries(results);
       } catch (error) {
-        const message = error instanceof Error ? error.message : "Failed to load inquiries.";
+        const message =
+          error instanceof Error ? error.message : "Failed to load inquiries.";
         setErrorMessage(message);
       }
     }
@@ -42,7 +43,8 @@ export function SentInquiriesView() {
         </Typography>
         <Typography variant="h2">Sent inquiries</Typography>
         <Typography color="text.secondary">
-          Track the listings you have contacted and monitor whether the owner has responded.
+          Track the listings you have contacted and monitor whether the owner
+          has responded.
         </Typography>
       </Stack>
 
@@ -50,7 +52,9 @@ export function SentInquiriesView() {
 
       {inquiries.length === 0 ? (
         <Paper sx={{ p: 3 }}>
-          <Typography color="text.secondary">You have not sent any inquiries yet.</Typography>
+          <Typography color="text.secondary">
+            You have not sent any inquiries yet.
+          </Typography>
         </Paper>
       ) : null}
 
@@ -67,7 +71,9 @@ export function SentInquiriesView() {
               <Typography color="text.secondary">
                 To: {inquiry.recipient.fullName} ({inquiry.recipient.role})
               </Typography>
-              <Typography color="text.secondary">Status: {inquiry.status}</Typography>
+              <Typography color="text.secondary">
+                Status: {inquiry.status}
+              </Typography>
               <Typography color="text.secondary">{inquiry.message}</Typography>
             </Stack>
           </Paper>

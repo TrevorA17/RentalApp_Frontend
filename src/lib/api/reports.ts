@@ -1,6 +1,6 @@
 import { apiRequest } from "@/lib/api/client";
-import { ApiSuccessResponse } from "@/types/api";
-import { Report } from "@/types/domain";
+import type { ApiSuccessResponse } from "@/types/api";
+import type { Report } from "@/types/domain";
 
 export type CreateReportPayload = {
   listingId?: string;

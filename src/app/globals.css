@@ -16,9 +16,16 @@ body {
 body {
   background:
     radial-gradient(circle at 12% 12%, rgba(200, 107, 42, 0.2), transparent 18%),
-    radial-gradient(circle at 84% 10%, rgba(14, 107, 115, 0.18), transparent 22%),
-    radial-gradient(circle at 50% 84%, rgba(113, 158, 120, 0.15), transparent 26%),
-    linear-gradient(180deg, #fcf5ea 0%, #f3f0ea 42%, #edf4ef 100%);
+    radial-gradient(
+      circle at 84% 10%,
+      rgba(14, 107, 115, 0.18),
+      transparent 22%
+    ),
+    radial-gradient(
+      circle at 50% 84%,
+      rgba(113, 158, 120, 0.15),
+      transparent 26%
+    ), linear-gradient(180deg, #fcf5ea 0%, #f3f0ea 42%, #edf4ef 100%);
   color: #162338;
   font-family: var(--font-sans), sans-serif;
   background-attachment: fixed;
@@ -43,7 +50,11 @@ body::after {
   pointer-events: none;
   background:
     radial-gradient(circle at 50% 0%, rgba(255, 255, 255, 0.4), transparent 28%),
-    radial-gradient(circle at 100% 100%, rgba(200, 107, 42, 0.08), transparent 20%);
+    radial-gradient(
+      circle at 100% 100%,
+      rgba(200, 107, 42, 0.08),
+      transparent 20%
+    );
   opacity: 0.9;
 }
 

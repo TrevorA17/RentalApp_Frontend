@@ -1,6 +1,5 @@
 "use client";
 
-import { FormEvent, useEffect, useMemo, useState } from "react";
 import Alert from "@mui/material/Alert";
 import Box from "@mui/material/Box";
 import Button from "@mui/material/Button";
@@ -13,13 +12,27 @@ import TextField from "@mui/material/TextField";
 import Typography from "@mui/material/Typography";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
+import { type FormEvent, useEffect, useMemo, useState } from "react";
 import { useAuth } from "@/features/auth/AuthProvider";
 import { interpretListingSearch } from "@/lib/api/ai";
 import { getAmenities, searchListings } from "@/lib/api/listings";
 import { getSavedListingIds } from "@/lib/api/savedListings";
-import { Amenity, HouseType, InterpretedListingSearch, ListingSummary } from "@/types/domain";
-import { PaginatedResponse } from "@/types/api";
+import type { PaginatedResponse } from "@/types/api";
+import type {
+  Amenity,
+  HouseType,
+  InterpretedListingSearch,
+  ListingSummary,
+} from "@/types/domain";
 import { SaveListingButton } from "./SaveListingButton";
+
+function formatEnumLabel(value: string) {
+  return value
+    .toLowerCase()
+    .split("_")
+    .map((part) => part.charAt(0).toUpperCase() + part.slice(1))
+    .join(" ");
+}
 
 const houseTypes: HouseType[] = [
   "APARTMENT",
@@ -55,7 +68,8 @@ export function ListingsBrowseView() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const { session } = useAuth();
-  const [results, setResults] = useState<PaginatedResponse<ListingSummary>>(emptyResults);
+  const [results, setResults] =
+    useState<PaginatedResponse<ListingSummary>>(emptyResults);
   const [amenities, setAmenities] = useState<Amenity[]>([]);
   const [savedListingIds, setSavedListingIds] = useState<string[]>([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -63,15 +77,22 @@ export function ListingsBrowseView() {
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [aiSearchInput, setAiSearchInput] = useState("");
   const [isInterpreting, setIsInterpreting] = useState(false);
-  const [aiInterpretation, setAiInterpretation] = useState<InterpretedListingSearch | null>(null);
+  const [aiInterpretation, setAiInterpretation] =
+    useState<InterpretedListingSearch | null>(null);
 
   const [city, setCity] = useState(searchParams.get("city") ?? "");
   const [area, setArea] = useState(searchParams.get("area") ?? "");
   const [maxPrice, setMaxPrice] = useState(searchParams.get("maxPrice") ?? "");
   const [bedrooms, setBedrooms] = useState(searchParams.get("bedrooms") ?? "");
-  const [houseType, setHouseType] = useState(searchParams.get("houseType") ?? "");
-  const [selectedAmenity, setSelectedAmenity] = useState(searchParams.get("amenities") ?? "");
-  const [sort, setSort] = useState<ListingSort>((searchParams.get("sort") as ListingSort) || "PUBLISHED_AT_DESC");
+  const [houseType, setHouseType] = useState(
+    searchParams.get("houseType") ?? "",
+  );
+  const [selectedAmenity, setSelectedAmenity] = useState(
+    searchParams.get("amenities") ?? "",
+  );
+  const [sort, setSort] = useState<ListingSort>(
+    (searchParams.get("sort") as ListingSort) || "PUBLISHED_AT_DESC",
+  );
 
   useEffect(() => {
     setCity(searchParams.get("city") ?? "");
@@ -80,7 +101,7 @@ export function ListingsBrowseView() {
     setBedrooms(searchParams.get("bedrooms") ?? "");
     setHouseType(searchParams.get("houseType") ?? "");
     setSelectedAmenity(searchParams.get("amenities") ?? "");
-    setSort(((searchParams.get("sort") as ListingSort) || "PUBLISHED_AT_DESC"));
+    setSort((searchParams.get("sort") as ListingSort) || "PUBLISHED_AT_DESC");
   }, [searchParams]);
 
   useEffect(() => {
@@ -93,20 +114,28 @@ export function ListingsBrowseView() {
           searchListings({
             city: searchParams.get("city") || undefined,
             area: searchParams.get("area") || undefined,
-            maxPrice: searchParams.get("maxPrice") ? Number(searchParams.get("maxPrice")) : undefined,
-            bedrooms: searchParams.get("bedrooms") ? Number(searchParams.get("bedrooms")) : undefined,
+            maxPrice: searchParams.get("maxPrice")
+              ? Number(searchParams.get("maxPrice"))
+              : undefined,
+            bedrooms: searchParams.get("bedrooms")
+              ? Number(searchParams.get("bedrooms"))
+              : undefined,
             houseType: searchParams.get("houseType") || undefined,
-            amenities: searchParams.get("amenities") ? [searchParams.get("amenities") as string] : undefined,
+            amenities: searchParams.get("amenities")
+              ? [searchParams.get("amenities") as string]
+              : undefined,
             page: Number.isNaN(pageParam) ? 0 : pageParam,
             size: Number.isNaN(sizeParam) ? 12 : sizeParam,
-            sort: ((searchParams.get("sort") as ListingSort) || "PUBLISHED_AT_DESC"),
+            sort:
+              (searchParams.get("sort") as ListingSort) || "PUBLISHED_AT_DESC",
           }),
           getAmenities(),
         ]);
         setResults(listingResults);
         setAmenities(amenityOptions);
       } catch (error) {
-        const message = error instanceof Error ? error.message : "Failed to load listings.";
+        const message =
+          error instanceof Error ? error.message : "Failed to load listings.";
         setErrorMessage(message);
       } finally {
         setIsLoading(false);
@@ -196,8 +225,12 @@ export function ListingsBrowseView() {
       updateQuery({
         city: interpreted.filters.city || undefined,
         area: interpreted.filters.area || undefined,
-        maxPrice: interpreted.filters.maxPrice ? String(interpreted.filters.maxPrice) : undefined,
-        bedrooms: interpreted.filters.bedrooms ? String(interpreted.filters.bedrooms) : undefined,
+        maxPrice: interpreted.filters.maxPrice
+          ? String(interpreted.filters.maxPrice)
+          : undefined,
+        bedrooms: interpreted.filters.bedrooms
+          ? String(interpreted.filters.bedrooms)
+          : undefined,
         houseType: interpreted.filters.houseType || undefined,
         amenities: interpreted.filters.amenities[0]?.id || undefined,
         sort,
@@ -205,7 +238,10 @@ export function ListingsBrowseView() {
         size: String(results.size || 12),
       });
     } catch (error) {
-      const message = error instanceof Error ? error.message : "Failed to interpret search request.";
+      const message =
+        error instanceof Error
+          ? error.message
+          : "Failed to interpret search request.";
       setErrorMessage(message);
     } finally {
       setIsInterpreting(false);
@@ -244,14 +280,6 @@ export function ListingsBrowseView() {
     });
   }
 
-  function formatEnumLabel(value: string) {
-    return value
-      .toLowerCase()
-      .split("_")
-      .map((part) => part.charAt(0).toUpperCase() + part.slice(1))
-      .join(" ");
-  }
-
   const activeFilterLabels = useMemo(
     () =>
       [
@@ -260,7 +288,10 @@ export function ListingsBrowseView() {
         maxPrice ? `Max KES ${maxPrice}` : null,
         bedrooms ? `${bedrooms} bedroom${bedrooms === "1" ? "" : "s"}` : null,
         houseType ? formatEnumLabel(houseType) : null,
-        selectedAmenity ? amenities.find((item) => item.id === selectedAmenity)?.name ?? null : null,
+        selectedAmenity
+          ? (amenities.find((item) => item.id === selectedAmenity)?.name ??
+            null)
+          : null,
       ].filter(Boolean) as string[],
     [amenities, area, bedrooms, city, houseType, maxPrice, selectedAmenity],
   );
@@ -273,18 +304,28 @@ export function ListingsBrowseView() {
         </Typography>
         <Typography variant="h2">Browse listings</Typography>
         <Typography color="text.secondary">
-          Explore live rental listings with practical filters, sorting, and paginated results built for a real marketplace flow.
+          Explore live rental listings with practical filters, sorting, and
+          paginated results built for a real marketplace flow.
         </Typography>
       </Stack>
 
       <Paper sx={{ p: 3 }}>
-        <Stack component="form" spacing={1.5} onSubmit={handleInterpretSearch} sx={{ mb: 3 }}>
+        <Stack
+          component="form"
+          spacing={1.5}
+          onSubmit={handleInterpretSearch}
+          sx={{ mb: 3 }}
+        >
           <Typography fontWeight={700}>Describe what you want</Typography>
           <Typography color="text.secondary" sx={{ display: "none" }}>
-            Try a natural-language request like “2 bedroom in Kilimani under 50k with parking”. We will translate it into the structured filters below.
+            Try a natural-language request like “2 bedroom in Kilimani under 50k
+            with parking”. We will translate it into the structured filters
+            below.
           </Typography>
           <Typography color="text.secondary">
-            Try a natural-language request like &quot;2 bedroom in Kilimani under 50k with parking&quot;. We will translate it into the structured filters below.
+            Try a natural-language request like &quot;2 bedroom in Kilimani
+            under 50k with parking&quot;. We will translate it into the
+            structured filters below.
           </Typography>
           <Stack direction={{ xs: "column", md: "row" }} spacing={1.5}>
             <TextField
@@ -302,29 +343,62 @@ export function ListingsBrowseView() {
               {aiInterpretation.interpreted
                 ? `Matched ${aiInterpretation.matchedSignals.join(", ")} using ${aiInterpretation.provider}.`
                 : "No strong structured filters were extracted. Keep using the manual search controls."}
-              {aiInterpretation.notes.length > 0 ? ` ${aiInterpretation.notes.join(" ")}` : ""}
+              {aiInterpretation.notes.length > 0
+                ? ` ${aiInterpretation.notes.join(" ")}`
+                : ""}
             </Alert>
           ) : null}
         </Stack>
         <Stack component="form" spacing={2} onSubmit={handleSearch}>
           <Grid container spacing={2}>
             <Grid size={{ xs: 12, md: 3 }}>
-              <TextField label="City" value={city} onChange={(e) => setCity(e.target.value)} fullWidth />
+              <TextField
+                label="City"
+                value={city}
+                onChange={(e) => setCity(e.target.value)}
+                fullWidth
+              />
             </Grid>
             <Grid size={{ xs: 12, md: 3 }}>
-              <TextField label="Area" value={area} onChange={(e) => setArea(e.target.value)} fullWidth />
+              <TextField
+                label="Area"
+                value={area}
+                onChange={(e) => setArea(e.target.value)}
+                fullWidth
+              />
             </Grid>
             <Grid size={{ xs: 12, md: 2 }}>
-              <TextField label="Max price" type="number" value={maxPrice} onChange={(e) => setMaxPrice(e.target.value)} fullWidth />
+              <TextField
+                label="Max price"
+                type="number"
+                value={maxPrice}
+                onChange={(e) => setMaxPrice(e.target.value)}
+                fullWidth
+              />
             </Grid>
             <Grid size={{ xs: 12, md: 2 }}>
-              <TextField label="Bedrooms" type="number" value={bedrooms} onChange={(e) => setBedrooms(e.target.value)} fullWidth />
+              <TextField
+                label="Bedrooms"
+                type="number"
+                value={bedrooms}
+                onChange={(e) => setBedrooms(e.target.value)}
+                fullWidth
+              />
             </Grid>
             <Grid size={{ xs: 12, md: 2 }}>
-              <TextField select SelectProps={{ native: true }} label="House type" value={houseType} onChange={(e) => setHouseType(e.target.value)} fullWidth>
+              <TextField
+                select
+                SelectProps={{ native: true }}
+                label="House type"
+                value={houseType}
+                onChange={(e) => setHouseType(e.target.value)}
+                fullWidth
+              >
                 <option value="">Any</option>
                 {houseTypes.map((option) => (
-                  <option key={option} value={option}>{option}</option>
+                  <option key={option} value={option}>
+                    {option}
+                  </option>
                 ))}
               </TextField>
             </Grid>
@@ -332,10 +406,19 @@ export function ListingsBrowseView() {
 
           <Grid container spacing={2} alignItems="center">
             <Grid size={{ xs: 12, md: 4 }}>
-              <TextField select SelectProps={{ native: true }} label="Amenity" value={selectedAmenity} onChange={(e) => setSelectedAmenity(e.target.value)} fullWidth>
+              <TextField
+                select
+                SelectProps={{ native: true }}
+                label="Amenity"
+                value={selectedAmenity}
+                onChange={(e) => setSelectedAmenity(e.target.value)}
+                fullWidth
+              >
                 <option value="">Any</option>
                 {amenities.map((amenity) => (
-                  <option key={amenity.id} value={amenity.id}>{amenity.name}</option>
+                  <option key={amenity.id} value={amenity.id}>
+                    {amenity.name}
+                  </option>
                 ))}
               </TextField>
             </Grid>
@@ -345,18 +428,24 @@ export function ListingsBrowseView() {
                 SelectProps={{ native: true }}
                 label="Sort"
                 value={sort}
-                onChange={(e) => handleSortChange(e.target.value as ListingSort)}
+                onChange={(e) =>
+                  handleSortChange(e.target.value as ListingSort)
+                }
                 fullWidth
               >
                 {sortOptions.map((option) => (
-                  <option key={option.value} value={option.value}>{option.label}</option>
+                  <option key={option.value} value={option.value}>
+                    {option.label}
+                  </option>
                 ))}
               </TextField>
             </Grid>
             <Grid size={{ xs: 12, md: 4 }}>
               <Stack direction="row" spacing={1} flexWrap="wrap" useFlexGap>
                 {activeFilterLabels.length > 0 ? (
-                  activeFilterLabels.map((label) => <Chip key={label} label={label} color="secondary" />)
+                  activeFilterLabels.map((label) => (
+                    <Chip key={label} label={label} color="secondary" />
+                  ))
                 ) : (
                   <Chip label="No filters applied" variant="outlined" />
                 )}
@@ -368,7 +457,12 @@ export function ListingsBrowseView() {
             <Button type="submit" variant="contained" disabled={isSearching}>
               Search listings
             </Button>
-            <Button type="button" variant="outlined" onClick={handleReset} disabled={isSearching}>
+            <Button
+              type="button"
+              variant="outlined"
+              onClick={handleReset}
+              disabled={isSearching}
+            >
               Reset filters
             </Button>
           </Stack>
@@ -376,7 +470,9 @@ export function ListingsBrowseView() {
       </Paper>
 
       {errorMessage ? <Alert severity="error">{errorMessage}</Alert> : null}
-      {isLoading || isSearching ? <Alert severity="info">Loading listings...</Alert> : null}
+      {isLoading || isSearching ? (
+        <Alert severity="info">Loading listings...</Alert>
+      ) : null}
 
       {!isLoading && !isSearching ? (
         <Paper sx={{ p: 2.5 }}>
@@ -387,10 +483,12 @@ export function ListingsBrowseView() {
             alignItems={{ xs: "flex-start", md: "center" }}
           >
             <Typography color="text.secondary">
-              {results.totalElements} listing{results.totalElements === 1 ? "" : "s"} found
+              {results.totalElements} listing
+              {results.totalElements === 1 ? "" : "s"} found
             </Typography>
             <Typography color="text.secondary">
-              Page {results.totalPages === 0 ? 0 : results.page + 1} of {results.totalPages}
+              Page {results.totalPages === 0 ? 0 : results.page + 1} of{" "}
+              {results.totalPages}
             </Typography>
           </Stack>
         </Paper>
@@ -399,9 +497,12 @@ export function ListingsBrowseView() {
       {!isLoading && !isSearching && results.items.length === 0 ? (
         <Paper sx={{ p: 4 }}>
           <Stack spacing={1}>
-            <Typography variant="h5">No listings match these filters</Typography>
+            <Typography variant="h5">
+              No listings match these filters
+            </Typography>
             <Typography color="text.secondary">
-              Try broadening the location, price, or property details and search again.
+              Try broadening the location, price, or property details and search
+              again.
             </Typography>
           </Stack>
         </Paper>
@@ -424,18 +525,33 @@ export function ListingsBrowseView() {
                     component="img"
                     src={listing.thumbnailUrl}
                     alt={listing.title}
-                    sx={{ width: "100%", height: 220, objectFit: "cover", borderRadius: 3 }}
+                    sx={{
+                      width: "100%",
+                      height: 220,
+                      objectFit: "cover",
+                      borderRadius: 3,
+                    }}
                   />
                 ) : null}
-                <Stack direction={{ xs: "column", sm: "row" }} justifyContent="space-between" spacing={2}>
+                <Stack
+                  direction={{ xs: "column", sm: "row" }}
+                  justifyContent="space-between"
+                  spacing={2}
+                >
                   <Link href={`/listings/${listing.id}`}>
                     <Typography variant="h5">{listing.title}</Typography>
                   </Link>
                   <SaveListingButton
                     key={`${listing.id}-${savedListingIds.includes(listing.id) ? "saved" : "unsaved"}`}
                     listingId={listing.id}
-                    variant={savedListingIds.includes(listing.id) ? "contained" : "outlined"}
-                    onSavedChange={(saved) => handleSavedChange(listing.id, saved)}
+                    variant={
+                      savedListingIds.includes(listing.id)
+                        ? "contained"
+                        : "outlined"
+                    }
+                    onSavedChange={(saved) =>
+                      handleSavedChange(listing.id, saved)
+                    }
                   />
                 </Stack>
                 <Stack spacing={1.5}>
@@ -443,16 +559,23 @@ export function ListingsBrowseView() {
                     KES {listing.rentAmount}
                   </Typography>
                   <Typography color="text.secondary">
-                    {listing.bedrooms} bed - {listing.bathrooms} bath - {formatEnumLabel(listing.houseType)}
+                    {listing.bedrooms} bed - {listing.bathrooms} bath -{" "}
+                    {formatEnumLabel(listing.houseType)}
                   </Typography>
                   <Typography color="text.secondary">
                     {listing.area}, {listing.city}
                   </Typography>
                   <Typography color="text.secondary">
-                    Amenities: {listing.amenities.length > 0 ? listing.amenities.map((amenity) => amenity.name).join(", ") : "None listed"}
+                    Amenities:{" "}
+                    {listing.amenities.length > 0
+                      ? listing.amenities
+                          .map((amenity) => amenity.name)
+                          .join(", ")
+                      : "None listed"}
                   </Typography>
                   <Typography color="text.secondary">
-                    {formatEnumLabel(listing.availabilityStatus)}{listing.furnished ? " - Furnished" : " - Unfurnished"}
+                    {formatEnumLabel(listing.availabilityStatus)}
+                    {listing.furnished ? " - Furnished" : " - Unfurnished"}
                   </Typography>
                 </Stack>
               </Stack>

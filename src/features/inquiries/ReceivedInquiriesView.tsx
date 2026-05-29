@@ -11,7 +11,7 @@ import Link from "next/link";
 import { useEffect, useState } from "react";
 import { useAuth } from "@/features/auth/AuthProvider";
 import { getReceivedInquiries, updateInquiryStatus } from "@/lib/api/inquiries";
-import { Inquiry, InquiryStatus } from "@/types/domain";
+import type { Inquiry, InquiryStatus } from "@/types/domain";
 
 const inquiryStatuses: InquiryStatus[] = ["NEW", "CONTACTED", "CLOSED"];
 
@@ -19,7 +19,9 @@ export function ReceivedInquiriesView() {
   const { session } = useAuth();
   const [inquiries, setInquiries] = useState<Inquiry[]>([]);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
-  const [statusDrafts, setStatusDrafts] = useState<Record<string, InquiryStatus>>({});
+  const [statusDrafts, setStatusDrafts] = useState<
+    Record<string, InquiryStatus>
+  >({});
 
   useEffect(() => {
     async function loadInquiries() {
@@ -32,10 +34,13 @@ export function ReceivedInquiriesView() {
         const results = await getReceivedInquiries();
         setInquiries(results);
         setStatusDrafts(
-          Object.fromEntries(results.map((inquiry) => [inquiry.id, inquiry.status])),
+          Object.fromEntries(
+            results.map((inquiry) => [inquiry.id, inquiry.status]),
+          ),
         );
       } catch (error) {
-        const message = error instanceof Error ? error.message : "Failed to load inquiries.";
+        const message =
+          error instanceof Error ? error.message : "Failed to load inquiries.";
         setErrorMessage(message);
       }
     }
@@ -49,12 +54,20 @@ export function ReceivedInquiriesView() {
     }
 
     try {
-      const updated = await updateInquiryStatus(inquiryId, statusDrafts[inquiryId]);
+      const updated = await updateInquiryStatus(
+        inquiryId,
+        statusDrafts[inquiryId],
+      );
       setInquiries((current) =>
-        current.map((inquiry) => (inquiry.id === inquiryId ? updated : inquiry)),
+        current.map((inquiry) =>
+          inquiry.id === inquiryId ? updated : inquiry,
+        ),
       );
     } catch (error) {
-      const message = error instanceof Error ? error.message : "Failed to update inquiry status.";
+      const message =
+        error instanceof Error
+          ? error.message
+          : "Failed to update inquiry status.";
       setErrorMessage(message);
     }
   }
@@ -67,7 +80,8 @@ export function ReceivedInquiriesView() {
         </Typography>
         <Typography variant="h2">Received inquiries</Typography>
         <Typography color="text.secondary">
-          Review incoming renter interest and update each inquiry as you respond.
+          Review incoming renter interest and update each inquiry as you
+          respond.
         </Typography>
       </Stack>
 
@@ -75,7 +89,9 @@ export function ReceivedInquiriesView() {
 
       {inquiries.length === 0 ? (
         <Paper sx={{ p: 3 }}>
-          <Typography color="text.secondary">No one has contacted your listings yet.</Typography>
+          <Typography color="text.secondary">
+            No one has contacted your listings yet.
+          </Typography>
         </Paper>
       ) : null}
 
@@ -90,10 +106,15 @@ export function ReceivedInquiriesView() {
                 KES {inquiry.listingRentAmount}
               </Typography>
               <Typography color="text.secondary">
-                From: {inquiry.sender.fullName} ({inquiry.sender.role}) - {inquiry.sender.email}
+                From: {inquiry.sender.fullName} ({inquiry.sender.role}) -{" "}
+                {inquiry.sender.email}
               </Typography>
               <Typography color="text.secondary">{inquiry.message}</Typography>
-              <Stack direction={{ xs: "column", sm: "row" }} spacing={1.5} alignItems={{ xs: "stretch", sm: "center" }}>
+              <Stack
+                direction={{ xs: "column", sm: "row" }}
+                spacing={1.5}
+                alignItems={{ xs: "stretch", sm: "center" }}
+              >
                 <TextField
                   select
                   label="Status"
@@ -112,7 +133,10 @@ export function ReceivedInquiriesView() {
                     </MenuItem>
                   ))}
                 </TextField>
-                <Button variant="contained" onClick={() => handleUpdateStatus(inquiry.id)}>
+                <Button
+                  variant="contained"
+                  onClick={() => handleUpdateStatus(inquiry.id)}
+                >
                   Update status
                 </Button>
               </Stack>
