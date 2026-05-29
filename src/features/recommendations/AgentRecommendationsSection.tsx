@@ -9,10 +9,16 @@ import Rating from "@mui/material/Rating";
 import Stack from "@mui/material/Stack";
 import TextField from "@mui/material/TextField";
 import Typography from "@mui/material/Typography";
-import { type FormEvent, useState } from "react";
+import { useFormik } from "formik";
+import { useState } from "react";
 import { useAuth } from "@/features/auth/AuthProvider";
+import { extractApiError } from "@/lib/api/client";
 import { createAgentRecommendation } from "@/lib/api/recommendations";
 import type { AgentRecommendation } from "@/types/domain";
+import {
+  type RecommendationFormValues,
+  recommendationSchema,
+} from "@/validations/recommendation";
 
 type AgentRecommendationsSectionProps = {
   agentUserId: string;
@@ -27,11 +33,8 @@ export function AgentRecommendationsSection({
 }: AgentRecommendationsSectionProps) {
   const { session } = useAuth();
   const [items] = useState(initialRecommendations);
-  const [rating, setRating] = useState(5);
-  const [comment, setComment] = useState("");
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [successMessage, setSuccessMessage] = useState<string | null>(null);
-  const [isSubmitting, setIsSubmitting] = useState(false);
 
   const alreadySubmitted =
     !!session && items.some((item) => item.author.userId === session.user.id);
@@ -42,36 +45,24 @@ export function AgentRecommendationsSection({
     !alreadySubmitted &&
     !isOwnProfile;
 
-  async function handleSubmit(event: FormEvent<HTMLFormElement>) {
-    event.preventDefault();
-    if (!session || !canSubmit) {
-      return;
-    }
-
-    setIsSubmitting(true);
-    setErrorMessage(null);
-    setSuccessMessage(null);
-
-    try {
-      await createAgentRecommendation(agentUserId, {
-        rating,
-        comment,
-      });
-      setComment("");
-      setRating(5);
-      setSuccessMessage(
-        "Recommendation submitted for admin review. It will appear publicly after approval.",
-      );
-    } catch (error) {
-      const message =
-        error instanceof Error
-          ? error.message
-          : "Failed to submit recommendation.";
-      setErrorMessage(message);
-    } finally {
-      setIsSubmitting(false);
-    }
-  }
+  const formik = useFormik<RecommendationFormValues>({
+    initialValues: { rating: 5, comment: "" },
+    validationSchema: recommendationSchema,
+    onSubmit: async (values, helpers) => {
+      if (!session || !canSubmit) return;
+      setErrorMessage(null);
+      setSuccessMessage(null);
+      try {
+        await createAgentRecommendation(agentUserId, values);
+        helpers.resetForm({ values: { rating: 5, comment: "" } });
+        setSuccessMessage(
+          "Recommendation submitted for admin review. It will appear publicly after approval.",
+        );
+      } catch (error) {
+        setErrorMessage(extractApiError(error));
+      }
+    },
+  });
 
   return (
     <Stack spacing={3}>
@@ -136,7 +127,7 @@ export function AgentRecommendationsSection({
       </Paper>
 
       <Paper sx={{ p: { xs: 3, md: 4 } }}>
-        <Stack component="form" spacing={2} onSubmit={handleSubmit}>
+        <Stack component="form" spacing={2} onSubmit={formik.handleSubmit}>
           <Typography variant="h6">Leave a recommendation</Typography>
           <Typography color="text.secondary">
             Keep it factual and concise. One recommendation per account keeps
@@ -171,10 +162,17 @@ export function AgentRecommendationsSection({
           <TextField
             select
             label="Rating"
-            value={rating}
-            onChange={(event) => setRating(Number(event.target.value))}
-            disabled={!canSubmit || isSubmitting}
+            disabled={!canSubmit || formik.isSubmitting}
             sx={{ maxWidth: 220 }}
+            value={formik.values.rating}
+            onChange={(event) =>
+              formik.setFieldValue("rating", Number(event.target.value))
+            }
+            onBlur={() => formik.setFieldTouched("rating", true)}
+            error={Boolean(formik.touched.rating && formik.errors.rating)}
+            helperText={
+              (formik.touched.rating && formik.errors.rating) || undefined
+            }
           >
             {ratingOptions.map((option) => (
               <MenuItem key={option} value={option}>
@@ -185,23 +183,24 @@ export function AgentRecommendationsSection({
 
           <TextField
             label="Recommendation"
-            value={comment}
-            onChange={(event) => setComment(event.target.value)}
             multiline
             minRows={4}
-            disabled={!canSubmit || isSubmitting}
-            helperText="Focus on communication, transparency, reliability, and overall experience."
+            disabled={!canSubmit || formik.isSubmitting}
+            {...formik.getFieldProps("comment")}
+            error={Boolean(formik.touched.comment && formik.errors.comment)}
+            helperText={
+              (formik.touched.comment && formik.errors.comment) ||
+              "Focus on communication, transparency, reliability, and overall experience."
+            }
           />
 
           <Stack direction="row">
             <Button
               type="submit"
               variant="contained"
-              disabled={
-                !canSubmit || isSubmitting || comment.trim().length === 0
-              }
+              disabled={!canSubmit || formik.isSubmitting}
             >
-              {isSubmitting ? "Submitting..." : "Submit recommendation"}
+              {formik.isSubmitting ? "Submitting..." : "Submit recommendation"}
             </Button>
           </Stack>
         </Stack>

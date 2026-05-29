@@ -8,34 +8,12 @@ import Paper from "@mui/material/Paper";
 import Stack from "@mui/material/Stack";
 import Typography from "@mui/material/Typography";
 import Link from "next/link";
-import { useEffect, useState } from "react";
 import { useAuth } from "@/features/auth/AuthProvider";
-import { getMyListings } from "@/lib/api/listings";
-import type { ListingSummary } from "@/types/domain";
+import { useMyListings } from "@/hooks/useMyListings";
 
 export function MyListingsView() {
   const { session } = useAuth();
-  const [listings, setListings] = useState<ListingSummary[]>([]);
-  const [errorMessage, setErrorMessage] = useState<string | null>(null);
-
-  useEffect(() => {
-    async function loadListings() {
-      if (!session) {
-        return;
-      }
-
-      try {
-        const result = await getMyListings();
-        setListings(result);
-      } catch (error) {
-        const message =
-          error instanceof Error ? error.message : "Failed to load listings.";
-        setErrorMessage(message);
-      }
-    }
-
-    void loadListings();
-  }, [session]);
+  const { listings, error } = useMyListings(Boolean(session));
 
   if (!session) {
     return null;
@@ -74,7 +52,7 @@ export function MyListingsView() {
         </Stack>
       </Paper>
 
-      {errorMessage ? <Alert severity="error">{errorMessage}</Alert> : null}
+      {error ? <Alert severity="error">{error}</Alert> : null}
 
       {listings.map((listing) => (
         <Paper key={listing.id} sx={{ p: 3 }}>

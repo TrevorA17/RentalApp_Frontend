@@ -5,35 +5,12 @@ import Paper from "@mui/material/Paper";
 import Stack from "@mui/material/Stack";
 import Typography from "@mui/material/Typography";
 import Link from "next/link";
-import { useEffect, useState } from "react";
 import { useAuth } from "@/features/auth/AuthProvider";
-import { getSentInquiries } from "@/lib/api/inquiries";
-import type { Inquiry } from "@/types/domain";
+import { useSentInquiries } from "@/hooks/useInquiries";
 
 export function SentInquiriesView() {
   const { session } = useAuth();
-  const [inquiries, setInquiries] = useState<Inquiry[]>([]);
-  const [errorMessage, setErrorMessage] = useState<string | null>(null);
-
-  useEffect(() => {
-    async function loadInquiries() {
-      if (!session?.accessToken) {
-        setInquiries([]);
-        return;
-      }
-
-      try {
-        const results = await getSentInquiries();
-        setInquiries(results);
-      } catch (error) {
-        const message =
-          error instanceof Error ? error.message : "Failed to load inquiries.";
-        setErrorMessage(message);
-      }
-    }
-
-    void loadInquiries();
-  }, [session?.accessToken]);
+  const { inquiries, error } = useSentInquiries(Boolean(session?.accessToken));
 
   return (
     <Stack spacing={3}>
@@ -48,7 +25,7 @@ export function SentInquiriesView() {
         </Typography>
       </Stack>
 
-      {errorMessage ? <Alert severity="error">{errorMessage}</Alert> : null}
+      {error ? <Alert severity="error">{error}</Alert> : null}
 
       {inquiries.length === 0 ? (
         <Paper sx={{ p: 3 }}>

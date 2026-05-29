@@ -7,24 +7,57 @@ import Paper from "@mui/material/Paper";
 import Stack from "@mui/material/Stack";
 import TextField from "@mui/material/TextField";
 import Typography from "@mui/material/Typography";
-import { type FormEvent, useEffect, useState } from "react";
+import { useFormik } from "formik";
+import { useEffect, useState } from "react";
 import { useAuth } from "@/features/auth/AuthProvider";
+import { extractApiError } from "@/lib/api/client";
 import { getMyProfile, saveMyProfile } from "@/lib/api/profiles";
+import { type ProfileFormValues, profileSchema } from "@/validations/profile";
 
 export function ProfileForm() {
   const { session } = useAuth();
   const [isLoading, setIsLoading] = useState(true);
-  const [isSaving, setIsSaving] = useState(false);
   const [successMessage, setSuccessMessage] = useState<string | null>(null);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
-  const [fullName, setFullName] = useState("");
-  const [phoneNumber, setPhoneNumber] = useState("");
-  const [bio, setBio] = useState("");
-  const [city, setCity] = useState("");
-  const [serviceAreas, setServiceAreas] = useState("");
-  const [companyName, setCompanyName] = useState("");
-  const [feeStructure, setFeeStructure] = useState("");
 
+  const isAgent = session?.user.role === "AGENT";
+
+  const formik = useFormik<ProfileFormValues>({
+    initialValues: {
+      fullName: "",
+      phoneNumber: "",
+      bio: "",
+      city: "",
+      serviceAreas: "",
+      companyName: "",
+      feeStructure: "",
+    },
+    validationSchema: profileSchema,
+    enableReinitialize: true,
+    onSubmit: async (values) => {
+      setErrorMessage(null);
+      setSuccessMessage(null);
+      try {
+        await saveMyProfile({
+          fullName: values.fullName,
+          phoneNumber: values.phoneNumber,
+          bio: values.bio,
+          city: values.city,
+          serviceAreas: values.serviceAreas
+            .split(",")
+            .map((item) => item.trim())
+            .filter(Boolean),
+          companyName: isAgent ? values.companyName : undefined,
+          feeStructure: isAgent ? values.feeStructure : undefined,
+        });
+        setSuccessMessage("Profile saved successfully.");
+      } catch (error) {
+        setErrorMessage(extractApiError(error));
+      }
+    },
+  });
+
+  // biome-ignore lint/correctness/useExhaustiveDependencies: intentional one-shot load on session change
   useEffect(() => {
     async function loadProfile() {
       if (!session) {
@@ -34,17 +67,19 @@ export function ProfileForm() {
 
       try {
         const profile = await getMyProfile();
-        setFullName(profile.fullName ?? "");
-        setPhoneNumber(profile.phoneNumber ?? "");
-        setBio(profile.bio ?? "");
-        setCity(profile.city ?? "");
-        setServiceAreas((profile.serviceAreas ?? []).join(", "));
-        setCompanyName(profile.companyName ?? "");
-        setFeeStructure(profile.feeStructure ?? "");
+        formik.resetForm({
+          values: {
+            fullName: profile.fullName ?? "",
+            phoneNumber: profile.phoneNumber ?? "",
+            bio: profile.bio ?? "",
+            city: profile.city ?? "",
+            serviceAreas: (profile.serviceAreas ?? []).join(", "),
+            companyName: profile.companyName ?? "",
+            feeStructure: profile.feeStructure ?? "",
+          },
+        });
       } catch (error) {
-        const message =
-          error instanceof Error ? error.message : "Failed to load profile.";
-        setErrorMessage(message);
+        setErrorMessage(extractApiError(error));
       } finally {
         setIsLoading(false);
       }
@@ -57,37 +92,7 @@ export function ProfileForm() {
     return null;
   }
 
-  const isAgent = session.user.role === "AGENT";
-
-  async function handleSubmit(event: FormEvent<HTMLFormElement>) {
-    event.preventDefault();
-    setErrorMessage(null);
-    setSuccessMessage(null);
-    setIsSaving(true);
-
-    try {
-      await saveMyProfile({
-        fullName,
-        phoneNumber,
-        bio,
-        city,
-        serviceAreas: serviceAreas
-          .split(",")
-          .map((item) => item.trim())
-          .filter(Boolean),
-        companyName: isAgent ? companyName : undefined,
-        feeStructure: isAgent ? feeStructure : undefined,
-      });
-
-      setSuccessMessage("Profile saved successfully.");
-    } catch (error) {
-      const message =
-        error instanceof Error ? error.message : "Failed to save profile.";
-      setErrorMessage(message);
-    } finally {
-      setIsSaving(false);
-    }
-  }
+  const disabled = isLoading || formik.isSubmitting;
 
   return (
     <Stack spacing={3}>
@@ -107,7 +112,7 @@ export function ProfileForm() {
       </Paper>
 
       <Paper sx={{ p: { xs: 3, md: 4 } }}>
-        <Stack component="form" spacing={2.5} onSubmit={handleSubmit}>
+        <Stack component="form" spacing={2.5} onSubmit={formik.handleSubmit}>
           {errorMessage ? <Alert severity="error">{errorMessage}</Alert> : null}
           {successMessage ? (
             <Alert severity="success">{successMessage}</Alert>
@@ -115,72 +120,65 @@ export function ProfileForm() {
 
           <TextField
             label="Full name"
-            value={fullName}
-            onChange={(event) => setFullName(event.target.value)}
             fullWidth
             required
-            disabled={isLoading || isSaving}
+            disabled={disabled}
+            {...formik.getFieldProps("fullName")}
+            error={Boolean(formik.touched.fullName && formik.errors.fullName)}
+            helperText={
+              (formik.touched.fullName && formik.errors.fullName) || undefined
+            }
           />
           <TextField
             label="Phone number"
-            value={phoneNumber}
-            onChange={(event) => setPhoneNumber(event.target.value)}
             fullWidth
-            disabled={isLoading || isSaving}
+            disabled={disabled}
+            {...formik.getFieldProps("phoneNumber")}
           />
           <TextField
             label="City"
-            value={city}
-            onChange={(event) => setCity(event.target.value)}
             fullWidth
-            disabled={isLoading || isSaving}
+            disabled={disabled}
+            {...formik.getFieldProps("city")}
           />
           <TextField
             label="Bio"
-            value={bio}
-            onChange={(event) => setBio(event.target.value)}
             fullWidth
             minRows={4}
             multiline
-            disabled={isLoading || isSaving}
+            disabled={disabled}
+            {...formik.getFieldProps("bio")}
           />
           <TextField
             label="Service areas"
-            value={serviceAreas}
-            onChange={(event) => setServiceAreas(event.target.value)}
-            helperText="Separate areas with commas."
             fullWidth
-            disabled={isLoading || isSaving}
+            disabled={disabled}
+            helperText="Separate areas with commas."
+            {...formik.getFieldProps("serviceAreas")}
           />
 
           {isAgent ? (
             <>
               <TextField
                 label="Company name"
-                value={companyName}
-                onChange={(event) => setCompanyName(event.target.value)}
                 fullWidth
-                disabled={isLoading || isSaving}
+                disabled={disabled}
+                {...formik.getFieldProps("companyName")}
               />
               <TextField
                 label="Fee structure"
-                value={feeStructure}
-                onChange={(event) => setFeeStructure(event.target.value)}
                 fullWidth
                 minRows={3}
                 multiline
-                disabled={isLoading || isSaving}
+                disabled={disabled}
+                {...formik.getFieldProps("feeStructure")}
               />
             </>
           ) : null}
 
           <Stack direction="row">
-            <Button
-              type="submit"
-              variant="contained"
-              disabled={isLoading || isSaving}
-            >
-              {isSaving ? "Saving..." : "Save profile"}
+            <Button type="submit" variant="contained" disabled={disabled}>
+              {formik.isSubmitting ? "Saving..." : "Save profile"}
             </Button>
           </Stack>
         </Stack>

@@ -14,11 +14,7 @@ import {
   refreshSession,
   registerUser,
 } from "@/lib/auth/authService";
-import {
-  clearStoredSession,
-  getStoredSession,
-  subscribeToSession,
-} from "@/lib/auth/sessionStore";
+import { getSessionSnapshot, useAuthStore } from "@/stores/auth-store";
 import type { AuthSession, LoginRequest, RegisterRequest } from "@/types/auth";
 
 type AuthContextValue = {
@@ -33,55 +29,52 @@ type AuthContextValue = {
 const AuthContext = createContext<AuthContextValue | undefined>(undefined);
 
 export function AuthProvider({ children }: PropsWithChildren) {
-  const [session, setSession] = useState<AuthSession | null>(null);
+  const storeUser = useAuthStore((state) => state.user);
+  const storeAccessToken = useAuthStore((state) => state.accessToken);
+  const storeRefreshToken = useAuthStore((state) => state.refreshToken);
+  const storeIsAuthenticated = useAuthStore((state) => state.isAuthenticated);
+
+  const session: AuthSession | null =
+    storeIsAuthenticated && storeUser && storeAccessToken && storeRefreshToken
+      ? {
+          user: storeUser,
+          accessToken: storeAccessToken,
+          refreshToken: storeRefreshToken,
+        }
+      : null;
+
   const [isLoading, setIsLoading] = useState(true);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   useEffect(() => {
     async function restoreSession() {
       try {
-        const storedSession = getStoredSession();
+        const stored = getSessionSnapshot();
 
-        if (!storedSession) {
-          setSession(null);
+        if (!stored) {
           return;
         }
 
         try {
-          const user = await getCurrentUser(storedSession.accessToken);
-          setSession({
-            ...storedSession,
-            user,
-          });
+          const user = await getCurrentUser(stored.accessToken);
+          useAuthStore.getState().updateUser(user);
         } catch {
-          const refreshedSession = await refreshSession(
-            storedSession.refreshToken,
-          );
-          setSession(refreshedSession);
+          await refreshSession(stored.refreshToken);
         }
       } catch {
-        clearStoredSession();
-        setSession(null);
+        useAuthStore.getState().logout();
       } finally {
         setIsLoading(false);
       }
     }
 
-    const unsubscribe = subscribeToSession((nextSession) => {
-      setSession(nextSession);
-    });
-
     void restoreSession();
-
-    return unsubscribe;
   }, []);
 
   async function login(request: LoginRequest) {
     setIsSubmitting(true);
-
     try {
-      const session = await loginUser(request);
-      setSession(session);
+      await loginUser(request);
     } finally {
       setIsSubmitting(false);
     }
@@ -89,10 +82,8 @@ export function AuthProvider({ children }: PropsWithChildren) {
 
   async function register(request: RegisterRequest) {
     setIsSubmitting(true);
-
     try {
-      const session = await registerUser(request);
-      setSession(session);
+      await registerUser(request);
     } finally {
       setIsSubmitting(false);
     }
@@ -104,8 +95,7 @@ export function AuthProvider({ children }: PropsWithChildren) {
         await logoutUser(session.refreshToken);
       }
     } finally {
-      clearStoredSession();
-      setSession(null);
+      useAuthStore.getState().logout();
     }
   }
 

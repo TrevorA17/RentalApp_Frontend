@@ -10,67 +10,43 @@ import Typography from "@mui/material/Typography";
 import Link from "next/link";
 import { useEffect, useState } from "react";
 import { useAuth } from "@/features/auth/AuthProvider";
-import { getReceivedInquiries, updateInquiryStatus } from "@/lib/api/inquiries";
-import type { Inquiry, InquiryStatus } from "@/types/domain";
+import { useReceivedInquiries } from "@/hooks/useInquiries";
+import { extractApiError } from "@/lib/api/client";
+import { updateInquiryStatus } from "@/lib/api/inquiries";
+import type { InquiryStatus } from "@/types/domain";
 
 const inquiryStatuses: InquiryStatus[] = ["NEW", "CONTACTED", "CLOSED"];
 
 export function ReceivedInquiriesView() {
   const { session } = useAuth();
-  const [inquiries, setInquiries] = useState<Inquiry[]>([]);
-  const [errorMessage, setErrorMessage] = useState<string | null>(null);
+  const { inquiries, error, refetch } = useReceivedInquiries(
+    Boolean(session?.accessToken),
+  );
+  const [mutationError, setMutationError] = useState<string | null>(null);
   const [statusDrafts, setStatusDrafts] = useState<
     Record<string, InquiryStatus>
   >({});
 
   useEffect(() => {
-    async function loadInquiries() {
-      if (!session?.accessToken) {
-        setInquiries([]);
-        return;
-      }
-
-      try {
-        const results = await getReceivedInquiries();
-        setInquiries(results);
-        setStatusDrafts(
-          Object.fromEntries(
-            results.map((inquiry) => [inquiry.id, inquiry.status]),
-          ),
-        );
-      } catch (error) {
-        const message =
-          error instanceof Error ? error.message : "Failed to load inquiries.";
-        setErrorMessage(message);
-      }
-    }
-
-    void loadInquiries();
-  }, [session?.accessToken]);
+    setStatusDrafts(
+      Object.fromEntries(
+        inquiries.map((inquiry) => [inquiry.id, inquiry.status]),
+      ),
+    );
+  }, [inquiries]);
 
   async function handleUpdateStatus(inquiryId: string) {
-    if (!session?.accessToken) {
-      return;
-    }
+    if (!session?.accessToken) return;
 
     try {
-      const updated = await updateInquiryStatus(
-        inquiryId,
-        statusDrafts[inquiryId],
-      );
-      setInquiries((current) =>
-        current.map((inquiry) =>
-          inquiry.id === inquiryId ? updated : inquiry,
-        ),
-      );
-    } catch (error) {
-      const message =
-        error instanceof Error
-          ? error.message
-          : "Failed to update inquiry status.";
-      setErrorMessage(message);
+      await updateInquiryStatus(inquiryId, statusDrafts[inquiryId]);
+      await refetch();
+    } catch (err) {
+      setMutationError(extractApiError(err));
     }
   }
+
+  const errorMessage = error ?? mutationError;
 
   return (
     <Stack spacing={3}>

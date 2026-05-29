@@ -1,5 +1,5 @@
-import { apiRequest } from "@/lib/api/client";
-import { storeSession } from "@/lib/auth/sessionStore";
+import client from "@/lib/api/client";
+import { useAuthStore } from "@/stores/auth-store";
 import type { ApiSuccessResponse } from "@/types/api";
 import type {
   AuthResponse,
@@ -19,52 +19,43 @@ function normalizeEmail(email: string) {
 }
 
 export async function loginUser(request: LoginRequest): Promise<AuthSession> {
-  const response = await apiRequest<ApiSuccessResponse<AuthResponse>>(
+  const res = await client.post<ApiSuccessResponse<AuthResponse>>(
     "/auth/login",
     {
-      method: "POST",
-      auth: "none",
-      body: JSON.stringify({
-        email: normalizeEmail(request.email),
-        password: request.password,
-      }),
+      email: normalizeEmail(request.email),
+      password: request.password,
     },
+    { meta: { auth: "none" } },
   );
-
-  storeSession(response.data);
-  return response.data;
+  useAuthStore.getState().setSession(res.data.data);
+  return res.data.data;
 }
 
 export async function refreshSession(
   refreshToken: string,
 ): Promise<AuthSession> {
-  const response = await apiRequest<ApiSuccessResponse<AuthResponse>>(
+  const res = await client.post<ApiSuccessResponse<AuthResponse>>(
     "/auth/refresh",
-    {
-      method: "POST",
-      auth: "none",
-      retryOnAuthFailure: false,
-      body: JSON.stringify({ refreshToken }),
-    },
+    { refreshToken },
+    { meta: { auth: "none", skipRefresh: true } },
   );
-
-  storeSession(response.data);
-  return response.data;
+  useAuthStore.getState().setSession(res.data.data);
+  return res.data.data;
 }
 
 export async function registerUser(
   request: RegisterRequest,
 ): Promise<AuthSession> {
-  await apiRequest<ApiSuccessResponse<RegisterResponseData>>("/auth/register", {
-    method: "POST",
-    auth: "none",
-    body: JSON.stringify({
+  await client.post<ApiSuccessResponse<RegisterResponseData>>(
+    "/auth/register",
+    {
       fullName: request.fullName.trim(),
       email: normalizeEmail(request.email),
       password: request.password,
       role: request.role,
-    }),
-  });
+    },
+    { meta: { auth: "none" } },
+  );
 
   return loginUser({
     email: request.email,
@@ -73,21 +64,17 @@ export async function registerUser(
 }
 
 export async function getCurrentUser(token: string): Promise<AuthUser> {
-  const response = await apiRequest<ApiSuccessResponse<AuthUser>>("/auth/me", {
-    method: "GET",
-    token,
-    auth: "required",
-    cache: "no-store",
+  const res = await client.get<ApiSuccessResponse<AuthUser>>("/auth/me", {
+    headers: { Authorization: `Bearer ${token}` },
+    meta: { auth: "required" },
   });
-
-  return response.data;
+  return res.data.data;
 }
 
 export async function logoutUser(refreshToken: string): Promise<void> {
-  await apiRequest<ApiSuccessResponse<null>>("/auth/logout", {
-    method: "POST",
-    auth: "none",
-    retryOnAuthFailure: false,
-    body: JSON.stringify({ refreshToken }),
-  });
+  await client.post<ApiSuccessResponse<null>>(
+    "/auth/logout",
+    { refreshToken },
+    { meta: { auth: "none", skipRefresh: true } },
+  );
 }

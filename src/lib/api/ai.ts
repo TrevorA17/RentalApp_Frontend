@@ -1,4 +1,4 @@
-import { apiRequest } from "@/lib/api/client";
+import client from "@/lib/api/client";
 import type { ApiSuccessResponse } from "@/types/api";
 import type {
   AvailabilityStatus,
@@ -28,25 +28,21 @@ export type EnhanceListingDescriptionResult = {
 
 export async function enhanceListingDescription(
   payload: EnhanceListingDescriptionPayload,
-) {
-  const response = await apiRequest<
+): Promise<EnhanceListingDescriptionResult> {
+  const res = await client.post<
     ApiSuccessResponse<EnhanceListingDescriptionResult>
-  >("/ai/listings/description-enhance", {
-    method: "POST",
-    auth: "required",
-    body: JSON.stringify(payload),
+  >("/ai/listings/description-enhance", payload, {
+    meta: { auth: "required" },
   });
-
-  return response.data;
+  return res.data.data;
 }
 
-export async function interpretListingSearch(query: string) {
-  const response = await apiRequest<
-    ApiSuccessResponse<InterpretedListingSearch>
-  >("/ai/search/interpret", {
-    method: "POST",
-    body: JSON.stringify({ query }),
-  });
-
-  return response.data;
+export async function interpretListingSearch(
+  query: string,
+): Promise<InterpretedListingSearch> {
+  const res = await client.post<ApiSuccessResponse<InterpretedListingSearch>>(
+    "/ai/search/interpret",
+    { query },
+  );
+  return res.data.data;
 }

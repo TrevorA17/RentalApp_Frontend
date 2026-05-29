@@ -1,4 +1,4 @@
-import { apiRequest } from "@/lib/api/client";
+import client from "@/lib/api/client";
 import type { ApiSuccessResponse } from "@/types/api";
 import type { Profile } from "@/types/domain";
 
@@ -13,40 +13,27 @@ export type ProfileUpsertRequest = {
   feeStructure?: string;
 };
 
-export async function getMyProfile() {
-  const response = await apiRequest<ApiSuccessResponse<Profile>>(
-    "/profiles/me",
-    {
-      method: "GET",
-      auth: "required",
-      cache: "no-store",
-    },
-  );
-
-  return response.data;
+export async function getMyProfile(): Promise<Profile> {
+  const res = await client.get<ApiSuccessResponse<Profile>>("/profiles/me", {
+    meta: { auth: "required" },
+  });
+  return res.data.data;
 }
 
-export async function saveMyProfile(payload: ProfileUpsertRequest) {
-  const response = await apiRequest<ApiSuccessResponse<Profile>>(
+export async function saveMyProfile(
+  payload: ProfileUpsertRequest,
+): Promise<Profile> {
+  const res = await client.put<ApiSuccessResponse<Profile>>(
     "/profiles/me",
-    {
-      method: "PUT",
-      auth: "required",
-      body: JSON.stringify(payload),
-    },
+    payload,
+    { meta: { auth: "required" } },
   );
-
-  return response.data;
+  return res.data.data;
 }
 
-export async function getPublicProfile(userId: string) {
-  const response = await apiRequest<ApiSuccessResponse<Profile>>(
+export async function getPublicProfile(userId: string): Promise<Profile> {
+  const res = await client.get<ApiSuccessResponse<Profile>>(
     `/profiles/${userId}`,
-    {
-      method: "GET",
-      cache: "no-store",
-    },
   );
-
-  return response.data;
+  return res.data.data;
 }

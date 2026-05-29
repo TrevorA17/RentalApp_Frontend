@@ -7,9 +7,12 @@ import Paper from "@mui/material/Paper";
 import Stack from "@mui/material/Stack";
 import TextField from "@mui/material/TextField";
 import Typography from "@mui/material/Typography";
-import { type FormEvent, useState } from "react";
+import { useFormik } from "formik";
+import { useState } from "react";
 import { useAuth } from "@/features/auth/AuthProvider";
+import { extractApiError } from "@/lib/api/client";
 import { createReport } from "@/lib/api/reports";
+import { type ReportFormValues, reportSchema } from "@/validations/report";
 
 type ReportComposerProps = {
   listingId: string;
@@ -28,56 +31,48 @@ export function ReportComposer({
   reportedUserId,
 }: ReportComposerProps) {
   const { session } = useAuth();
-  const [reason, setReason] = useState(defaultReasons[0]);
-  const [details, setDetails] = useState("");
   const [successMessage, setSuccessMessage] = useState<string | null>(null);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
-  const [isSubmitting, setIsSubmitting] = useState(false);
+
   const canReport =
     !!session &&
     session.user.role !== "ADMIN" &&
     session.user.id !== reportedUserId;
 
-  async function handleSubmit(event: FormEvent<HTMLFormElement>) {
-    event.preventDefault();
-
-    if (!session) {
-      setErrorMessage("Sign in to submit a report.");
-      return;
-    }
-
-    if (!canReport) {
-      setErrorMessage(
-        "You cannot report this listing from your current account.",
-      );
-      return;
-    }
-
-    setIsSubmitting(true);
-    setSuccessMessage(null);
-    setErrorMessage(null);
-
-    try {
-      await createReport({
-        listingId,
-        reportedUserId,
-        reason,
-        details: details.trim() || undefined,
-      });
-      setSuccessMessage("Report submitted successfully.");
-      setDetails("");
-    } catch (error) {
-      const message =
-        error instanceof Error ? error.message : "Failed to submit report.";
-      setErrorMessage(message);
-    } finally {
-      setIsSubmitting(false);
-    }
-  }
+  const formik = useFormik<ReportFormValues>({
+    initialValues: { reason: defaultReasons[0], details: "" },
+    validationSchema: reportSchema,
+    onSubmit: async (values, helpers) => {
+      if (!session) {
+        setErrorMessage("Sign in to submit a report.");
+        return;
+      }
+      if (!canReport) {
+        setErrorMessage(
+          "You cannot report this listing from your current account.",
+        );
+        return;
+      }
+      setSuccessMessage(null);
+      setErrorMessage(null);
+      try {
+        await createReport({
+          listingId,
+          reportedUserId,
+          reason: values.reason,
+          details: values.details.trim() || undefined,
+        });
+        setSuccessMessage("Report submitted successfully.");
+        helpers.setFieldValue("details", "");
+      } catch (error) {
+        setErrorMessage(extractApiError(error));
+      }
+    },
+  });
 
   return (
     <Paper sx={{ p: { xs: 3, md: 4 } }}>
-      <Stack component="form" spacing={2} onSubmit={handleSubmit}>
+      <Stack component="form" spacing={2} onSubmit={formik.handleSubmit}>
         <Stack spacing={1}>
           <Typography variant="h5">Report this listing</Typography>
           <Typography color="text.secondary">
@@ -93,9 +88,12 @@ export function ReportComposer({
         <TextField
           select
           label="Reason"
-          value={reason}
-          onChange={(event) => setReason(event.target.value)}
           fullWidth
+          {...formik.getFieldProps("reason")}
+          error={Boolean(formik.touched.reason && formik.errors.reason)}
+          helperText={
+            (formik.touched.reason && formik.errors.reason) || undefined
+          }
         >
           {defaultReasons.map((option) => (
             <MenuItem key={option} value={option}>
@@ -106,11 +104,14 @@ export function ReportComposer({
 
         <TextField
           label="Additional details"
-          value={details}
-          onChange={(event) => setDetails(event.target.value)}
           multiline
           minRows={3}
           fullWidth
+          {...formik.getFieldProps("details")}
+          error={Boolean(formik.touched.details && formik.errors.details)}
+          helperText={
+            (formik.touched.details && formik.errors.details) || undefined
+          }
         />
 
         <Stack direction="row">
@@ -118,7 +119,7 @@ export function ReportComposer({
             type="submit"
             variant="outlined"
             color="error"
-            disabled={isSubmitting || !canReport}
+            disabled={formik.isSubmitting || !canReport}
           >
             Submit report
           </Button>

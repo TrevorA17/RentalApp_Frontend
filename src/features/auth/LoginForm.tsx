@@ -6,24 +6,19 @@ import Divider from "@mui/material/Divider";
 import Stack from "@mui/material/Stack";
 import TextField from "@mui/material/TextField";
 import Typography from "@mui/material/Typography";
+import { useFormik } from "formik";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
-import { type FormEvent, useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 import { AuthCard } from "@/features/auth/AuthCard";
 import { useAuth } from "@/features/auth/AuthProvider";
-
-type LoginErrors = {
-  email?: string;
-  password?: string;
-};
+import { extractApiError } from "@/lib/api/client";
+import { type LoginFormValues, loginSchema } from "@/validations/auth";
 
 export function LoginForm() {
   const router = useRouter();
   const searchParams = useSearchParams();
-  const { login, session, isLoading, isSubmitting } = useAuth();
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
-  const [errors, setErrors] = useState<LoginErrors>({});
+  const { login, session, isLoading } = useAuth();
   const [formError, setFormError] = useState<string | null>(null);
 
   const redirectTarget = searchParams.get("redirect") || "/dashboard";
@@ -34,43 +29,19 @@ export function LoginForm() {
     }
   }, [isLoading, redirectTarget, router, session]);
 
-  function validate() {
-    const nextErrors: LoginErrors = {};
-
-    if (!email.trim()) {
-      nextErrors.email = "Email is required.";
-    }
-
-    if (!password) {
-      nextErrors.password = "Password is required.";
-    }
-
-    setErrors(nextErrors);
-
-    return Object.keys(nextErrors).length === 0;
-  }
-
-  async function handleSubmit(event: FormEvent<HTMLFormElement>) {
-    event.preventDefault();
-
-    if (!validate()) {
-      return;
-    }
-
-    setFormError(null);
-
-    try {
-      await login({
-        email,
-        password,
-      });
-      router.replace(redirectTarget);
-    } catch (error) {
-      const message =
-        error instanceof Error ? error.message : "Unable to log in.";
-      setFormError(message);
-    }
-  }
+  const formik = useFormik<LoginFormValues>({
+    initialValues: { email: "", password: "" },
+    validationSchema: loginSchema,
+    onSubmit: async (values) => {
+      setFormError(null);
+      try {
+        await login(values);
+        router.replace(redirectTarget);
+      } catch (error) {
+        setFormError(extractApiError(error));
+      }
+    },
+  });
 
   return (
     <AuthCard
@@ -78,30 +49,36 @@ export function LoginForm() {
       title="Sign in"
       description="Access your renter, agent, landlord, or admin workspace with the live backend auth flow."
     >
-      <Stack component="form" spacing={2} onSubmit={handleSubmit}>
+      <Stack component="form" spacing={2} onSubmit={formik.handleSubmit}>
         {formError ? <Alert severity="error">{formError}</Alert> : null}
         <TextField
           label="Email"
           type="email"
-          value={email}
-          onChange={(event) => setEmail(event.target.value)}
-          error={Boolean(errors.email)}
-          helperText={errors.email}
           autoComplete="email"
           fullWidth
+          {...formik.getFieldProps("email")}
+          error={Boolean(formik.touched.email && formik.errors.email)}
+          helperText={
+            (formik.touched.email && formik.errors.email) || undefined
+          }
         />
         <TextField
           label="Password"
           type="password"
-          value={password}
-          onChange={(event) => setPassword(event.target.value)}
-          error={Boolean(errors.password)}
-          helperText={errors.password}
           autoComplete="current-password"
           fullWidth
+          {...formik.getFieldProps("password")}
+          error={Boolean(formik.touched.password && formik.errors.password)}
+          helperText={
+            (formik.touched.password && formik.errors.password) || undefined
+          }
         />
-        <Button type="submit" variant="contained" disabled={isSubmitting}>
-          {isSubmitting ? "Signing in..." : "Sign in"}
+        <Button
+          type="submit"
+          variant="contained"
+          disabled={formik.isSubmitting}
+        >
+          {formik.isSubmitting ? "Signing in..." : "Sign in"}
         </Button>
         <Divider />
         <Stack spacing={0.75}>

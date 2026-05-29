@@ -11,16 +11,12 @@ import Paper from "@mui/material/Paper";
 import Stack from "@mui/material/Stack";
 import TextField from "@mui/material/TextField";
 import Typography from "@mui/material/Typography";
+import { useFormik } from "formik";
 import { useRouter } from "next/navigation";
-import {
-  type ChangeEvent,
-  type FormEvent,
-  useEffect,
-  useRef,
-  useState,
-} from "react";
+import { type ChangeEvent, useEffect, useRef, useState } from "react";
 import { AiDescriptionAssist } from "@/features/ai/AiDescriptionAssist";
 import { useAuth } from "@/features/auth/AuthProvider";
+import { extractApiError } from "@/lib/api/client";
 import {
   createListing,
   getAmenities,
@@ -36,6 +32,7 @@ import type {
   ListingSummary,
   MediaType,
 } from "@/types/domain";
+import { type ListingFormValues, listingSchema } from "@/validations/listing";
 
 type ListingFormProps = {
   mode: "create" | "edit";
@@ -71,32 +68,97 @@ type ListingMediaDraft = {
   uploadError?: string | null;
 };
 
+const initialValues: ListingFormValues = {
+  title: "",
+  description: "",
+  rentAmount: "",
+  depositAmount: "",
+  agentFeeAmount: "",
+  city: "",
+  area: "",
+  bedrooms: "1",
+  bathrooms: "1",
+  houseType: "APARTMENT",
+  furnished: false,
+  availabilityStatus: "AVAILABLE_NOW",
+};
+
 export function ListingForm({ mode, listingId }: ListingFormProps) {
   const router = useRouter();
   const { session } = useAuth();
   const fileInputRef = useRef<HTMLInputElement | null>(null);
   const [isLoading, setIsLoading] = useState(true);
-  const [isSaving, setIsSaving] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [successMessage, setSuccessMessage] = useState<string | null>(null);
   const [amenities, setAmenities] = useState<Amenity[]>([]);
-  const [title, setTitle] = useState("");
-  const [description, setDescription] = useState("");
-  const [rentAmount, setRentAmount] = useState("");
-  const [depositAmount, setDepositAmount] = useState("");
-  const [agentFeeAmount, setAgentFeeAmount] = useState("");
-  const [city, setCity] = useState("");
-  const [area, setArea] = useState("");
-  const [bedrooms, setBedrooms] = useState("1");
-  const [bathrooms, setBathrooms] = useState("1");
-  const [houseType, setHouseType] = useState<HouseType>("APARTMENT");
-  const [availabilityStatus, setAvailabilityStatus] =
-    useState<AvailabilityStatus>("AVAILABLE_NOW");
-  const [furnished, setFurnished] = useState(false);
   const [selectedAmenityIds, setSelectedAmenityIds] = useState<string[]>([]);
   const [mediaItems, setMediaItems] = useState<ListingMediaDraft[]>([]);
   const isUploadingMedia = mediaItems.some((item) => item.isUploading);
 
+  const formik = useFormik<ListingFormValues>({
+    initialValues,
+    validationSchema: listingSchema,
+    enableReinitialize: false,
+    onSubmit: async (values) => {
+      setErrorMessage(null);
+      setSuccessMessage(null);
+
+      if (isUploadingMedia) {
+        setErrorMessage(
+          "Wait for media uploads to finish before saving the listing.",
+        );
+        return;
+      }
+
+      try {
+        const payload = {
+          title: values.title,
+          description: values.description,
+          rentAmount: Number(values.rentAmount),
+          depositAmount: values.depositAmount
+            ? Number(values.depositAmount)
+            : undefined,
+          agentFeeAmount: values.agentFeeAmount
+            ? Number(values.agentFeeAmount)
+            : undefined,
+          city: values.city,
+          area: values.area,
+          bedrooms: Number(values.bedrooms),
+          bathrooms: Number(values.bathrooms),
+          houseType: values.houseType,
+          furnished: values.furnished,
+          availabilityStatus: values.availabilityStatus,
+          amenityIds: selectedAmenityIds,
+          media: mediaItems
+            .filter((item) => item.mediaUrl.trim().length > 0)
+            .map((item) => ({
+              mediaType: item.mediaType,
+              mediaUrl: item.mediaUrl.trim(),
+              caption: item.caption.trim() || undefined,
+            })),
+        };
+
+        let listing: ListingSummary;
+        if (mode === "create") {
+          listing = await createListing(payload);
+        } else {
+          if (!listingId) {
+            throw new Error("Missing listing id for edit.");
+          }
+          listing = await updateListing(listingId, payload);
+        }
+
+        setSuccessMessage(
+          mode === "create" ? "Listing draft created." : "Listing updated.",
+        );
+        router.replace(`/my-listings/${listing.id}/edit`);
+      } catch (error) {
+        setErrorMessage(extractApiError(error));
+      }
+    },
+  });
+
+  // biome-ignore lint/correctness/useExhaustiveDependencies: intentional one-shot load
   useEffect(() => {
     async function loadData() {
       if (!session) {
@@ -115,26 +177,26 @@ export function ListingForm({ mode, listingId }: ListingFormProps) {
         setAmenities(amenityOptions);
 
         if (existingListing) {
-          setTitle(existingListing.title);
-          setDescription(existingListing.description);
-          setRentAmount(String(existingListing.rentAmount));
-          setDepositAmount(
-            existingListing.depositAmount
-              ? String(existingListing.depositAmount)
-              : "",
-          );
-          setAgentFeeAmount(
-            existingListing.agentFeeAmount
-              ? String(existingListing.agentFeeAmount)
-              : "",
-          );
-          setCity(existingListing.city);
-          setArea(existingListing.area);
-          setBedrooms(String(existingListing.bedrooms));
-          setBathrooms(String(existingListing.bathrooms));
-          setHouseType(existingListing.houseType);
-          setAvailabilityStatus(existingListing.availabilityStatus);
-          setFurnished(existingListing.furnished);
+          formik.resetForm({
+            values: {
+              title: existingListing.title,
+              description: existingListing.description,
+              rentAmount: String(existingListing.rentAmount),
+              depositAmount: existingListing.depositAmount
+                ? String(existingListing.depositAmount)
+                : "",
+              agentFeeAmount: existingListing.agentFeeAmount
+                ? String(existingListing.agentFeeAmount)
+                : "",
+              city: existingListing.city,
+              area: existingListing.area,
+              bedrooms: String(existingListing.bedrooms),
+              bathrooms: String(existingListing.bathrooms),
+              houseType: existingListing.houseType,
+              furnished: existingListing.furnished,
+              availabilityStatus: existingListing.availabilityStatus,
+            },
+          });
           setSelectedAmenityIds(
             existingListing.amenities.map((amenity) => amenity.id),
           );
@@ -151,11 +213,7 @@ export function ListingForm({ mode, listingId }: ListingFormProps) {
           );
         }
       } catch (error) {
-        const message =
-          error instanceof Error
-            ? error.message
-            : "Failed to load listing form.";
-        setErrorMessage(message);
+        setErrorMessage(extractApiError(error));
       } finally {
         setIsLoading(false);
       }
@@ -191,12 +249,7 @@ export function ListingForm({ mode, listingId }: ListingFormProps) {
   ) {
     setMediaItems((current) =>
       current.map((item, itemIndex) =>
-        itemIndex === index
-          ? {
-              ...item,
-              [field]: value,
-            }
-          : item,
+        itemIndex === index ? { ...item, [field]: value } : item,
       ),
     );
   }
@@ -265,81 +318,15 @@ export function ListingForm({ mode, listingId }: ListingFormProps) {
           ),
         );
       } catch (error) {
-        const message =
-          error instanceof Error ? error.message : "Failed to upload image.";
+        const message = extractApiError(error);
         setMediaItems((current) =>
           current.map((item) =>
             item.clientId === clientId
-              ? {
-                  ...item,
-                  isUploading: false,
-                  uploadError: message,
-                }
+              ? { ...item, isUploading: false, uploadError: message }
               : item,
           ),
         );
       }
-    }
-  }
-
-  async function handleSubmit(event: FormEvent<HTMLFormElement>) {
-    event.preventDefault();
-    setErrorMessage(null);
-    setSuccessMessage(null);
-    setIsSaving(true);
-
-    if (isUploadingMedia) {
-      setErrorMessage(
-        "Wait for media uploads to finish before saving the listing.",
-      );
-      setIsSaving(false);
-      return;
-    }
-
-    try {
-      const payload = {
-        title,
-        description,
-        rentAmount: Number(rentAmount),
-        depositAmount: depositAmount ? Number(depositAmount) : undefined,
-        agentFeeAmount: agentFeeAmount ? Number(agentFeeAmount) : undefined,
-        city,
-        area,
-        bedrooms: Number(bedrooms),
-        bathrooms: Number(bathrooms),
-        houseType,
-        furnished,
-        availabilityStatus,
-        amenityIds: selectedAmenityIds,
-        media: mediaItems
-          .filter((item) => item.mediaUrl.trim().length > 0)
-          .map((item) => ({
-            mediaType: item.mediaType,
-            mediaUrl: item.mediaUrl.trim(),
-            caption: item.caption.trim() || undefined,
-          })),
-      };
-
-      let listing: ListingSummary;
-      if (mode === "create") {
-        listing = await createListing(payload);
-      } else {
-        if (!listingId) {
-          throw new Error("Missing listing id for edit.");
-        }
-        listing = await updateListing(listingId, payload);
-      }
-
-      setSuccessMessage(
-        mode === "create" ? "Listing draft created." : "Listing updated.",
-      );
-      router.replace(`/my-listings/${listing.id}/edit`);
-    } catch (error) {
-      const message =
-        error instanceof Error ? error.message : "Failed to save listing.";
-      setErrorMessage(message);
-    } finally {
-      setIsSaving(false);
     }
   }
 
@@ -350,13 +337,11 @@ export function ListingForm({ mode, listingId }: ListingFormProps) {
 
     setErrorMessage(null);
     setSuccessMessage(null);
-    setIsSaving(true);
 
     if (isUploadingMedia) {
       setErrorMessage(
         "Wait for media uploads to finish before publishing the listing.",
       );
-      setIsSaving(false);
       return;
     }
 
@@ -364,12 +349,16 @@ export function ListingForm({ mode, listingId }: ListingFormProps) {
       await publishListing(listingId);
       setSuccessMessage("Listing published successfully.");
     } catch (error) {
-      const message =
-        error instanceof Error ? error.message : "Failed to publish listing.";
-      setErrorMessage(message);
-    } finally {
-      setIsSaving(false);
+      setErrorMessage(extractApiError(error));
     }
+  }
+
+  const disabled = isLoading || formik.isSubmitting;
+
+  function fieldError(name: keyof ListingFormValues): string | undefined {
+    const touched = formik.touched[name];
+    const error = formik.errors[name];
+    return touched && typeof error === "string" ? error : undefined;
   }
 
   return (
@@ -400,7 +389,7 @@ export function ListingForm({ mode, listingId }: ListingFormProps) {
       </Paper>
 
       <Paper sx={{ p: { xs: 3, md: 4 } }}>
-        <Stack component="form" spacing={2.5} onSubmit={handleSubmit}>
+        <Stack component="form" spacing={2.5} onSubmit={formik.handleSubmit}>
           {errorMessage ? <Alert severity="error">{errorMessage}</Alert> : null}
           {successMessage ? (
             <Alert severity="success">{successMessage}</Alert>
@@ -408,35 +397,39 @@ export function ListingForm({ mode, listingId }: ListingFormProps) {
 
           <TextField
             label="Title"
-            value={title}
-            onChange={(e) => setTitle(e.target.value)}
             required
-            disabled={isLoading || isSaving}
+            disabled={disabled}
+            {...formik.getFieldProps("title")}
+            error={Boolean(fieldError("title"))}
+            helperText={fieldError("title")}
           />
           <TextField
             label="Description"
-            value={description}
-            onChange={(e) => setDescription(e.target.value)}
             required
             multiline
             minRows={4}
-            disabled={isLoading || isSaving}
+            disabled={disabled}
+            {...formik.getFieldProps("description")}
+            error={Boolean(fieldError("description"))}
+            helperText={fieldError("description")}
           />
 
           <AiDescriptionAssist
-            title={title}
-            description={description}
-            city={city}
-            area={area}
-            houseType={houseType}
-            bedrooms={Number(bedrooms)}
-            bathrooms={Number(bathrooms)}
-            availabilityStatus={availabilityStatus}
-            furnished={furnished}
-            rentAmount={Number(rentAmount || 0)}
+            title={formik.values.title}
+            description={formik.values.description}
+            city={formik.values.city}
+            area={formik.values.area}
+            houseType={formik.values.houseType as HouseType}
+            bedrooms={Number(formik.values.bedrooms) || 0}
+            bathrooms={Number(formik.values.bathrooms) || 0}
+            availabilityStatus={
+              formik.values.availabilityStatus as AvailabilityStatus
+            }
+            furnished={formik.values.furnished}
+            rentAmount={Number(formik.values.rentAmount || 0)}
             selectedAmenityIds={selectedAmenityIds}
             amenities={amenities}
-            onApply={setDescription}
+            onApply={(value) => formik.setFieldValue("description", value)}
           />
 
           <Grid container spacing={2}>
@@ -444,31 +437,34 @@ export function ListingForm({ mode, listingId }: ListingFormProps) {
               <TextField
                 label="Rent amount"
                 type="number"
-                value={rentAmount}
-                onChange={(e) => setRentAmount(e.target.value)}
                 required
                 fullWidth
-                disabled={isLoading || isSaving}
+                disabled={disabled}
+                {...formik.getFieldProps("rentAmount")}
+                error={Boolean(fieldError("rentAmount"))}
+                helperText={fieldError("rentAmount")}
               />
             </Grid>
             <Grid size={{ xs: 12, md: 4 }}>
               <TextField
                 label="Deposit amount"
                 type="number"
-                value={depositAmount}
-                onChange={(e) => setDepositAmount(e.target.value)}
                 fullWidth
-                disabled={isLoading || isSaving}
+                disabled={disabled}
+                {...formik.getFieldProps("depositAmount")}
+                error={Boolean(fieldError("depositAmount"))}
+                helperText={fieldError("depositAmount")}
               />
             </Grid>
             <Grid size={{ xs: 12, md: 4 }}>
               <TextField
                 label="Agent fee amount"
                 type="number"
-                value={agentFeeAmount}
-                onChange={(e) => setAgentFeeAmount(e.target.value)}
                 fullWidth
-                disabled={isLoading || isSaving}
+                disabled={disabled}
+                {...formik.getFieldProps("agentFeeAmount")}
+                error={Boolean(fieldError("agentFeeAmount"))}
+                helperText={fieldError("agentFeeAmount")}
               />
             </Grid>
           </Grid>
@@ -477,21 +473,23 @@ export function ListingForm({ mode, listingId }: ListingFormProps) {
             <Grid size={{ xs: 12, md: 6 }}>
               <TextField
                 label="City"
-                value={city}
-                onChange={(e) => setCity(e.target.value)}
                 required
                 fullWidth
-                disabled={isLoading || isSaving}
+                disabled={disabled}
+                {...formik.getFieldProps("city")}
+                error={Boolean(fieldError("city"))}
+                helperText={fieldError("city")}
               />
             </Grid>
             <Grid size={{ xs: 12, md: 6 }}>
               <TextField
                 label="Area / neighborhood"
-                value={area}
-                onChange={(e) => setArea(e.target.value)}
                 required
                 fullWidth
-                disabled={isLoading || isSaving}
+                disabled={disabled}
+                {...formik.getFieldProps("area")}
+                error={Boolean(fieldError("area"))}
+                helperText={fieldError("area")}
               />
             </Grid>
           </Grid>
@@ -501,22 +499,24 @@ export function ListingForm({ mode, listingId }: ListingFormProps) {
               <TextField
                 label="Bedrooms"
                 type="number"
-                value={bedrooms}
-                onChange={(e) => setBedrooms(e.target.value)}
                 required
                 fullWidth
-                disabled={isLoading || isSaving}
+                disabled={disabled}
+                {...formik.getFieldProps("bedrooms")}
+                error={Boolean(fieldError("bedrooms"))}
+                helperText={fieldError("bedrooms")}
               />
             </Grid>
             <Grid size={{ xs: 12, md: 3 }}>
               <TextField
                 label="Bathrooms"
                 type="number"
-                value={bathrooms}
-                onChange={(e) => setBathrooms(e.target.value)}
                 required
                 fullWidth
-                disabled={isLoading || isSaving}
+                disabled={disabled}
+                {...formik.getFieldProps("bathrooms")}
+                error={Boolean(fieldError("bathrooms"))}
+                helperText={fieldError("bathrooms")}
               />
             </Grid>
             <Grid size={{ xs: 12, md: 3 }}>
@@ -524,10 +524,9 @@ export function ListingForm({ mode, listingId }: ListingFormProps) {
                 select
                 SelectProps={{ native: true }}
                 label="House type"
-                value={houseType}
-                onChange={(e) => setHouseType(e.target.value as HouseType)}
                 fullWidth
-                disabled={isLoading || isSaving}
+                disabled={disabled}
+                {...formik.getFieldProps("houseType")}
               >
                 {houseTypes.map((option) => (
                   <option key={option} value={option}>
@@ -541,12 +540,9 @@ export function ListingForm({ mode, listingId }: ListingFormProps) {
                 select
                 SelectProps={{ native: true }}
                 label="Availability"
-                value={availabilityStatus}
-                onChange={(e) =>
-                  setAvailabilityStatus(e.target.value as AvailabilityStatus)
-                }
                 fullWidth
-                disabled={isLoading || isSaving}
+                disabled={disabled}
+                {...formik.getFieldProps("availabilityStatus")}
               >
                 {availabilityStatuses.map((option) => (
                   <option key={option} value={option}>
@@ -560,8 +556,10 @@ export function ListingForm({ mode, listingId }: ListingFormProps) {
           <FormControlLabel
             control={
               <Checkbox
-                checked={furnished}
-                onChange={(e) => setFurnished(e.target.checked)}
+                checked={formik.values.furnished}
+                onChange={(e) =>
+                  formik.setFieldValue("furnished", e.target.checked)
+                }
               />
             }
             label="Furnished"
@@ -577,7 +575,7 @@ export function ListingForm({ mode, listingId }: ListingFormProps) {
                       <Checkbox
                         checked={selectedAmenityIds.includes(amenity.id)}
                         onChange={() => toggleAmenity(amenity.id)}
-                        disabled={isLoading || isSaving}
+                        disabled={disabled}
                       />
                     }
                     label={amenity.name}
@@ -599,7 +597,7 @@ export function ListingForm({ mode, listingId }: ListingFormProps) {
                   type="button"
                   variant="contained"
                   onClick={() => fileInputRef.current?.click()}
-                  disabled={isLoading || isSaving || isUploadingMedia}
+                  disabled={disabled || isUploadingMedia}
                 >
                   Upload images
                 </Button>
@@ -607,7 +605,7 @@ export function ListingForm({ mode, listingId }: ListingFormProps) {
                   type="button"
                   variant="outlined"
                   onClick={addManualMediaItem}
-                  disabled={isLoading || isSaving || isUploadingMedia}
+                  disabled={disabled || isUploadingMedia}
                 >
                   Add external URL
                 </Button>
@@ -670,7 +668,7 @@ export function ListingForm({ mode, listingId }: ListingFormProps) {
                       variant="text"
                       color="error"
                       onClick={() => removeMediaItem(index)}
-                      disabled={isLoading || isSaving || item.isUploading}
+                      disabled={disabled || item.isUploading}
                     >
                       Remove
                     </Button>
@@ -688,7 +686,11 @@ export function ListingForm({ mode, listingId }: ListingFormProps) {
                         <Box
                           component="img"
                           src={item.mediaUrl}
-                          alt={item.caption || title || "Listing media"}
+                          alt={
+                            item.caption ||
+                            formik.values.title ||
+                            "Listing media"
+                          }
                           sx={{
                             width: "100%",
                             maxHeight: 260,
@@ -736,7 +738,7 @@ export function ListingForm({ mode, listingId }: ListingFormProps) {
                               )
                             }
                             fullWidth
-                            disabled={isLoading || isSaving || item.isUploading}
+                            disabled={disabled || item.isUploading}
                           >
                             {mediaTypes.map((option) => (
                               <option key={option} value={option}>
@@ -757,7 +759,7 @@ export function ListingForm({ mode, listingId }: ListingFormProps) {
                               )
                             }
                             fullWidth
-                            disabled={isLoading || isSaving || item.isUploading}
+                            disabled={disabled || item.isUploading}
                             helperText="Use this only if you already host the media elsewhere."
                           />
                         </Grid>
@@ -785,7 +787,7 @@ export function ListingForm({ mode, listingId }: ListingFormProps) {
                       updateMediaItem(index, "caption", event.target.value)
                     }
                     fullWidth
-                    disabled={isLoading || isSaving || item.isUploading}
+                    disabled={disabled || item.isUploading}
                   />
                   {item.uploadError ? (
                     <Alert severity="error">{item.uploadError}</Alert>
@@ -799,9 +801,9 @@ export function ListingForm({ mode, listingId }: ListingFormProps) {
             <Button
               type="submit"
               variant="contained"
-              disabled={isLoading || isSaving || isUploadingMedia}
+              disabled={disabled || isUploadingMedia}
             >
-              {isSaving
+              {formik.isSubmitting
                 ? "Saving..."
                 : mode === "create"
                   ? "Create draft"
@@ -812,7 +814,7 @@ export function ListingForm({ mode, listingId }: ListingFormProps) {
                 type="button"
                 variant="outlined"
                 onClick={handlePublish}
-                disabled={isLoading || isSaving || isUploadingMedia}
+                disabled={disabled || isUploadingMedia}
               >
                 Publish
               </Button>

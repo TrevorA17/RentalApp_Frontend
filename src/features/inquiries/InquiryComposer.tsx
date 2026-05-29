@@ -6,10 +6,13 @@ import Paper from "@mui/material/Paper";
 import Stack from "@mui/material/Stack";
 import TextField from "@mui/material/TextField";
 import Typography from "@mui/material/Typography";
-import { type FormEvent, useState } from "react";
+import { useFormik } from "formik";
+import { useState } from "react";
 import { useAuth } from "@/features/auth/AuthProvider";
+import { extractApiError } from "@/lib/api/client";
 import { createInquiry } from "@/lib/api/inquiries";
 import type { ListingDetail } from "@/types/domain";
+import { type InquiryFormValues, inquirySchema } from "@/validations/inquiry";
 
 type InquiryComposerProps = {
   listing: ListingDetail;
@@ -17,12 +20,8 @@ type InquiryComposerProps = {
 
 export function InquiryComposer({ listing }: InquiryComposerProps) {
   const { session } = useAuth();
-  const [message, setMessage] = useState(
-    `Hi ${listing.poster.fullName}, I am interested in ${listing.title}. Is it still available?`,
-  );
   const [successMessage, setSuccessMessage] = useState<string | null>(null);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
-  const [isSubmitting, setIsSubmitting] = useState(false);
   const [hasSubmitted, setHasSubmitted] = useState(false);
 
   const canInquire =
@@ -30,39 +29,31 @@ export function InquiryComposer({ listing }: InquiryComposerProps) {
     session.user.id !== listing.poster.userId &&
     session.user.role !== "ADMIN";
 
-  async function handleSubmit(event: FormEvent<HTMLFormElement>) {
-    event.preventDefault();
-
-    if (!session) {
-      setErrorMessage("Sign in to contact the listing owner.");
-      return;
-    }
-
-    if (!message.trim()) {
-      setErrorMessage("Enter a short message before sending the inquiry.");
-      return;
-    }
-
-    setIsSubmitting(true);
-    setErrorMessage(null);
-    setSuccessMessage(null);
-
-    try {
-      await createInquiry(listing.id, { message: message.trim() });
-      setSuccessMessage("Inquiry sent successfully.");
-      setHasSubmitted(true);
-    } catch (error) {
-      const nextMessage =
-        error instanceof Error ? error.message : "Failed to send inquiry.";
-      setErrorMessage(nextMessage);
-    } finally {
-      setIsSubmitting(false);
-    }
-  }
+  const formik = useFormik<InquiryFormValues>({
+    initialValues: {
+      message: `Hi ${listing.poster.fullName}, I am interested in ${listing.title}. Is it still available?`,
+    },
+    validationSchema: inquirySchema,
+    onSubmit: async (values) => {
+      if (!session) {
+        setErrorMessage("Sign in to contact the listing owner.");
+        return;
+      }
+      setErrorMessage(null);
+      setSuccessMessage(null);
+      try {
+        await createInquiry(listing.id, { message: values.message.trim() });
+        setSuccessMessage("Inquiry sent successfully.");
+        setHasSubmitted(true);
+      } catch (error) {
+        setErrorMessage(extractApiError(error));
+      }
+    },
+  });
 
   return (
     <Paper sx={{ p: { xs: 3, md: 4 } }}>
-      <Stack spacing={2.5} component="form" onSubmit={handleSubmit}>
+      <Stack spacing={2.5} component="form" onSubmit={formik.handleSubmit}>
         <Stack spacing={1}>
           <Typography variant="h5">Contact about this listing</Typography>
           <Typography color="text.secondary">
@@ -88,18 +79,21 @@ export function InquiryComposer({ listing }: InquiryComposerProps) {
 
         <TextField
           label="Message"
-          value={message}
-          onChange={(event) => setMessage(event.target.value)}
           multiline
           minRows={4}
           fullWidth
+          {...formik.getFieldProps("message")}
+          error={Boolean(formik.touched.message && formik.errors.message)}
+          helperText={
+            (formik.touched.message && formik.errors.message) || undefined
+          }
         />
 
         <Stack direction="row" justifyContent="flex-start">
           <Button
             type="submit"
             variant="contained"
-            disabled={!canInquire || isSubmitting || hasSubmitted}
+            disabled={!canInquire || formik.isSubmitting || hasSubmitted}
           >
             Send inquiry
           </Button>
