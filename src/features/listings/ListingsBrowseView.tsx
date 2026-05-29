@@ -4,15 +4,25 @@ import Alert from "@mui/material/Alert";
 import Box from "@mui/material/Box";
 import Button from "@mui/material/Button";
 import Chip from "@mui/material/Chip";
+import Collapse from "@mui/material/Collapse";
 import Grid from "@mui/material/Grid";
+import MenuItem from "@mui/material/MenuItem";
 import Pagination from "@mui/material/Pagination";
 import Paper from "@mui/material/Paper";
 import Stack from "@mui/material/Stack";
+import { useTheme } from "@mui/material/styles";
 import TextField from "@mui/material/TextField";
 import Typography from "@mui/material/Typography";
-import Link from "next/link";
+import useMediaQuery from "@mui/material/useMediaQuery";
+import {
+  Search as SearchIcon,
+  SlidersHorizontal,
+  Sparkles,
+} from "lucide-react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { type FormEvent, useEffect, useMemo, useState } from "react";
+import { EmptyState } from "@/components/ui/EmptyState";
+import { ListingCard } from "@/components/ui/ListingCard";
 import { useAuth } from "@/features/auth/AuthProvider";
 import { useAmenities } from "@/hooks/useAmenities";
 import { useSavedListingIds } from "@/hooks/useSavedListings";
@@ -45,10 +55,10 @@ const houseTypes: HouseType[] = [
 ];
 
 const sortOptions = [
-  { value: "PUBLISHED_AT_DESC", label: "Newest published" },
+  { value: "PUBLISHED_AT_DESC", label: "Newest" },
   { value: "RENT_AMOUNT_ASC", label: "Price: low to high" },
   { value: "RENT_AMOUNT_DESC", label: "Price: high to low" },
-  { value: "CREATED_AT_DESC", label: "Newest added" },
+  { value: "CREATED_AT_DESC", label: "Recently added" },
 ] as const;
 
 type ListingSort = (typeof sortOptions)[number]["value"];
@@ -154,7 +164,6 @@ export function ListingsBrowseView() {
       if (saved) {
         return current.includes(listingId) ? current : [...current, listingId];
       }
-
       return current.filter((id) => id !== listingId);
     });
   }
@@ -174,7 +183,7 @@ export function ListingsBrowseView() {
     router.replace(`/listings${query ? `?${query}` : ""}`);
   }
 
-  async function handleSearch(event: FormEvent<HTMLFormElement>) {
+  function handleSearch(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     setErrorMessage(null);
     setIsSearching(true);
@@ -193,10 +202,7 @@ export function ListingsBrowseView() {
 
   async function handleInterpretSearch(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
-
-    if (!aiSearchInput.trim()) {
-      return;
-    }
+    if (!aiSearchInput.trim()) return;
 
     setErrorMessage(null);
     setAiInterpretation(null);
@@ -221,12 +227,6 @@ export function ListingsBrowseView() {
         page: "0",
         size: String(results.size || 12),
       });
-    } catch (error) {
-      const message =
-        error instanceof Error
-          ? error.message
-          : "Failed to interpret search request.";
-      setErrorMessage(message);
     } finally {
       setIsInterpreting(false);
     }
@@ -251,17 +251,12 @@ export function ListingsBrowseView() {
   function handleSortChange(nextSort: ListingSort) {
     setSort(nextSort);
     setIsSearching(true);
-    updateQuery({
-      sort: nextSort,
-      page: "0",
-    });
+    updateQuery({ sort: nextSort, page: "0" });
   }
 
   function handlePageChange(nextPage: number) {
     setIsSearching(true);
-    updateQuery({
-      page: String(nextPage - 1),
-    });
+    updateQuery({ page: String(nextPage - 1) });
   }
 
   const activeFilterLabels = useMemo(
@@ -280,305 +275,275 @@ export function ListingsBrowseView() {
     [amenities, area, bedrooms, city, houseType, maxPrice, selectedAmenity],
   );
 
+  const hasActiveFilters = activeFilterLabels.length > 0;
+  const showLoading = isLoading || isSearching;
+  const theme = useTheme();
+  const isMobile = useMediaQuery(theme.breakpoints.down("md"));
+  const [filtersOpen, setFiltersOpen] = useState(false);
+  const filtersVisible = !isMobile || filtersOpen;
+
   return (
-    <Stack spacing={3}>
-      <Stack spacing={1.5}>
-        <Typography variant="overline" color="secondary.main" fontWeight={800}>
-          Rental search
-        </Typography>
-        <Typography variant="h2">Browse listings</Typography>
-        <Typography color="text.secondary">
-          Explore live rental listings with practical filters, sorting, and
-          paginated results built for a real marketplace flow.
-        </Typography>
+    <Box>
+      {/* AI search row */}
+      <Paper
+        component="form"
+        onSubmit={handleInterpretSearch}
+        sx={{
+          p: 1,
+          mb: 2,
+          display: "flex",
+          alignItems: "center",
+          gap: 1,
+          borderColor: "primary.light",
+        }}
+      >
+        <Box sx={{ pl: 1.5, color: "primary.main", display: "flex" }}>
+          <Sparkles size={18} />
+        </Box>
+        <TextField
+          placeholder='Try "2-bed in Kilimani under 50k with parking"'
+          value={aiSearchInput}
+          onChange={(event) => setAiSearchInput(event.target.value)}
+          fullWidth
+          variant="standard"
+          slotProps={{ input: { disableUnderline: true } }}
+          sx={{
+            "& .MuiInputBase-root": { backgroundColor: "transparent" },
+          }}
+        />
+        <Button
+          type="submit"
+          variant="contained"
+          size="small"
+          disabled={isInterpreting || !aiSearchInput.trim()}
+          sx={{ flexShrink: 0 }}
+        >
+          {isInterpreting ? "Interpreting…" : "Ask AI"}
+        </Button>
+      </Paper>
+
+      {aiInterpretation ? (
+        <Alert
+          severity={aiInterpretation.interpreted ? "success" : "info"}
+          sx={{ mb: 2 }}
+          onClose={() => setAiInterpretation(null)}
+        >
+          {aiInterpretation.interpreted
+            ? `Matched ${aiInterpretation.matchedSignals.join(", ")} using ${aiInterpretation.provider}.`
+            : "No strong filters extracted — use the manual controls below."}
+        </Alert>
+      ) : null}
+
+      {/* Filters toggle (mobile only) */}
+      <Stack
+        direction="row"
+        justifyContent="space-between"
+        alignItems="center"
+        sx={{ display: { md: "none" }, mb: 1.5 }}
+      >
+        <Button
+          variant="outlined"
+          size="small"
+          startIcon={<SlidersHorizontal size={16} />}
+          onClick={() => setFiltersOpen((open) => !open)}
+        >
+          Filters{hasActiveFilters ? ` (${activeFilterLabels.length})` : ""}
+        </Button>
       </Stack>
 
-      <Paper sx={{ p: 3 }}>
-        <Stack
+      {/* Filter bar */}
+      <Collapse in={filtersVisible}>
+        <Paper
           component="form"
-          spacing={1.5}
-          onSubmit={handleInterpretSearch}
-          sx={{ mb: 3 }}
+          onSubmit={handleSearch}
+          sx={{
+            p: 2,
+            mb: 2,
+            position: "sticky",
+            top: { md: 64 },
+            zIndex: 5,
+          }}
         >
-          <Typography fontWeight={700}>Describe what you want</Typography>
-          <Typography color="text.secondary" sx={{ display: "none" }}>
-            Try a natural-language request like “2 bedroom in Kilimani under 50k
-            with parking”. We will translate it into the structured filters
-            below.
-          </Typography>
-          <Typography color="text.secondary">
-            Try a natural-language request like &quot;2 bedroom in Kilimani
-            under 50k with parking&quot;. We will translate it into the
-            structured filters below.
-          </Typography>
-          <Stack direction={{ xs: "column", md: "row" }} spacing={1.5}>
-            <TextField
-              label="Natural-language housing request"
-              value={aiSearchInput}
-              onChange={(event) => setAiSearchInput(event.target.value)}
-              fullWidth
-            />
-            <Button type="submit" variant="outlined" disabled={isInterpreting}>
-              {isInterpreting ? "Interpreting..." : "Use AI to fill filters"}
-            </Button>
-          </Stack>
-          {aiInterpretation ? (
-            <Alert severity={aiInterpretation.interpreted ? "success" : "info"}>
-              {aiInterpretation.interpreted
-                ? `Matched ${aiInterpretation.matchedSignals.join(", ")} using ${aiInterpretation.provider}.`
-                : "No strong structured filters were extracted. Keep using the manual search controls."}
-              {aiInterpretation.notes.length > 0
-                ? ` ${aiInterpretation.notes.join(" ")}`
-                : ""}
-            </Alert>
-          ) : null}
-        </Stack>
-        <Stack component="form" spacing={2} onSubmit={handleSearch}>
-          <Grid container spacing={2}>
-            <Grid size={{ xs: 12, md: 3 }}>
+          <Grid container spacing={1.5} alignItems="center">
+            <Grid size={{ xs: 12, sm: 6, md: 2.5 }}>
               <TextField
-                label="City"
+                placeholder="City"
                 value={city}
                 onChange={(e) => setCity(e.target.value)}
                 fullWidth
+                size="small"
               />
             </Grid>
-            <Grid size={{ xs: 12, md: 3 }}>
+            <Grid size={{ xs: 12, sm: 6, md: 2 }}>
               <TextField
-                label="Area"
+                placeholder="Area"
                 value={area}
                 onChange={(e) => setArea(e.target.value)}
                 fullWidth
+                size="small"
               />
             </Grid>
-            <Grid size={{ xs: 12, md: 2 }}>
+            <Grid size={{ xs: 6, sm: 3, md: 1.5 }}>
               <TextField
-                label="Max price"
+                placeholder="Max KES"
                 type="number"
                 value={maxPrice}
                 onChange={(e) => setMaxPrice(e.target.value)}
                 fullWidth
+                size="small"
               />
             </Grid>
-            <Grid size={{ xs: 12, md: 2 }}>
+            <Grid size={{ xs: 6, sm: 3, md: 1 }}>
               <TextField
-                label="Bedrooms"
+                placeholder="Beds"
                 type="number"
                 value={bedrooms}
                 onChange={(e) => setBedrooms(e.target.value)}
                 fullWidth
+                size="small"
               />
             </Grid>
-            <Grid size={{ xs: 12, md: 2 }}>
+            <Grid size={{ xs: 12, sm: 6, md: 2 }}>
               <TextField
                 select
-                SelectProps={{ native: true }}
-                label="House type"
                 value={houseType}
                 onChange={(e) => setHouseType(e.target.value)}
                 fullWidth
+                size="small"
+                SelectProps={{ displayEmpty: true }}
               >
-                <option value="">Any</option>
+                <MenuItem value="">
+                  <em>Any type</em>
+                </MenuItem>
                 {houseTypes.map((option) => (
-                  <option key={option} value={option}>
-                    {option}
-                  </option>
+                  <MenuItem key={option} value={option}>
+                    {formatEnumLabel(option)}
+                  </MenuItem>
                 ))}
               </TextField>
             </Grid>
-          </Grid>
-
-          <Grid container spacing={2} alignItems="center">
-            <Grid size={{ xs: 12, md: 4 }}>
-              <TextField
-                select
-                SelectProps={{ native: true }}
-                label="Amenity"
-                value={selectedAmenity}
-                onChange={(e) => setSelectedAmenity(e.target.value)}
-                fullWidth
-              >
-                <option value="">Any</option>
-                {amenities.map((amenity) => (
-                  <option key={amenity.id} value={amenity.id}>
-                    {amenity.name}
-                  </option>
-                ))}
-              </TextField>
-            </Grid>
-            <Grid size={{ xs: 12, md: 4 }}>
-              <TextField
-                select
-                SelectProps={{ native: true }}
-                label="Sort"
-                value={sort}
-                onChange={(e) =>
-                  handleSortChange(e.target.value as ListingSort)
-                }
-                fullWidth
-              >
-                {sortOptions.map((option) => (
-                  <option key={option.value} value={option.value}>
-                    {option.label}
-                  </option>
-                ))}
-              </TextField>
-            </Grid>
-            <Grid size={{ xs: 12, md: 4 }}>
-              <Stack direction="row" spacing={1} flexWrap="wrap" useFlexGap>
-                {activeFilterLabels.length > 0 ? (
-                  activeFilterLabels.map((label) => (
-                    <Chip key={label} label={label} color="secondary" />
-                  ))
-                ) : (
-                  <Chip label="No filters applied" variant="outlined" />
-                )}
-              </Stack>
-            </Grid>
-          </Grid>
-
-          <Stack direction={{ xs: "column", sm: "row" }} spacing={1.5}>
-            <Button type="submit" variant="contained" disabled={isSearching}>
-              Search listings
-            </Button>
-            <Button
-              type="button"
-              variant="outlined"
-              onClick={handleReset}
-              disabled={isSearching}
-            >
-              Reset filters
-            </Button>
-          </Stack>
-        </Stack>
-      </Paper>
-
-      {errorMessage ? <Alert severity="error">{errorMessage}</Alert> : null}
-      {isLoading || isSearching ? (
-        <Alert severity="info">Loading listings...</Alert>
-      ) : null}
-
-      {!isLoading && !isSearching ? (
-        <Paper sx={{ p: 2.5 }}>
-          <Stack
-            direction={{ xs: "column", md: "row" }}
-            spacing={1.5}
-            justifyContent="space-between"
-            alignItems={{ xs: "flex-start", md: "center" }}
-          >
-            <Typography color="text.secondary">
-              {results.totalElements} listing
-              {results.totalElements === 1 ? "" : "s"} found
-            </Typography>
-            <Typography color="text.secondary">
-              Page {results.totalPages === 0 ? 0 : results.page + 1} of{" "}
-              {results.totalPages}
-            </Typography>
-          </Stack>
-        </Paper>
-      ) : null}
-
-      {!isLoading && !isSearching && results.items.length === 0 ? (
-        <Paper sx={{ p: 4 }}>
-          <Stack spacing={1}>
-            <Typography variant="h5">
-              No listings match these filters
-            </Typography>
-            <Typography color="text.secondary">
-              Try broadening the location, price, or property details and search
-              again.
-            </Typography>
-          </Stack>
-        </Paper>
-      ) : null}
-
-      <Grid container spacing={3}>
-        {results.items.map((listing) => (
-          <Grid key={listing.id} size={{ xs: 12, md: 6 }}>
-            <Paper
-              sx={{
-                p: 3,
-                backgroundColor: "background.paper",
-                height: "100%",
-                overflow: "hidden",
-              }}
-            >
-              <Stack spacing={2}>
-                {listing.thumbnailUrl ? (
-                  <Box
-                    component="img"
-                    src={listing.thumbnailUrl}
-                    alt={listing.title}
-                    sx={{
-                      width: "100%",
-                      height: 220,
-                      objectFit: "cover",
-                      borderRadius: 3,
-                    }}
-                  />
-                ) : null}
-                <Stack
-                  direction={{ xs: "column", sm: "row" }}
-                  justifyContent="space-between"
-                  spacing={2}
+            <Grid size={{ xs: 12, sm: 6, md: 3 }}>
+              <Stack direction="row" spacing={1}>
+                <Button
+                  type="submit"
+                  variant="contained"
+                  fullWidth
+                  startIcon={<SearchIcon size={16} />}
+                  disabled={isSearching}
                 >
-                  <Link href={`/listings/${listing.id}`}>
-                    <Typography variant="h5">{listing.title}</Typography>
-                  </Link>
-                  <SaveListingButton
-                    key={`${listing.id}-${savedListingIds.includes(listing.id) ? "saved" : "unsaved"}`}
-                    listingId={listing.id}
-                    variant={
-                      savedListingIds.includes(listing.id)
-                        ? "contained"
-                        : "outlined"
-                    }
-                    onSavedChange={(saved) =>
-                      handleSavedChange(listing.id, saved)
-                    }
-                  />
-                </Stack>
-                <Stack spacing={1.5}>
-                  <Typography variant="h6" color="primary.main">
-                    KES {listing.rentAmount}
-                  </Typography>
-                  <Typography color="text.secondary">
-                    {listing.bedrooms} bed - {listing.bathrooms} bath -{" "}
-                    {formatEnumLabel(listing.houseType)}
-                  </Typography>
-                  <Typography color="text.secondary">
-                    {listing.area}, {listing.city}
-                  </Typography>
-                  <Typography color="text.secondary">
-                    Amenities:{" "}
-                    {listing.amenities.length > 0
-                      ? listing.amenities
-                          .map((amenity) => amenity.name)
-                          .join(", ")
-                      : "None listed"}
-                  </Typography>
-                  <Typography color="text.secondary">
-                    {formatEnumLabel(listing.availabilityStatus)}
-                    {listing.furnished ? " - Furnished" : " - Unfurnished"}
-                  </Typography>
-                </Stack>
+                  Search
+                </Button>
+                {hasActiveFilters ? (
+                  <Button
+                    type="button"
+                    variant="outlined"
+                    onClick={handleReset}
+                    disabled={isSearching}
+                  >
+                    Clear
+                  </Button>
+                ) : null}
               </Stack>
-            </Paper>
+            </Grid>
+          </Grid>
+        </Paper>
+      </Collapse>
+
+      {/* Results header */}
+      <Stack
+        direction={{ xs: "column", sm: "row" }}
+        spacing={1.5}
+        alignItems={{ xs: "flex-start", sm: "center" }}
+        justifyContent="space-between"
+        sx={{ mb: 2 }}
+      >
+        <Stack
+          direction="row"
+          spacing={1}
+          alignItems="center"
+          flexWrap="wrap"
+          useFlexGap
+        >
+          <Typography variant="h6" sx={{ mr: 1 }}>
+            {results.totalElements} rental
+            {results.totalElements === 1 ? "" : "s"}
+          </Typography>
+          {activeFilterLabels.map((label) => (
+            <Chip key={label} label={label} size="small" />
+          ))}
+        </Stack>
+        <TextField
+          select
+          value={sort}
+          onChange={(e) => handleSortChange(e.target.value as ListingSort)}
+          size="small"
+          sx={{ minWidth: 200 }}
+        >
+          {sortOptions.map((option) => (
+            <MenuItem key={option.value} value={option.value}>
+              Sort: {option.label}
+            </MenuItem>
+          ))}
+        </TextField>
+      </Stack>
+
+      {errorMessage ? (
+        <Alert severity="error" sx={{ mb: 2 }}>
+          {errorMessage}
+        </Alert>
+      ) : null}
+
+      {!showLoading && results.items.length === 0 ? (
+        <EmptyState
+          icon={SearchIcon}
+          title="No listings match these filters"
+          description="Try broadening the location, price, or property details."
+          action={
+            hasActiveFilters ? (
+              <Button onClick={handleReset} variant="outlined">
+                Clear filters
+              </Button>
+            ) : undefined
+          }
+        />
+      ) : null}
+
+      {/* Card grid */}
+      <Grid container spacing={2.5}>
+        {results.items.map((listing) => (
+          <Grid key={listing.id} size={{ xs: 12, sm: 6, md: 4 }}>
+            <ListingCard
+              listing={listing}
+              renderActions={
+                session
+                  ? () => (
+                      <SaveListingButton
+                        key={`${listing.id}-${savedListingIds.includes(listing.id) ? "saved" : "unsaved"}`}
+                        listingId={listing.id}
+                        iconOnly
+                        onSavedChange={(saved) =>
+                          handleSavedChange(listing.id, saved)
+                        }
+                      />
+                    )
+                  : undefined
+              }
+            />
           </Grid>
         ))}
       </Grid>
 
-      {!isLoading && !isSearching && results.totalPages > 1 ? (
-        <Stack alignItems="center">
+      {!showLoading && results.totalPages > 1 ? (
+        <Stack alignItems="center" sx={{ mt: 4 }}>
           <Pagination
             count={results.totalPages}
             page={results.page + 1}
             onChange={(_, page) => handlePageChange(page)}
-            color="secondary"
             shape="rounded"
+            color="primary"
           />
         </Stack>
       ) : null}
-    </Stack>
+    </Box>
   );
 }

@@ -4,16 +4,11 @@ import Alert from "@mui/material/Alert";
 import Box from "@mui/material/Box";
 import Button from "@mui/material/Button";
 import MenuItem from "@mui/material/MenuItem";
-import Paper from "@mui/material/Paper";
-import Stack from "@mui/material/Stack";
 import TextField from "@mui/material/TextField";
-import Typography from "@mui/material/Typography";
-import {
-  DataGrid,
-  type GridColDef,
-  type GridRenderCellParams,
-} from "@mui/x-data-grid";
+import type { GridColDef, GridRenderCellParams } from "@mui/x-data-grid";
 import { useEffect, useMemo, useState } from "react";
+import { DataTable } from "@/components/ui/DataTable";
+import { PageHeader } from "@/components/ui/PageHeader";
 import { useAuth } from "@/features/auth/AuthProvider";
 import { getAdminReports, updateAdminReportStatus } from "@/lib/api/admin";
 import { extractApiError } from "@/lib/api/client";
@@ -138,35 +133,33 @@ export function AdminReportsView() {
   );
 
   return (
-    <Stack spacing={3}>
-      <Stack spacing={1}>
-        <Typography variant="overline" color="secondary.main" fontWeight={800}>
-          Trust reports
-        </Typography>
-        <Typography variant="h2">Reports</Typography>
-      </Stack>
+    <Box>
+      <PageHeader
+        eyebrow="Trust reports"
+        title="Reports"
+        subtitle="Review user-submitted reports on listings and other accounts."
+      />
 
-      {errorMessage ? <Alert severity="error">{errorMessage}</Alert> : null}
+      {errorMessage ? (
+        <Alert severity="error" sx={{ mb: 2 }}>
+          {errorMessage}
+        </Alert>
+      ) : null}
       {successMessage ? (
-        <Alert severity="success">{successMessage}</Alert>
+        <Alert severity="success" sx={{ mb: 2 }}>
+          {successMessage}
+        </Alert>
       ) : null}
 
-      <Paper sx={{ p: 0 }}>
-        <Box sx={{ width: "100%" }}>
-          <DataGrid
-            rows={reports}
-            columns={columns}
-            getRowId={(row) => row.id}
-            autoHeight
-            disableRowSelectionOnClick
-            initialState={{
-              pagination: { paginationModel: { pageSize: 25 } },
-              sorting: { sortModel: [{ field: "status", sort: "asc" }] },
-            }}
-            pageSizeOptions={[10, 25, 50]}
-          />
-        </Box>
-      </Paper>
-    </Stack>
+      <DataTable
+        rows={reports}
+        columns={columns}
+        getRowId={(row) => row.id}
+        initialState={{
+          pagination: { paginationModel: { pageSize: 25 } },
+          sorting: { sortModel: [{ field: "status", sort: "asc" }] },
+        }}
+      />
+    </Box>
   );
 }

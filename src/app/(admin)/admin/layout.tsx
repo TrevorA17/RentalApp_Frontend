@@ -1,9 +1,9 @@
-import { WorkspaceShell } from "@/components/shell/WorkspaceShell";
+import { DashboardShell } from "@/components/shell/DashboardShell";
 
 export default function AdminLayout({
   children,
 }: Readonly<{
   children: React.ReactNode;
 }>) {
-  return <WorkspaceShell mode="admin">{children}</WorkspaceShell>;
+  return <DashboardShell mode="admin">{children}</DashboardShell>;
 }

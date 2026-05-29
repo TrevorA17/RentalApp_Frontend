@@ -1,10 +1,14 @@
 "use client";
 
 import Alert from "@mui/material/Alert";
-import Paper from "@mui/material/Paper";
-import Stack from "@mui/material/Stack";
-import Typography from "@mui/material/Typography";
+import Box from "@mui/material/Box";
+import Button from "@mui/material/Button";
+import Grid from "@mui/material/Grid";
+import { Heart } from "lucide-react";
 import Link from "next/link";
+import { EmptyState } from "@/components/ui/EmptyState";
+import { ListingCard } from "@/components/ui/ListingCard";
+import { PageHeader } from "@/components/ui/PageHeader";
 import { useAuth } from "@/features/auth/AuthProvider";
 import { useSavedListings } from "@/hooks/useSavedListings";
 import { SaveListingButton } from "./SaveListingButton";
@@ -22,66 +26,49 @@ export function SavedListingsView() {
   }
 
   return (
-    <Stack spacing={3}>
-      <Stack spacing={1.5}>
-        <Typography variant="overline" color="secondary.main" fontWeight={800}>
-          Renter shortlist
-        </Typography>
-        <Typography variant="h2">Saved listings</Typography>
-        <Typography color="text.secondary">
-          Shortlist published listings here before you start contacting owners
-          and agents.
-        </Typography>
-      </Stack>
+    <Box>
+      <PageHeader
+        title="Saved listings"
+        subtitle="Shortlist published listings before you start contacting owners and agents."
+      />
 
-      {error ? <Alert severity="error">{error}</Alert> : null}
-
-      {savedListings.length === 0 ? (
-        <Paper sx={{ p: 3 }}>
-          <Typography color="text.secondary">
-            You have not saved any listings yet. Browse public listings and add
-            a few to your shortlist.
-          </Typography>
-        </Paper>
+      {error ? (
+        <Alert severity="error" sx={{ mb: 2 }}>
+          {error}
+        </Alert>
       ) : null}
 
-      <Stack spacing={2}>
-        {savedListings.map((listing) => (
-          <Paper key={listing.id} sx={{ p: 3 }}>
-            <Stack spacing={1.5}>
-              <Stack
-                direction={{ xs: "column", sm: "row" }}
-                justifyContent="space-between"
-                spacing={2}
-              >
-                <Stack spacing={1}>
-                  <Link href={`/listings/${listing.id}`}>
-                    <Typography variant="h5">{listing.title}</Typography>
-                  </Link>
-                  <Typography variant="h6" color="primary.main">
-                    KES {listing.rentAmount}
-                  </Typography>
-                  <Typography color="text.secondary">
-                    {listing.bedrooms} bed - {listing.bathrooms} bath -{" "}
-                    {listing.houseType}
-                  </Typography>
-                  <Typography color="text.secondary">
-                    {listing.area}, {listing.city}
-                  </Typography>
-                </Stack>
-                <Stack alignItems={{ xs: "stretch", sm: "flex-end" }}>
+      {savedListings.length === 0 ? (
+        <EmptyState
+          icon={Heart}
+          title="No saved listings yet"
+          description="Browse public listings and tap the heart to shortlist them here."
+          action={
+            <Button component={Link} href="/listings" variant="contained">
+              Browse rentals
+            </Button>
+          }
+        />
+      ) : (
+        <Grid container spacing={2.5}>
+          {savedListings.map((listing) => (
+            <Grid key={listing.id} size={{ xs: 12, sm: 6, md: 4 }}>
+              <ListingCard
+                listing={listing}
+                renderActions={() => (
                   <SaveListingButton
                     listingId={listing.id}
+                    iconOnly
                     onSavedChange={(saved) =>
                       handleSavedChange(listing.id, saved)
                     }
                   />
-                </Stack>
-              </Stack>
-            </Stack>
-          </Paper>
-        ))}
-      </Stack>
-    </Stack>
+                )}
+              />
+            </Grid>
+          ))}
+        </Grid>
+      )}
+    </Box>
   );
 }

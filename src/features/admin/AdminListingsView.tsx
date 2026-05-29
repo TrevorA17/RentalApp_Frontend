@@ -4,17 +4,12 @@ import Alert from "@mui/material/Alert";
 import Box from "@mui/material/Box";
 import Button from "@mui/material/Button";
 import MenuItem from "@mui/material/MenuItem";
-import Paper from "@mui/material/Paper";
-import Stack from "@mui/material/Stack";
 import TextField from "@mui/material/TextField";
-import Typography from "@mui/material/Typography";
-import {
-  DataGrid,
-  type GridColDef,
-  type GridRenderCellParams,
-} from "@mui/x-data-grid";
+import type { GridColDef, GridRenderCellParams } from "@mui/x-data-grid";
 import Link from "next/link";
 import { useEffect, useMemo, useState } from "react";
+import { DataTable } from "@/components/ui/DataTable";
+import { PageHeader } from "@/components/ui/PageHeader";
 import { useAuth } from "@/features/auth/AuthProvider";
 import { getAdminListings, updateAdminListingApproval } from "@/lib/api/admin";
 import { extractApiError } from "@/lib/api/client";
@@ -74,7 +69,12 @@ export function AdminListingsView() {
         flex: 1.5,
         minWidth: 220,
         renderCell: (params: GridRenderCellParams<AdminListing>) => (
-          <Link href={`/listings/${params.row.id}`}>{params.row.title}</Link>
+          <Link
+            href={`/listings/${params.row.id}`}
+            style={{ color: "inherit" }}
+          >
+            {params.row.title}
+          </Link>
         ),
       },
       {
@@ -94,13 +94,13 @@ export function AdminListingsView() {
       },
       {
         field: "listingStatus",
-        headerName: "Listing",
+        headerName: "Status",
         width: 120,
       },
       {
         field: "approvalStatus",
         headerName: "Approval",
-        width: 220,
+        width: 200,
         sortable: false,
         renderCell: (params: GridRenderCellParams<AdminListing>) => (
           <TextField
@@ -113,7 +113,7 @@ export function AdminListingsView() {
                 [params.row.id]: event.target.value as ApprovalStatus,
               }))
             }
-            sx={{ minWidth: 180 }}
+            sx={{ minWidth: 160 }}
           >
             {approvalStatuses.map((status) => (
               <MenuItem key={status} value={status}>
@@ -144,35 +144,33 @@ export function AdminListingsView() {
   );
 
   return (
-    <Stack spacing={3}>
-      <Stack spacing={1}>
-        <Typography variant="overline" color="secondary.main" fontWeight={800}>
-          Listing moderation
-        </Typography>
-        <Typography variant="h2">Moderate listings</Typography>
-      </Stack>
+    <Box>
+      <PageHeader
+        eyebrow="Listing moderation"
+        title="Moderate listings"
+        subtitle="Approve or reject pending listings, and revisit decisions as needed."
+      />
 
-      {errorMessage ? <Alert severity="error">{errorMessage}</Alert> : null}
+      {errorMessage ? (
+        <Alert severity="error" sx={{ mb: 2 }}>
+          {errorMessage}
+        </Alert>
+      ) : null}
       {successMessage ? (
-        <Alert severity="success">{successMessage}</Alert>
+        <Alert severity="success" sx={{ mb: 2 }}>
+          {successMessage}
+        </Alert>
       ) : null}
 
-      <Paper sx={{ p: 0 }}>
-        <Box sx={{ width: "100%" }}>
-          <DataGrid
-            rows={listings}
-            columns={columns}
-            getRowId={(row) => row.id}
-            autoHeight
-            disableRowSelectionOnClick
-            initialState={{
-              pagination: { paginationModel: { pageSize: 25 } },
-              sorting: { sortModel: [{ field: "title", sort: "asc" }] },
-            }}
-            pageSizeOptions={[10, 25, 50]}
-          />
-        </Box>
-      </Paper>
-    </Stack>
+      <DataTable
+        rows={listings}
+        columns={columns}
+        getRowId={(row) => row.id}
+        initialState={{
+          pagination: { paginationModel: { pageSize: 25 } },
+          sorting: { sortModel: [{ field: "title", sort: "asc" }] },
+        }}
+      />
+    </Box>
   );
 }

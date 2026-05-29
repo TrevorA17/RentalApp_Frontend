@@ -14,6 +14,7 @@ import Typography from "@mui/material/Typography";
 import { useFormik } from "formik";
 import { useRouter } from "next/navigation";
 import { type ChangeEvent, useEffect, useRef, useState } from "react";
+import { PageHeader } from "@/components/ui/PageHeader";
 import { AiDescriptionAssist } from "@/features/ai/AiDescriptionAssist";
 import { useAuth } from "@/features/auth/AuthProvider";
 import { useAmenities } from "@/hooks/useAmenities";
@@ -366,22 +367,11 @@ export function ListingForm({ mode, listingId }: ListingFormProps) {
         hidden
         onChange={handleMediaFilesSelected}
       />
-      <Paper sx={{ p: { xs: 3, md: 4 } }}>
-        <Stack spacing={2}>
-          <Chip
-            label={mode === "create" ? "New rental" : "Listing workspace"}
-            color="secondary"
-            sx={{ width: "fit-content" }}
-          />
-          <Typography variant="h3">
-            {mode === "create" ? "Create listing" : "Edit listing"}
-          </Typography>
-          <Typography color="text.secondary">
-            Create a clear rental listing with pricing, location, amenities,
-            images, and AI-assisted description support.
-          </Typography>
-        </Stack>
-      </Paper>
+      <PageHeader
+        eyebrow={mode === "create" ? "New rental" : "Listing workspace"}
+        title={mode === "create" ? "Create listing" : "Edit listing"}
+        subtitle="Create a clear rental listing with pricing, location, amenities, images, and AI-assisted description support."
+      />
 
       <Paper sx={{ p: { xs: 3, md: 4 } }}>
         <Stack component="form" spacing={2.5} onSubmit={formik.handleSubmit}>

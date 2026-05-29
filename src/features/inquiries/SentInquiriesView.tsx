@@ -1,61 +1,92 @@
 "use client";
 
 import Alert from "@mui/material/Alert";
+import Box from "@mui/material/Box";
+import Chip from "@mui/material/Chip";
 import Paper from "@mui/material/Paper";
 import Stack from "@mui/material/Stack";
 import Typography from "@mui/material/Typography";
+import { Send } from "lucide-react";
 import Link from "next/link";
+import { EmptyState } from "@/components/ui/EmptyState";
+import { PageHeader } from "@/components/ui/PageHeader";
 import { useAuth } from "@/features/auth/AuthProvider";
 import { useSentInquiries } from "@/hooks/useInquiries";
+
+const STATUS_COLOR: Record<
+  string,
+  "default" | "primary" | "success" | "warning"
+> = {
+  NEW: "warning",
+  CONTACTED: "primary",
+  CLOSED: "default",
+};
 
 export function SentInquiriesView() {
   const { session } = useAuth();
   const { inquiries, error } = useSentInquiries(Boolean(session?.accessToken));
 
   return (
-    <Stack spacing={3}>
-      <Stack spacing={1.5}>
-        <Typography variant="overline" color="secondary.main" fontWeight={800}>
-          Inquiry tracking
-        </Typography>
-        <Typography variant="h2">Sent inquiries</Typography>
-        <Typography color="text.secondary">
-          Track the listings you have contacted and monitor whether the owner
-          has responded.
-        </Typography>
-      </Stack>
+    <Box>
+      <PageHeader
+        title="Sent inquiries"
+        subtitle="Track the listings you have contacted and monitor whether the owner has responded."
+      />
 
-      {error ? <Alert severity="error">{error}</Alert> : null}
-
-      {inquiries.length === 0 ? (
-        <Paper sx={{ p: 3 }}>
-          <Typography color="text.secondary">
-            You have not sent any inquiries yet.
-          </Typography>
-        </Paper>
+      {error ? (
+        <Alert severity="error" sx={{ mb: 2 }}>
+          {error}
+        </Alert>
       ) : null}
 
-      <Stack spacing={2}>
-        {inquiries.map((inquiry) => (
-          <Paper key={inquiry.id} sx={{ p: 3 }}>
-            <Stack spacing={1.25}>
-              <Link href={`/listings/${inquiry.listingId}`}>
-                <Typography variant="h5">{inquiry.listingTitle}</Typography>
-              </Link>
-              <Typography color="primary.main" fontWeight={700}>
-                KES {inquiry.listingRentAmount}
-              </Typography>
-              <Typography color="text.secondary">
-                To: {inquiry.recipient.fullName} ({inquiry.recipient.role})
-              </Typography>
-              <Typography color="text.secondary">
-                Status: {inquiry.status}
-              </Typography>
-              <Typography color="text.secondary">{inquiry.message}</Typography>
-            </Stack>
-          </Paper>
-        ))}
-      </Stack>
-    </Stack>
+      {inquiries.length === 0 ? (
+        <EmptyState
+          icon={Send}
+          title="No inquiries sent yet"
+          description="When you contact an owner from a listing, the conversation will appear here."
+        />
+      ) : (
+        <Stack spacing={1.5}>
+          {inquiries.map((inquiry) => (
+            <Paper key={inquiry.id} sx={{ p: 2.5 }}>
+              <Stack spacing={1.25}>
+                <Stack
+                  direction="row"
+                  justifyContent="space-between"
+                  alignItems="flex-start"
+                >
+                  <Box sx={{ minWidth: 0 }}>
+                    <Typography
+                      component={Link}
+                      href={`/listings/${inquiry.listingId}`}
+                      variant="h5"
+                      sx={{
+                        textDecoration: "none",
+                        color: "text.primary",
+                        "&:hover": { color: "primary.main" },
+                      }}
+                    >
+                      {inquiry.listingTitle}
+                    </Typography>
+                    <Typography variant="body2" color="text.secondary">
+                      KES {inquiry.listingRentAmount.toLocaleString()} · To{" "}
+                      {inquiry.recipient.fullName} ({inquiry.recipient.role})
+                    </Typography>
+                  </Box>
+                  <Chip
+                    label={inquiry.status}
+                    size="small"
+                    color={STATUS_COLOR[inquiry.status] ?? "default"}
+                  />
+                </Stack>
+                <Typography variant="body2" color="text.secondary">
+                  {inquiry.message}
+                </Typography>
+              </Stack>
+            </Paper>
+          ))}
+        </Stack>
+      )}
+    </Box>
   );
 }

@@ -1,14 +1,14 @@
 "use client";
 
 import Alert from "@mui/material/Alert";
+import Box from "@mui/material/Box";
 import Button from "@mui/material/Button";
-import Chip from "@mui/material/Chip";
 import Paper from "@mui/material/Paper";
 import Stack from "@mui/material/Stack";
 import TextField from "@mui/material/TextField";
-import Typography from "@mui/material/Typography";
 import { useFormik } from "formik";
 import { useEffect, useState } from "react";
+import { PageHeader } from "@/components/ui/PageHeader";
 import { useAuth } from "@/features/auth/AuthProvider";
 import { extractApiError } from "@/lib/api/client";
 import { getMyProfile, saveMyProfile } from "@/lib/api/profiles";
@@ -95,21 +95,12 @@ export function ProfileForm() {
   const disabled = isLoading || formik.isSubmitting;
 
   return (
-    <Stack spacing={3}>
-      <Paper sx={{ p: { xs: 3, md: 4 } }}>
-        <Stack spacing={2}>
-          <Chip
-            label={`${session.user.role} profile`}
-            color="secondary"
-            sx={{ width: "fit-content" }}
-          />
-          <Typography variant="h3">Manage profile</Typography>
-          <Typography color="text.secondary" maxWidth={720}>
-            This profile data will power listing poster summaries, public trust
-            signals, and later agent profile views.
-          </Typography>
-        </Stack>
-      </Paper>
+    <Box>
+      <PageHeader
+        eyebrow={`${session.user.role.toLowerCase()} profile`}
+        title="Manage profile"
+        subtitle="This profile data powers listing poster summaries, public trust signals, and agent profile views."
+      />
 
       <Paper sx={{ p: { xs: 3, md: 4 } }}>
         <Stack component="form" spacing={2.5} onSubmit={formik.handleSubmit}>
@@ -183,6 +174,6 @@ export function ProfileForm() {
           </Stack>
         </Stack>
       </Paper>
-    </Stack>
+    </Box>
   );
 }

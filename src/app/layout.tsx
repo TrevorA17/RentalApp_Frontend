@@ -1,10 +1,10 @@
 import type { Metadata } from "next";
-import { DM_Sans, Fraunces } from "next/font/google";
+import { Fraunces, Inter } from "next/font/google";
 import { AuthProvider } from "@/features/auth/AuthProvider";
 import { ThemeRegistry } from "@/theme/ThemeRegistry";
 import "./globals.css";
 
-const sansFont = DM_Sans({
+const sansFont = Inter({
   subsets: ["latin"],
   variable: "--font-sans",
 });
